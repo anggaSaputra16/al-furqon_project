@@ -1,103 +1,218 @@
-import Image from "next/image";
+'use client'
 
-export default function Home() {
+import { useState, useEffect } from 'react'
+import GuideSection from '@/app/contents/section/GuideSection'
+import AboutSection from '@/app/contents/section/AboutSection'
+import UniversalNavGrid, { NavItem } from './components/path/UniversalNavGrid'
+import { FaBars, FaTimes, FaRoute } from 'react-icons/fa'
+import { AnimatePresence, motion } from 'framer-motion'
+import Footer from './components/path/Footer'
+import ThemeToggle from './components/path/ThemeToggle'
+import CardLayout, { CardData } from './layouts/CardLayout'
+import MasjidHeader from './components/path/MasjidHeader'
+import { useMenuStore } from './stores/useMenuStore'
+import { iconMap } from './utils/iconMapper'
+import ActivityModal from './components/path/ActivityModal'
+import { useTheme } from '@/context/themeContext'
+
+export default function Page() {
+  const [showNav, setShowNav] = useState(true)
+  const [modalData, setModalData] = useState<CardData | null>(null)
+  const { colors } = useTheme()
+
+  const { menus, fetchMenus } = useMenuStore()
+
+  useEffect(() => {
+    fetchMenus()
+  }, [])
+
+  const navItems: NavItem[] = menus.map((menu) => {
+    const Icon = iconMap[menu.icon] || FaRoute
+    return {
+      title: menu.title,
+      href: `/${menu.slug}`,
+      icon: <Icon />,
+    }
+  })
+
+  const [cards, setCards] = useState<CardData[]>([
+    {
+      id: '1',
+      title: 'Kajian Tematik setiap Ahad Pagi minggu ke Lima',
+      description: 'Program - 3 Feb 2024',
+      detail: 'Pembahasan tema khusus bersama ustadz tamu setiap akhir bulan. lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.', 
+      image: '/images/gambar1.jpg',
+      size: 'large',
+    },
+    {
+      id: '2',
+      title: 'Kajian Spesial Akhir Bulan',
+      description: 'Program - 24 Feb 2024',
+      detail: 'Kajian eksklusif akhir bulan dengan bahasan fiqh kontemporer. loeem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+      image: '/images/gambar2.jpg',
+      size: 'small',
+    },
+    {
+      id: '3',
+      title: 'Pembinaan Remaja Masjid',
+      description: 'Program - 10 Feb 2024',
+      detail: 'Program khusus untuk pembinaan akhlak dan organisasi remaja masjid.',
+      image: '/images/gambar3.jpg',
+      size: 'small',
+    },
+    {
+      id: '4',
+      title: 'Pembinaan Remaja Masjid',
+      description: 'Program - 10 Feb 2024',
+      detail: 'Program khusus untuk pembinaan akhlak dan organisasi remaja masjid. lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+      image: '/images/gambar3.jpg',
+      size: 'small',
+    },
+    {
+      id: '5',
+      title: 'Pembinaan Remaja Masjid',
+      description: 'Program - 10 Feb 2024',
+      detail: 'Program khusus untuk pembinaan akhlak dan organisasi remaja masjid. lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+      image: '/images/gambar3.jpg',
+      size: 'small',
+    },
+    {
+      id: '6',
+      title: 'Pembinaan Remaja Masjid',
+      description: 'Program - 10 Feb 2024',
+      detail: 'Program khusus untuk pembinaan akhlak dan organisasi remaja masjid. lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+      image: '/images/gambar3.jpg',
+      size: 'small',
+    },
+    {
+      id: '7',
+      title: 'Pembinaan Remaja Masjid',
+      description: 'Program - 10 Feb 2024',
+      detail: 'Program khusus untuk pembinaan akhlak dan organisasi remaja masjid. lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+      image: '/images/gambar3.jpg',
+      size: 'small',
+    },
+    {
+      id: '8',
+      title: 'Pembinaan Remaja Masjid',
+      description: 'Program - 10 Feb 2024',
+      detail: 'Program khusus untuk pembinaan akhlak dan organisasi remaja masjid. lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+      image: '/images/gambar3.jpg',
+      size: 'small',
+    },
+    {
+      id: '9',
+      title: 'Pembinaan Remaja Masjid',
+      description: 'Program - 10 Feb 2024',
+      detail: 'Program khusus untuk pembinaan akhlak dan organisasi remaja masjid. lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+      image: '/images/gambar3.jpg',
+      size: 'small',
+    },
+    // ... tambahkan card lainnya sesuai format ini
+  ])
+
+  const [upcomingCards, setUpcomingCards] = useState<CardData[]>([
+    {
+      id: '4',
+      title: 'Kajian Spesial Awal Bulan',
+      description: 'Program - 10 Maret 2024',
+      detail: 'Mengawali bulan dengan kajian ruhiyah dan muhasabah.',
+      image: '/images/gambar1.jpg',
+      size: 'large',
+    },
+    {
+      id: '5',
+      title: 'Pembinaan Remaja Masjid no 2',
+      description: 'Program - 12 Maret 2024',
+      detail: 'Lanjutan pembinaan sesi pertama untuk remaja masjid.',
+      image: '/images/gambar2.jpg',
+      size: 'small',
+    },
+    {
+      id: '6',
+      title: 'Kajian Ramadhan',
+      description: 'Program - 1 April 2024',
+      detail: 'Persiapan ruhiyah dan ilmu menyambut bulan suci Ramadhan.',
+      image: '/images/gambar3.jpg',
+      size: 'small',
+    },
+    // ... tambahkan card lainnya sesuai format ini
+  ])
+
+  const handleReorder = (from: number, to: number) => {
+    const newCards = [...cards]
+    const [moved] = newCards.splice(from, 1)
+    newCards.splice(to, 0, moved)
+    setCards(newCards)
+  }
+
+  const handleReorderUpcoming = (from: number, to: number) => {
+    const newCards = [...upcomingCards]
+    const [moved] = newCards.splice(from, 1)
+    newCards.splice(to, 0, moved)
+    setUpcomingCards(newCards)
+  }
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+      <main
+      style={{ background: colors.background, color: colors.cardText }}
+      className="transition-colors duration-500"
+    >
+      <MasjidHeader />
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+      <div className="max-w-7xl mx-auto px-6 space-y-8">
+        {/* Top Bar */}
+        <div className="flex justify-between items-center">
+          <div className="flex gap-2 items-center">
+            <ThemeToggle />
+            <button
+              onClick={() => setShowNav(prev => !prev)}
+              className="text-xl p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+              aria-label="Toggle Navigation"
+            >
+              {showNav ? <FaTimes /> : <FaBars />}
+            </button>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+
+        {/* Nav Grid */}
+        <AnimatePresence>
+          {showNav && (
+            <motion.div
+              key="navgrid"
+              initial={{ opacity: 0, y: -20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.95 }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
+            >
+              <UniversalNavGrid items={navItems} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Cards */}
+        <section className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-bold">Aktivitas Terkini</h2>
+            <a href="#" className="text-blue-600 text-sm hover:underline">Lebih Lengkap</a>
+          </div>
+          <CardLayout cards={cards} onReorder={handleReorder} onShowDetail={setModalData} />
+        </section>
+
+        <section className="space-y-4 mt-10">
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-bold">Program Mendatang</h2>
+            <a href="#" className="text-blue-600 text-sm hover:underline">Lihat Semua</a>
+          </div>
+          <CardLayout cards={upcomingCards} onReorder={handleReorderUpcoming} onShowDetail={setModalData} />
+        </section>
+
+        <GuideSection />
+        <AboutSection />
+      </div>
+
+      <ActivityModal data={modalData} onClose={() => setModalData(null)} />
+      <Footer />
+    </main>
+  )
 }
