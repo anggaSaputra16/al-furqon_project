@@ -184,10 +184,9 @@ const filteredImages = (images || []).filter((img) => {
       className="transition-colors duration-500"
     >
       <MasjidHeader />
-      <div className="max-w-7xl mx-auto px-6 space-y-8">
+      <div className="max-w-7xl mx-auto px-6 space-y-8 mt-5">
         <div className="flex justify-between items-center">
           <div className="flex gap-2 items-center">
-            <ThemeToggle />
             <button
               onClick={() => setShowNav((prev) => !prev)}
               className="text-xl p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition"

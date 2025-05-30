@@ -2,15 +2,17 @@
 
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
-import { FaChevronDown, FaChevronUp, FaSearch } from 'react-icons/fa'
+import { FaChevronDown, FaChevronUp, FaSearch, FaSun, FaCloudSun, FaCloudMoon, FaMoon, FaRegClock } from 'react-icons/fa'
 import banner1 from '@/app/assets/images/banner1.jpg'
 import banner2 from '@/app/assets/images/banner2.jpg'
+import banner3 from '@/app/assets/images/banner3.jpg'
 import { useSearchStore } from '@/app/stores/useSearchStore'
 import { useTheme } from '@/context/themeContext'
 import { fetchJadwalSholat } from '@/app/utils/fetchJadwalSholat'
+import ThemeToggle from '@/app/components/path/ThemeToggle' // Pastikan import ThemeToggle dari path yang benar
 
 export default function MasjidHeader() {
-  const { colors } = useTheme()
+  const { colors, theme, toggleTheme } = useTheme()
   const [currentTime, setCurrentTime] = useState<string>('')
   const [bannerIndex, setBannerIndex] = useState<number>(0)
   const [hovered, setHovered] = useState<boolean>(false)
@@ -18,7 +20,8 @@ export default function MasjidHeader() {
 
   const { search, setSearch } = useSearchStore()
 
-  const banners = [banner1, banner2]
+  // Pilih banner sesuai theme
+  const banners = theme === 'dark' ? [banner1] : theme === 'dusk' ? [banner3] : [banner2]
 
   const [jadwalSholat, setJadwalSholat] = useState([
     { name: 'Fajr', time: '04:33' },
@@ -86,9 +89,51 @@ export default function MasjidHeader() {
       .catch(() => {/* fallback ke default jika error */})
   }, [])
 
+  // --- Auto theme by waktu sholat ---
+  useEffect(() => {
+    if (!jadwalSholat.length) return;
+    const now = new Date();
+    const nowMinutes = now.getHours() * 60 + now.getMinutes();
+    const getMinutes = (time: string) => {
+      const [h, m] = time.split(":");
+      return parseInt(h) * 60 + parseInt(m);
+    };
+    const fajr = jadwalSholat.find(j => j.name === 'Fajr')?.time || '04:33';
+    const ashr = jadwalSholat.find(j => j.name === 'Asr')?.time || '15:30';
+    const maghrib = jadwalSholat.find(j => j.name === 'Maghrib')?.time || '18:10';
+    const isha = jadwalSholat.find(j => j.name === 'Isha')?.time || '19:20';
+    const fajrM = getMinutes(fajr);
+    const ashrM = getMinutes(ashr);
+    const maghribM = getMinutes(maghrib);
+    const ishaM = getMinutes(isha);
+    let nextTheme = 'light';
+    if (nowMinutes >= ashrM && nowMinutes < ishaM) {
+      nextTheme = 'dusk'; // Senja
+    } else if (nowMinutes >= ishaM || nowMinutes < fajrM) {
+      nextTheme = 'dark'; // Malam
+    } else if (nowMinutes >= fajrM && nowMinutes < ashrM) {
+      nextTheme = 'light'; // Siang
+    }
+    if (theme !== nextTheme) {
+      toggleTheme(); // toggleTheme sudah cycle, jadi akan sync
+    }
+    // eslint-disable-next-line
+  }, [jadwalSholat]);
+
+  // Ganti handleSwitchBanner agar tidak error jika hanya 1 banner
   const handleSwitchBanner = () => {
-    setBannerIndex((prev) => (prev + 1) % banners.length)
+    if (banners.length > 1) {
+      setBannerIndex((prev) => (prev + 1) % banners.length)
+    }
   }
+
+  // Pilih icon sesuai waktu sholat
+  let sholatIcon = <FaRegClock className="text-2xl text-accent" />
+  if (currentSholat.name === 'Fajr') sholatIcon = <FaSun className="text-2xl text-yellow-400" />
+  else if (currentSholat.name === 'Dhuhr') sholatIcon = <FaCloudSun className="text-2xl text-yellow-500" />
+  else if (currentSholat.name === 'Asr') sholatIcon = <FaCloudSun className="text-2xl text-orange-400" />
+  else if (currentSholat.name === 'Maghrib') sholatIcon = <FaCloudMoon className="text-2xl text-orange-500" />
+  else if (currentSholat.name === 'Isha') sholatIcon = <FaMoon className="text-2xl text-blue-400" />
 
   return (
     <div
@@ -97,13 +142,34 @@ export default function MasjidHeader() {
       }`}
       style={{ background: colors.background, color: colors.cardText }}
     >
-      <button
-        onClick={() => setMinimized((v) => !v)}
-        className="absolute top-4 left-4 z-30 bg-white/80 dark:bg-gray-800/80 hover:bg-white dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 px-2 py-1 rounded-full text-xs shadow transition-colors duration-200"
-        style={{ backdropFilter: 'blur(4px)' }}
-      >
-        {minimized ? <FaChevronDown /> : <FaChevronUp />}
-      </button>
+      {/* Header Top Bar: Theme Toggle & Close/Menu */}
+      <div className={
+        minimized
+          ? 'absolute top-4 left-4 flex items-center gap-2 z-30'
+          : 'absolute top-4 left-0 right-0 flex items-center justify-between z-30 px-6'
+      }>
+        <div className="flex items-center gap-2">
+          {/* Theme Toggle */}
+          <div className="rounded-full bg-white/80 dark:bg-gray-800/80 shadow p-1 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200">
+            {/* ThemeToggle component, pastikan import dan gunakan di sini */}
+            <ThemeToggle />
+            {/* Label theme */}
+            <span className="ml-2 text-xs font-semibold uppercase tracking-wide" style={{ color: colors.accent }}>
+              {theme === 'light' ? 'Siang' : theme === 'dark' ? 'Malam' : 'Senja'}
+            </span>
+          </div>
+        </div>
+        {/* Menu/Close Button hanya tampil jika tidak minimized */}
+        {!minimized && (
+          <button
+            onClick={() => setMinimized((v) => !v)}
+            className="rounded-full bg-white/80 dark:bg-gray-800/80 hover:bg-white dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 p-2 shadow transition-colors duration-200"
+            style={{ backdropFilter: 'blur(4px)' }}
+          >
+            {minimized ? <FaChevronDown /> : <FaChevronUp />}
+          </button>
+        )}
+      </div>
 
       {!minimized && (
         <Image
@@ -115,7 +181,7 @@ export default function MasjidHeader() {
         />
       )}
 
-      {!minimized && (
+      {!minimized && banners.length > 1 && (
         <button
           onClick={handleSwitchBanner}
           className="absolute top-4 right-4 bg-white/80 dark:bg-gray-800/80 hover:bg-white dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 px-3 py-1 rounded-md text-xs shadow transition-colors duration-200"
@@ -130,6 +196,7 @@ export default function MasjidHeader() {
           style={{ color: colors.cardText }}
         >
           <div className="bg-black/40 px-8 py-6 rounded-2xl flex flex-col gap-2 items-center shadow-lg">
+            <div className="mb-2">{sholatIcon}</div>
             <div className="text-2xl font-bold tracking-widest mb-2" style={{ fontFamily: 'monospace, monospace' }}>
               Jadwal Sholat
             </div>
@@ -192,6 +259,17 @@ export default function MasjidHeader() {
           <span className="text-sm font-semibold uppercase">{currentSholat.name}</span>
           <span className="text-lg font-mono font-extrabold">{currentTime}</span>
         </div>
+
+        {/* Tombol minimize hanya saat minimized, posisinya di kanan bawah search bar agar tidak overlap */}
+        {minimized && (
+          <button
+            onClick={() => setMinimized((v) => !v)}
+            className="absolute bottom-4 right-6 rounded-full bg-white/80 dark:bg-gray-800/80 hover:bg-white dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 p-2 shadow transition-colors duration-200 z-30"
+            style={{ backdropFilter: 'blur(4px)' }}
+          >
+            <FaChevronDown />
+          </button>
+        )}
       </div>
     </div>
   )

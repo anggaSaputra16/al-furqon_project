@@ -7,7 +7,7 @@ const Footer: React.FC = () => {
   const { colors } = useTheme()
   return (
     <footer
-      className="w-full py-6 mt-10 transition-colors duration-200"
+      className="w-full py-6 mt-10 transition-colors duration-200 pb-20"
       style={{ background: colors.footer, color: colors.cardText }}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

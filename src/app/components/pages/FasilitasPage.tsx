@@ -1,29 +1,34 @@
 'use client'
 
-import { useArticleStore } from '../../stores/articleStore'
-import { useSearchStore } from '../../stores/useSearchStore'
-import ArticleCard from '../path/ArticleCard'
-import MasjidHeader from '../path/MasjidHeader'
-import { useMenuStore } from '@/app/stores/useMenuStore'
-import Footer from '../path/Footer'
-import { FaTimes, FaBars, FaRoute } from 'react-icons/fa'
-import ThemeToggle from '../path/ThemeToggle'
-import { iconMap } from '@/app/utils/iconMapper'
-import UniversalNavGrid, { NavItem } from '../path/UniversalNavGrid'
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
+import { FaBars, FaTimes, FaRoute } from 'react-icons/fa'
+
+import { useArticleStore } from '../../stores/useArticleStore'
+import { useSearchStore } from '../../stores/useSearchStore'
+import { useMenuStore } from '../../stores/useMenuStore'
 import { useTheme } from '@/context/themeContext'
+import { iconMap } from '@/app/utils/iconMapper'
+
+import MasjidHeader from '../path/MasjidHeader'
+import Footer from '../path/Footer'
+import ThemeToggle from '../path/ThemeToggle'
+import ArticleCard from '../path/ArticleCard'
+import ArticleDetail from '../path/ArticleDetail'
+import UniversalNavGrid, { NavItem } from '../path/UniversalNavGrid'
 
 export default function FasilitasPage() {
   const { colors } = useTheme()
   const articles = useArticleStore((state) => state.articles)
+  const fetchArticles = useArticleStore((state) => state.fetchArticles)
   const { search } = useSearchStore()
-  const [showNav, setShowNav] = useState(true)
   const { menus, fetchMenus } = useMenuStore()
+  const [showNav, setShowNav] = useState(true)
 
   useEffect(() => {
     fetchMenus()
-  }, [fetchMenus])
+    fetchArticles()
+  }, [fetchMenus, fetchArticles])
 
   const navItems: NavItem[] = menus.map((menu) => {
     const Icon = iconMap[menu.icon] || FaRoute
@@ -34,10 +39,18 @@ export default function FasilitasPage() {
     }
   })
 
+  const introArticle = articles.find(
+    (a) => a.category === 'fasilitas' && a.mode === 'detail'
+  )
+
   const filteredArticles = articles.filter((article) => {
     const searchWords = search.toLowerCase().split(' ').filter(Boolean)
     const title = article.title?.toLowerCase() || ''
-    return searchWords.every((word) => title.includes(word))
+    return (
+      article.category === 'fasilitas' &&
+      article.mode === 'card' &&
+      searchWords.every((word) => title.includes(word))
+    )
   })
 
   return (
@@ -46,20 +59,21 @@ export default function FasilitasPage() {
       className="transition-colors duration-500"
     >
       <MasjidHeader />
-      <div className="max-w-7xl mx-auto px-6 space-y-8">
+
+      <div className="max-w-7xl mx-auto px-6 space-y-8 mt-5">
         <div className="flex justify-between items-center">
           <div className="flex gap-2 items-center">
-          <ThemeToggle />
-          <button
-            onClick={() => setShowNav((prev) => !prev)}
-            className="text-xl p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition"
-            aria-label="Toggle Navigation"
-          >
-            {showNav ? <FaTimes /> : <FaBars />}
-          </button>
+            <button
+              onClick={() => setShowNav((prev) => !prev)}
+              className="text-xl p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+              aria-label="Toggle Navigation"
+            >
+              {showNav ? <FaTimes /> : <FaBars />}
+            </button>
           </div>
         </div>
-     <AnimatePresence>
+
+        <AnimatePresence>
           {showNav && (
             <motion.div
               key="navgrid"
@@ -72,24 +86,36 @@ export default function FasilitasPage() {
             </motion.div>
           )}
         </AnimatePresence>
+
         <section className="p-6 space-y-6">
-          <h1 className="text-2xl font-bold text-center" style={{ color: colors.cardText }}>Fasilitas</h1>
-          <p className="text-center text-gray-600 dark:text-gray-300" style={{ color: colors.cardText }}>
-            Masjid Besar Al-Furqon, Bekasi Barat bukan hanya tempat ibadah yang luas dan nyaman, tetapi juga pusat kegiatan umat yang menghadirkan berbagai fasilitas penunjang di bawah naungan Yayasan Pondok Mulya Bekasi. 
-Dilengkapi dengan aula serbaguna Graha Subagdja, masjid ini siap menjadi pilihan untuk berbagai acara penting seperti pertemuan komunitas, kajian, hingga resepsi pernikahan yang berkesan. 
-Area parkir yang luas memberikan kenyamanan bagi para jamaah, sementara ruang belajar TPO menjadi wadah pembinaan generasi Qurani sejak dini. Tersedia pula ruang keserikatan yang mendukung kolaborasi dan kegiatan sosial masyarakat. Semua hadir dalam suasana yang teduh, bersih, dan penuh berkah.
-          </p>
+          <h1 className="text-2xl font-bold text-center" style={{ color: colors.cardText }}>
+            Fasilitas
+          </h1>
+
+          {/* Tampilkan detail jika tersedia */}
+          {articles.length === 0 ? (
+            <p className="text-center text-sm text-gray-400">Memuat artikel...</p>
+          ) : introArticle ? (
+            <ArticleDetail articleId={introArticle.id} showRelated={false} />
+          ) : (
+            <p className="text-center text-sm text-gray-400">Artikel pengantar tidak ditemukan.</p>
+          )}
+
           <div className="space-y-8">
-            {filteredArticles.length > 0 ? (
+            {articles.length === 0 ? (
+              <p className="text-center text-gray-400">Memuat data...</p>
+            ) : filteredArticles.length > 0 ? (
               filteredArticles.map((article) => (
                 <ArticleCard
                   key={article.id}
+                  id={article.id}
                   title={article.title}
-                  description={article.description}
-                  detail={article.detail}
+                  description={article.description || ''}
+                  detail={article.detail || article.content || ''}
                   image={article.image}
                   imagePosition={article.imagePosition}
                   links={article.links}
+                  category={article.category}
                 />
               ))
             ) : (
@@ -100,8 +126,8 @@ Area parkir yang luas memberikan kenyamanan bagi para jamaah, sementara ruang be
           </div>
         </section>
       </div>
+
       <Footer />
     </main>
   )
 }
-

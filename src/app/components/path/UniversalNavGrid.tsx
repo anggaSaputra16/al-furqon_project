@@ -44,19 +44,19 @@ export default function UniversalNavGrid({ items, customClass = '' }: UniversalN
       <div
         className={clsx(
           isSticky
-            ? 'fixed top-0 left-0 right-0 z-50 backdrop-blur bg-black/80 py-2 transition-all duration-300'
+            ? 'fixed bottom-0 left-0 right-0 z-50 backdrop-blur-md bg-white/40 dark:bg-black/30 py-2 transition-all duration-300'
             : 'relative',
-          'w-full flex justify-center'
+          'w-full flex justify-center pointer-events-none'
         )}
         style={{
-          background: isSticky ? colors.card : 'transparent',
+          background: isSticky ? undefined : 'transparent',
           color: colors.cardText,
-          boxShadow: isSticky ? '0 2px 12px 0 rgba(0,0,0,0.10)' : 'none',
+          boxShadow: isSticky ? '0 -2px 16px 0 rgba(0,0,0,0.10)' : 'none',
         }}
       >
         <div
           className={clsx(
-            'max-w-5xl mx-auto flex flex-wrap gap-4 justify-center items-center px-4',
+            'max-w-5xl mx-auto flex flex-wrap gap-4 justify-center items-center px-4 pointer-events-auto',
             isSticky ? 'py-2' : 'py-6'
           )}
         >
@@ -69,7 +69,8 @@ export default function UniversalNavGrid({ items, customClass = '' }: UniversalN
                     'transition-all duration-200 flex flex-col justify-center items-center shadow-sm border',
                     isSticky
                       ? 'w-12 h-12 p-0 rounded-full bg-opacity-80'
-                      : 'w-[120px] h-[105px] rounded-2xl'
+                      : 'w-[120px] h-[105px] rounded-2xl',
+                    isActive && 'ring-2 ring-accent ring-offset-2 ring-offset-transparent'
                   )}
                   style={{
                     background: isActive ? colors.accent : colors.card,

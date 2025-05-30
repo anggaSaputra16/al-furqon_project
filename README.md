@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
@@ -49,3 +50,45 @@ my-next-zustand-app/
 ├── package.json
 ├── next.config.js
 └── README.md
+=======
+# al-furqon_project
+>>>>>>> 9bc2be9a64c2abf0ff9ad089f6fbb4f4f9f045c2
+
+
+
+response api untuk article :[
+  {
+    "id": "1",
+    "title": "Masjid Besar Al – Furqon",
+    "description": "Lantai dua Masjid...",
+    "detail": "Ruang ini bukan hanya...",
+    "image": "/images/gambar1.jpg",
+    "imagePosition": "left",
+    "imageSize": "medium",
+    "category": "fasilitas",
+    "mode": "card",  
+    "links": [
+      { "label": "Galeri", "href": "#" }
+    ]
+  },
+  {
+    "id": "intro-fasilitas",
+    "title": "Tentang Fasilitas Masjid Al-Furqon",
+    "content": "...",
+    "image": "/images/masjid.jpg",
+    "imagePosition": "right",
+    "imageSize": "large",
+    "category": "fasilitas",
+    "mode": "detail"
+  }
+]
+
+"mode": "card/detail" = menentukan component apa yang akan di isi dengan data jika mode card component simple dengan modal avtivity dan jika detail akan mode detail akanmenampilkan article yang bisa memuat banyak text selayaknya article pada umumnya.
+
+imageSize": "medium", terdapat 3 pilihan small/medium/dan large
+
+ "imagePosition": "left", terdapat 2 pilihan left dan right 
+
+jika menggunakan mode card data ini  "links": [
+      { "label": "Galeri", "href": "#" }
+    ] harus ada, 

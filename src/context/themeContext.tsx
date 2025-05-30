@@ -2,9 +2,9 @@
 
 import { createContext, useContext, useEffect, useState } from 'react'
 
-type Theme = 'light' | 'dark'
+export type Theme = 'light' | 'dark' | 'dusk'
 
-// Tambahkan custom color untuk theme
+// 🎨 Warna tema light
 const lightTheme = {
   background: '#f9f6f2', // warm white
   foreground: '#2d2d2d', // soft dark gray
@@ -39,6 +39,24 @@ const darkTheme = {
   detail: '#cbd5e1',
 }
 
+// 🌇 Warna tema dusk (senja)
+const duskTheme = {
+  background: '#1a0e07',        // gelap seperti langit senja
+  foreground: '#ffe7b3',        // terang kekuningan
+  card: '#3e2210',              // coklat kemerahan gelap
+  cardText: '#ffbe6a',          // oranye keemasan terang
+  accent: '#ff9900',            // oranye sunset hangat
+  footer: '#241106',            // coklat tua
+  border: '#a86c2c',            // coklat emas
+  secondary: '#e6a86a',         // pastel oranye
+  muted: '#2a1407',             // latar redup
+  shadow: '0 8px 32px 0 rgba(255, 153, 0, 0.15)',
+  link: '#ffb84d',
+  heading: '#ffd08a',
+  subheading: '#eabf99',
+  detail: '#ffe7b3',
+}
+
 interface ThemeContextProps {
   theme: Theme
   toggleTheme: () => void
@@ -59,6 +77,10 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
       setTheme('dark')
       setColors(darkTheme)
       root.classList.add('dark')
+    } else if (storedTheme === 'dusk') {
+      setTheme('dusk')
+      setColors(duskTheme)
+      root.classList.remove('dark')
     } else {
       setTheme('light')
       setColors(lightTheme)
@@ -66,19 +88,27 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [])
 
-  const toggleTheme = () => {
-    const newTheme: Theme = theme === 'light' ? 'dark' : 'light'
-    const root = document.documentElement
-
+  const setThemeAndColors = (newTheme: Theme) => {
     setTheme(newTheme)
     localStorage.setItem('theme', newTheme)
-    setColors(newTheme === 'dark' ? darkTheme : lightTheme)
 
+    const root = document.documentElement
     if (newTheme === 'dark') {
+      setColors(darkTheme)
       root.classList.add('dark')
+    } else if (newTheme === 'dusk') {
+      setColors(duskTheme)
+      root.classList.remove('dark')
     } else {
+      setColors(lightTheme)
       root.classList.remove('dark')
     }
+  }
+
+  const toggleTheme = () => {
+    const nextTheme: Theme =
+      theme === 'light' ? 'dusk' : theme === 'dusk' ? 'dark' : 'light'
+    setThemeAndColors(nextTheme)
   }
 
   return (
@@ -90,6 +120,7 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
 
 export const useTheme = () => {
   const context = useContext(ThemeContext)
-  if (!context) throw new Error('useTheme must be used within ThemeProvider')
+  if (!context)
+    throw new Error('useTheme must be used within ThemeProvider')
   return context
 }
