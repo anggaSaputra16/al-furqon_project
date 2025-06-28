@@ -15,6 +15,7 @@ import { iconMap } from '../../utils/iconMapper'
 import ActivityModal from '../path/ActivityModal'
 import { useTheme } from '@/context/themeContext'
 import HomeHeader from '../path/HomeHeader'
+import ActivityCarousel from '../path/ActivityCarousel'
 import { useArticleStore } from '../../stores/useArticleStore'
 import UniversalModal from '../path/UniversalModal'
 import UniversalCard from '../path/UniversalCard'
@@ -123,24 +124,27 @@ export default function HomePage() {
               style={{
                 color: colors.cardText,
                 fontFamily: 'var(--font-header-modern)',
-                fontSize: 'clamp(24px, 4vw, 28px)',
+                fontSize: 'clamp(26px, 5vw, 32px)',
                 lineHeight: '1.2',
-                fontWeight: '700'
+                fontWeight: '700',
+                letterSpacing: '-0.01em'
               }}
             >
               Aktivitas Terkini
             </h2>
             <a
-              href="#"
-              className="text-blue-600 text-sm hover:underline transition-colors font-sharp-light self-start sm:self-auto"
+              href="/artikel"
+              className="text-sm hover:underline transition-all duration-200 font-sharp-bold self-start sm:self-auto hover:gap-1 flex items-center gap-1"
               style={{
-                fontSize: '13px'
+                color: colors.accent,
+                fontSize: 'clamp(13px, 3vw, 14px)'
               }}
             >
               Lebih Lengkap
+              <span className="transition-transform duration-200 hover:translate-x-0.5">→</span>
             </a>
           </div>
-          <CardLayout cards={cards} onReorder={handleReorder} onShowDetail={setModalData} />
+          <ActivityCarousel articles={articles} autoplay={true} autoplayInterval={10000} />
         </section>
 
         {/* Program Mendatang Section */}
