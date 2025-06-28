@@ -13,15 +13,15 @@ export default function ThemeToggle() {
       aria-label="Toggle Theme"
       style={{ minWidth: 0, minHeight: 0 }}
     >
-      {theme === 'dark' ? (
-        <FaSun className="text-yellow-400 text-lg" />
+      {theme === 'light' ? (
+        <FaSun className="text-yellow-500 text-lg" />
       ) : theme === 'dusk' ? (
         <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="text-orange-400">
           <circle cx="10" cy="10" r="7" fill="#ffb347" />
           <ellipse cx="10" cy="15" rx="6" ry="2" fill="#e29547" fillOpacity=".5" />
         </svg>
       ) : (
-        <FaMoon className="text-gray-800 text-lg" />
+        <FaMoon className="text-blue-300 text-lg" />
       )}
     </button>
   )
