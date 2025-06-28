@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTheme } from '@/context/themeContext'
-import { FaChevronLeft, FaChevronRight, FaCalendar, FaUser, FaArrowRight } from 'react-icons/fa'
+import { FaChevronLeft, FaChevronRight, FaUser, FaArrowRight } from 'react-icons/fa'
 
 interface Article {
   id: string
@@ -161,9 +161,10 @@ export default function ActivityCarousel({
       return dateString // Return original string if can't parse
     }
 
+    // Return short format for badge (DD MMM YYYY)
     return date.toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'long',
+      day: '2-digit',
+      month: 'short',
       year: 'numeric'
     })
   }
@@ -225,6 +226,22 @@ export default function ActivityCarousel({
                       alt={article.title}
                       className="w-full h-full object-cover transition-transform duration-300"
                     />
+
+                    {/* Date Badge */}
+                    {article.date && (
+                      <div
+                        className="absolute top-3 right-3 px-2 py-1 rounded-lg text-xs font-medium backdrop-blur-md"
+                        style={{
+                          backgroundColor: `${colors.accent}90`,
+                          color: colors.card,
+                          fontFamily: 'var(--font-sharp-bold)',
+                          fontSize: 'clamp(10px, 2.5vw, 11px)'
+                        }}
+                      >
+                        {formatDate(article.date)}
+                      </div>
+                    )}
+
                     {article.category && (
                       <div className="absolute top-3 left-3">
                         <span
@@ -241,16 +258,9 @@ export default function ActivityCarousel({
                   </div>
 
                   <div className="p-4">
-                    {/* Meta info */}
-                    <div className="flex items-center gap-3 mb-3 text-xs">
-                      <div
-                        className="flex items-center gap-1"
-                        style={{ color: colors.subheading }}
-                      >
-                        <FaCalendar className="w-3 h-3" />
-                        <span>{article.date ? formatDate(article.date) : 'Tanggal tidak tersedia'}</span>
-                      </div>
-                      {article.author && (
+                    {/* Meta info - Remove date, keep author only */}
+                    {article.author && (
+                      <div className="flex items-center gap-1 mb-3 text-xs">
                         <div
                           className="flex items-center gap-1"
                           style={{ color: colors.subheading }}
@@ -258,8 +268,8 @@ export default function ActivityCarousel({
                           <FaUser className="w-3 h-3" />
                           <span>{article.author}</span>
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
 
                     {/* Title */}
                     <h3
@@ -340,6 +350,22 @@ export default function ActivityCarousel({
                       alt={article.title}
                       className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                     />
+
+                    {/* Date Badge */}
+                    {article.date && (
+                      <div
+                        className="absolute top-3 right-3 px-2 py-1 rounded-lg text-xs font-medium backdrop-blur-md"
+                        style={{
+                          backgroundColor: `${colors.accent}90`,
+                          color: colors.card,
+                          fontFamily: 'var(--font-sharp-bold)',
+                          fontSize: 'clamp(10px, 2.5vw, 11px)'
+                        }}
+                      >
+                        {formatDate(article.date)}
+                      </div>
+                    )}
+
                     {article.category && (
                       <div className="absolute top-3 left-3">
                         <span
@@ -356,16 +382,9 @@ export default function ActivityCarousel({
                   </div>
 
                   <div className="p-4 md:p-5">
-                    {/* Meta info */}
-                    <div className="flex items-center gap-4 mb-3 text-xs">
-                      <div
-                        className="flex items-center gap-1"
-                        style={{ color: colors.subheading }}
-                      >
-                        <FaCalendar className="w-3 h-3" />
-                        <span>{article.date ? formatDate(article.date) : 'Tanggal tidak tersedia'}</span>
-                      </div>
-                      {article.author && (
+                    {/* Meta info - Remove date, keep author only */}
+                    {article.author && (
+                      <div className="flex items-center gap-1 mb-3 text-xs">
                         <div
                           className="flex items-center gap-1"
                           style={{ color: colors.subheading }}
@@ -373,8 +392,8 @@ export default function ActivityCarousel({
                           <FaUser className="w-3 h-3" />
                           <span>{article.author}</span>
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
 
                     {/* Title */}
                     <h3
@@ -466,8 +485,8 @@ export default function ActivityCarousel({
               key={index}
               onClick={() => goToSlide(index)}
               className={`rounded-full transition-all duration-300 touch-manipulation ${index === currentIndex
-                  ? 'w-8 h-2 opacity-100'
-                  : 'w-2 h-2 opacity-50 hover:opacity-75'
+                ? 'w-8 h-2 opacity-100'
+                : 'w-2 h-2 opacity-50 hover:opacity-75'
                 }`}
               style={{
                 backgroundColor: colors.accent

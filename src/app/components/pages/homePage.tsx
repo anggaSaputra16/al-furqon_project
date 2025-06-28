@@ -58,6 +58,28 @@ export default function HomePage() {
     })
   }
 
+  // Donation modal functions
+  const handleQuickAmount = (amount: number) => {
+    setDonationAmount(amount.toString())
+  }
+
+  const handleCloseDonationModal = () => {
+    setShowDonationModal(null)
+    setDonationAmount('')
+    setDonorName('')
+  }
+
+  const handleDonationSubmit = () => {
+    if (!donorName.trim() || !donationAmount.trim()) {
+      alert('Mohon lengkapi nama dan nominal donasi')
+      return
+    }
+
+    // Here you would typically handle the donation submission
+    alert(`Terima kasih ${donorName} atas donasi Rp ${parseInt(donationAmount).toLocaleString('id-ID')}. Silakan lanjutkan ke pembayaran.`)
+    handleCloseDonationModal()
+  }
+
   const navItems: NavItem[] = menus.map((menu) => {
     const Icon = iconMap[menu.icon] || FaRoute
     return {
@@ -78,6 +100,8 @@ export default function HomePage() {
     donationCardsStatic.map(card => ({ ...card, size: card.size as 'large' | 'small' }))
   );
   const [showDonationModal, setShowDonationModal] = useState<CardData | null>(null)
+  const [donationAmount, setDonationAmount] = useState<string>('')
+  const [donorName, setDonorName] = useState<string>('')
 
   const [selectedNews, setSelectedNews] = useState<{
     image: string;
@@ -149,61 +173,228 @@ export default function HomePage() {
 
         {/* Bantuan Keagamaan Section */}
         <section className="space-y-4 sm:space-y-6 mt-8 sm:mt-12">
-          <h2
-            className="text-2xl sm:text-3xl font-bold text-center mb-6 sm:mb-8"
-            style={{
-              color: colors.cardText,
-              fontFamily: 'var(--font-header-masjid)',
-              fontSize: 'clamp(26px, 5vw, 34px)',
-              lineHeight: '1.2',
-              fontWeight: '900',
-              letterSpacing: '-0.02em'
-            }}
-          >
-            Bantuan Keagamaan Kami
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-            {donationCards.map((card) => (
-              <UniversalCard
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-6 sm:mb-8">
+            <h2
+              className="text-2xl sm:text-3xl font-bold"
+              style={{
+                color: colors.cardText,
+                fontFamily: 'var(--font-header-modern)',
+                fontSize: 'clamp(26px, 5vw, 32px)',
+                lineHeight: '1.2',
+                fontWeight: '700',
+                letterSpacing: '-0.01em'
+              }}
+            >
+              Bantuan Keagamaan Kami
+            </h2>
+            <a
+              href="/donasi"
+              className="text-sm hover:underline transition-all duration-200 font-sharp-bold self-start sm:self-auto hover:gap-1 flex items-center gap-1"
+              style={{
+                color: colors.accent,
+                fontSize: 'clamp(13px, 3vw, 14px)'
+              }}
+            >
+              Lihat Semua Program
+              <span className="transition-transform duration-200 hover:translate-x-0.5">→</span>
+            </a>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            {donationCards.map((card, index) => (
+              <div
                 key={card.id}
-                image={card.image}
-                title={card.title}
-                description={card.description}
-                detail={card.detail}
-                onButtonClick={() => setShowDonationModal(card)}
-                buttonLabel="Donasi Sekarang"
-              />
+                className="group"
+              >
+                <div
+                  className="rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 h-full border"
+                  style={{
+                    backgroundColor: colors.card,
+                    border: `1px solid ${colors.border}20`,
+                    transform: 'translateY(0)',
+                  }}
+                >
+                  {/* Image */}
+                  <div className="relative h-48 sm:h-52 overflow-hidden">
+                    <img
+                      src={card.image}
+                      alt={card.title}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-4 sm:p-5">
+                    {/* Title */}
+                    <h3
+                      className="font-bold text-lg mb-3 line-clamp-2 leading-tight"
+                      style={{
+                        color: colors.cardText,
+                        fontFamily: 'var(--font-header-modern)',
+                        fontSize: 'clamp(16px, 3vw, 18px)'
+                      }}
+                    >
+                      {card.title}
+                    </h3>
+
+                    {/* Description */}
+                    <p
+                      className="text-sm line-clamp-3 mb-4 leading-relaxed"
+                      style={{
+                        color: colors.detail,
+                        fontFamily: 'var(--font-sharp-light)',
+                        fontSize: 'clamp(13px, 2.5vw, 14px)'
+                      }}
+                    >
+                      {card.description}
+                    </p>
+
+                    {/* CTA Button */}
+                    <button
+                      onClick={() => setShowDonationModal(card)}
+                      className="w-full py-3 px-4 rounded-lg font-semibold transition-all duration-200 hover:transform hover:scale-[1.02] active:scale-[0.98] touch-manipulation group/btn"
+                      style={{
+                        backgroundColor: colors.accent,
+                        color: colors.card,
+                        border: `1px solid ${colors.accent}`,
+                        fontFamily: 'var(--font-sharp-bold)',
+                        fontSize: 'clamp(14px, 3vw, 15px)'
+                      }}
+                    >
+                      <span className="flex items-center justify-center gap-2">
+                        Donasi Sekarang
+                        <span className="transition-transform duration-200 group-hover/btn:translate-x-1">💝</span>
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         </section>
 
         {/* Berita Utama Section */}
         <section className="space-y-4 sm:space-y-6 mt-8 sm:mt-12">
-          <h2
-            className="text-2xl sm:text-3xl font-bold text-center mb-6 sm:mb-8"
-            style={{
-              color: colors.cardText,
-              fontFamily: 'var(--font-header-masjid)',
-              fontSize: 'clamp(26px, 5vw, 34px)',
-              lineHeight: '1.2',
-              fontWeight: '900',
-              letterSpacing: '-0.02em'
-            }}
-          >
-            Berita Utama
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-6 sm:mb-8">
+            <h2
+              className="text-2xl sm:text-3xl font-bold"
+              style={{
+                color: colors.cardText,
+                fontFamily: 'var(--font-header-modern)',
+                fontSize: 'clamp(26px, 5vw, 32px)',
+                lineHeight: '1.2',
+                fontWeight: '700',
+                letterSpacing: '-0.01em'
+              }}
+            >
+              Berita Utama
+            </h2>
+            <a
+              href="/berita"
+              className="text-sm hover:underline transition-all duration-200 font-sharp-bold self-start sm:self-auto hover:gap-1 flex items-center gap-1"
+              style={{
+                color: colors.accent,
+                fontSize: 'clamp(13px, 3vw, 14px)'
+              }}
+            >
+              Lihat Semua Berita
+              <span className="transition-transform duration-200 hover:translate-x-0.5">→</span>
+            </a>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {newsCards.map((news, idx) => (
-              <UniversalCard
+              <motion.div
                 key={news.title + idx}
-                variant="modern"
-                image={news.image}
-                title={news.title}
-                description={news.description}
-                detail={news.detail}
-                buttonLabel="Baca Selengkapnya"
-                onButtonClick={() => setSelectedNews(news)}
-              />
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  duration: 0.5,
+                  delay: idx * 0.1,
+                  ease: 'easeOut'
+                }}
+                className="group"
+              >
+                <div
+                  className="rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 h-full border"
+                  style={{
+                    backgroundColor: colors.card,
+                    border: `1px solid ${colors.border}20`,
+                    transform: 'translateY(0)',
+                  }}
+                >
+                  {/* Image */}
+                  <div className="relative h-48 sm:h-52 overflow-hidden">
+                    <img
+                      src={news.image}
+                      alt={news.title}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                    {/* Date Badge */}
+                    {news.detail && (
+                      <div
+                        className="absolute top-3 right-3 px-2 py-1 rounded-lg text-xs font-medium backdrop-blur-md"
+                        style={{
+                          backgroundColor: `${colors.accent}90`,
+                          color: colors.card,
+                          fontFamily: 'var(--font-sharp-bold)',
+                          fontSize: 'clamp(10px, 2.5vw, 11px)'
+                        }}
+                      >
+                        {news.detail}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-4 sm:p-5">
+                    {/* Title */}
+                    <h3
+                      className="font-bold text-lg mb-3 line-clamp-2 leading-tight"
+                      style={{
+                        color: colors.cardText,
+                        fontFamily: 'var(--font-header-modern)',
+                        fontSize: 'clamp(16px, 3vw, 18px)'
+                      }}
+                    >
+                      {news.title}
+                    </h3>
+
+                    {/* Description */}
+                    <p
+                      className="text-sm line-clamp-3 mb-4 leading-relaxed"
+                      style={{
+                        color: colors.detail,
+                        fontFamily: 'var(--font-sharp-light)',
+                        fontSize: 'clamp(13px, 2.5vw, 14px)'
+                      }}
+                    >
+                      {news.description}
+                    </p>
+
+                    {/* CTA Button */}
+                    <button
+                      onClick={() => setSelectedNews(news)}
+                      className="w-full py-3 px-4 rounded-lg font-semibold transition-all duration-200 hover:transform hover:scale-[1.02] active:scale-[0.98] touch-manipulation group/btn border-2 border-transparent hover:border-current"
+                      style={{
+                        backgroundColor: 'transparent',
+                        color: colors.accent,
+                        border: `2px solid ${colors.accent}`,
+                        fontFamily: 'var(--font-sharp-bold)',
+                        fontSize: 'clamp(14px, 3vw, 15px)'
+                      }}
+                    >
+                      <span className="flex items-center justify-center gap-2">
+                        Baca Selengkapnya
+                        <span className="transition-transform duration-200 group-hover/btn:translate-x-1">📖</span>
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
             ))}
           </div>
         </section>
@@ -249,86 +440,229 @@ export default function HomePage() {
       <ActivityModal data={modalData} onClose={() => setModalData(null)} />
       <Footer />
 
-      {/* Modal Donasi - Mobile Optimized */}
+      {/* Modal Donasi - Enhanced UI */}
       <UniversalModal
         open={!!showDonationModal}
-        onClose={() => setShowDonationModal(null)}
+        onClose={handleCloseDonationModal}
         title={showDonationModal?.title}
         description={showDonationModal?.description}
-        maxWidth="max-w-md"
+        maxWidth="max-w-lg"
       >
-        <div className="mb-4">
-          <span
-            className="block text-sm mb-1"
-            style={{
-              color: colors.detail,
-              fontFamily: 'var(--font-sharp-light)',
-              fontSize: 'clamp(14px, 3vw, 16px)',
-              lineHeight: '1.5'
-            }}
-          >
-            {showDonationModal?.detail}
-          </span>
-          <span
-            className="block text-xs"
+        <div className="space-y-4">
+          {/* Progress Indicator */}
+          {showDonationModal?.target && (
+            <div className="p-4 rounded-lg" style={{ backgroundColor: `${colors.accent}08`, border: `1px solid ${colors.accent}15` }}>
+              <div className="flex justify-between items-center mb-2">
+                <span
+                  className="text-sm font-medium"
+                  style={{
+                    color: colors.cardText,
+                    fontFamily: 'var(--font-sharp-bold)',
+                    fontSize: 'clamp(13px, 3vw, 14px)'
+                  }}
+                >
+                  Target Donasi
+                </span>
+                <span
+                  className="text-sm font-bold"
+                  style={{
+                    color: colors.accent,
+                    fontFamily: 'var(--font-sharp-bold)',
+                    fontSize: 'clamp(13px, 3vw, 14px)'
+                  }}
+                >
+                  Rp {showDonationModal.target.toLocaleString('id-ID')}
+                </span>
+              </div>
+
+              {/* Progress Bar */}
+              <div
+                className="w-full h-2 rounded-full overflow-hidden"
+                style={{ backgroundColor: `${colors.accent}20` }}
+              >
+                <div
+                  className="h-full rounded-full transition-all duration-500 ease-out"
+                  style={{
+                    backgroundColor: colors.accent,
+                    width: `${Math.min((showDonationModal.collected || 0) / showDonationModal.target * 100, 100)}%`
+                  }}
+                />
+              </div>
+
+              <div className="flex justify-between items-center mt-2">
+                <span
+                  className="text-xs"
+                  style={{
+                    color: colors.subheading,
+                    fontFamily: 'var(--font-sharp-light)',
+                    fontSize: 'clamp(11px, 2.5vw, 12px)'
+                  }}
+                >
+                  Terkumpul: Rp {(showDonationModal.collected || 0).toLocaleString('id-ID')}
+                </span>
+                <span
+                  className="text-xs font-medium"
+                  style={{
+                    color: colors.accent,
+                    fontFamily: 'var(--font-sharp-bold)',
+                    fontSize: 'clamp(11px, 2.5vw, 12px)'
+                  }}
+                >
+                  {Math.min(Math.round((showDonationModal.collected || 0) / showDonationModal.target * 100), 100)}%
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Program Details */}
+          <div className="p-4 rounded-lg" style={{ backgroundColor: `${colors.accent}10`, border: `1px solid ${colors.accent}20` }}>
+            <div className="flex items-start gap-3">
+              <div
+                className="w-2 h-2 rounded-full mt-2 flex-shrink-0"
+                style={{ backgroundColor: colors.accent }}
+              />
+              <div>
+                <span
+                  className="block text-sm mb-1 font-medium"
+                  style={{
+                    color: colors.cardText,
+                    fontFamily: 'var(--font-sharp-bold)',
+                    fontSize: 'clamp(14px, 3vw, 15px)',
+                    lineHeight: '1.5'
+                  }}
+                >
+                  {showDonationModal?.detail}
+                </span>
+                <span
+                  className="block text-xs"
+                  style={{
+                    color: colors.subheading,
+                    fontFamily: 'var(--font-sharp-light)',
+                    fontSize: 'clamp(11px, 2.5vw, 12px)'
+                  }}
+                >
+                  Bank Syariah Indonesia • Rekening: 1234567890
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Donation Form */}
+          <form className="space-y-4">
+            <div>
+              <label
+                className="block text-sm font-medium mb-2"
+                style={{
+                  color: colors.cardText,
+                  fontFamily: 'var(--font-sharp-bold)',
+                  fontSize: 'clamp(13px, 3vw, 14px)'
+                }}
+              >
+                Nama Donatur
+              </label>
+              <input
+                type="text"
+                value={donorName}
+                onChange={(e) => setDonorName(e.target.value)}
+                placeholder="Masukkan nama lengkap"
+                className="w-full px-4 py-3 rounded-lg border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-opacity-50 touch-manipulation"
+                style={{
+                  backgroundColor: colors.card,
+                  color: colors.cardText,
+                  border: `1px solid ${colors.border}40`,
+                  fontFamily: 'var(--font-sharp-light)',
+                  fontSize: 'clamp(14px, 3vw, 16px)'
+                }}
+              />
+            </div>
+
+            <div>
+              <label
+                className="block text-sm font-medium mb-2"
+                style={{
+                  color: colors.cardText,
+                  fontFamily: 'var(--font-sharp-bold)',
+                  fontSize: 'clamp(13px, 3vw, 14px)'
+                }}
+              >
+                Nominal Donasi
+              </label>
+              <div className="relative">
+                <span
+                  className="absolute left-4 top-1/2 transform -translate-y-1/2 text-sm"
+                  style={{ color: colors.subheading }}
+                >
+                  Rp
+                </span>
+                <input
+                  type="number"
+                  value={donationAmount}
+                  onChange={(e) => setDonationAmount(e.target.value)}
+                  placeholder="0"
+                  className="w-full pl-10 pr-4 py-3 rounded-lg border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-opacity-50 touch-manipulation"
+                  style={{
+                    backgroundColor: colors.card,
+                    color: colors.cardText,
+                    border: `1px solid ${colors.border}40`,
+                    fontFamily: 'var(--font-sharp-light)',
+                    fontSize: 'clamp(14px, 3vw, 16px)'
+                  }}
+                />
+              </div>
+
+              {/* Quick Amount Buttons */}
+              <div className="grid grid-cols-3 gap-2 mt-3">
+                {[50000, 100000, 250000].map((amount) => (
+                  <button
+                    key={amount}
+                    type="button"
+                    onClick={() => handleQuickAmount(amount)}
+                    className="py-2 px-3 rounded-lg text-xs font-medium transition-all duration-200 hover:scale-105 active:scale-95 touch-manipulation"
+                    style={{
+                      backgroundColor: donationAmount === amount.toString() ? colors.accent : `${colors.accent}15`,
+                      color: donationAmount === amount.toString() ? colors.card : colors.accent,
+                      border: `1px solid ${colors.accent}30`,
+                      fontFamily: 'var(--font-sharp-bold)'
+                    }}
+                  >
+                    Rp {amount.toLocaleString('id-ID')}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleDonationSubmit}
+              className="w-full py-4 rounded-lg font-semibold transition-all duration-200 hover:transform hover:scale-[1.02] active:scale-[0.98] touch-manipulation group"
+              style={{
+                backgroundColor: colors.accent,
+                color: colors.card,
+                border: `1px solid ${colors.accent}`,
+                fontFamily: 'var(--font-sharp-bold)',
+                fontSize: 'clamp(15px, 3.5vw, 16px)',
+                boxShadow: `0 4px 12px ${colors.accent}30`
+              }}
+            >
+              <span className="flex items-center justify-center gap-2">
+                💝 Donasi Sekarang
+                <span className="transition-transform duration-200 group-hover:translate-x-1">→</span>
+              </span>
+            </button>
+          </form>
+
+          <div
+            className="mt-4 text-center text-xs p-3 rounded-lg"
             style={{
               color: colors.subheading,
               fontFamily: 'var(--font-sharp-light)',
-              fontSize: 'clamp(11px, 2.5vw, 12px)'
+              fontSize: 'clamp(10px, 2vw, 11px)',
+              backgroundColor: `${colors.background}50`,
+              border: `1px solid ${colors.border}20`
             }}
           >
-            Rekening: 1234567890 (Bank Syariah)
-          </span>
-        </div>
-
-        <form className="space-y-3">
-          <input
-            type="text"
-            placeholder="Nama Donatur"
-            className="w-full px-3 py-3 sm:py-2 rounded border transition-colors touch-manipulation"
-            style={{
-              background: colors.card,
-              color: colors.cardText,
-              border: `1px solid ${colors.border}`,
-              fontFamily: 'var(--font-sharp-light)',
-              fontSize: 'clamp(14px, 3vw, 16px)'
-            }}
-          />
-          <input
-            type="number"
-            placeholder="Nominal Donasi"
-            className="w-full px-3 py-3 sm:py-2 rounded border transition-colors touch-manipulation"
-            style={{
-              background: colors.card,
-              color: colors.cardText,
-              border: `1px solid ${colors.border}`,
-              fontFamily: 'var(--font-sharp-light)',
-              fontSize: 'clamp(14px, 3vw, 16px)'
-            }}
-          />
-          <button
-            type="button"
-            className="w-full py-3 sm:py-2 rounded-lg font-semibold transition touch-manipulation"
-            style={{
-              background: colors.accent,
-              color: colors.card,
-              border: `1px solid ${colors.accent}`,
-              fontFamily: 'var(--font-sharp-bold)',
-              fontSize: 'clamp(15px, 3.5vw, 16px)'
-            }}
-          >
-            Donasi Sekarang
-          </button>
-        </form>
-        <div
-          className="mt-4 text-center text-xs"
-          style={{
-            color: colors.subheading,
-            fontFamily: 'var(--font-sharp-light)',
-            fontSize: 'clamp(10px, 2vw, 11px)'
-          }}
-        >
-          Simulasi Payment Gateway (QRIS, Transfer, dll)
+            🔒 Transaksi Aman • QRIS • Transfer Bank • E-Wallet
+          </div>
         </div>
       </UniversalModal>
 

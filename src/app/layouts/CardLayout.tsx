@@ -15,6 +15,8 @@ export type CardData = {
   detail?: string
   image: string
   size?: 'small' | 'large'
+  target?: number
+  collected?: number
 }
 
 type Props = {
