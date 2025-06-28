@@ -21,41 +21,65 @@ export default function RelatedArticles({ category, excludeId }: Props) {
   if (related.length === 0) return null
 
   return (
-    <div className="mt-10">
-      <h2 className="text-xl font-bold mb-4" style={{ color: colors.cardText }}>
+    <div className="w-full space-y-6">
+      <h2
+        className="text-xl sm:text-2xl font-bold"
+        style={{
+          color: colors.heading,
+          fontFamily: 'var(--font-header-masjid)',
+          fontWeight: '700',
+          letterSpacing: '-0.01em'
+        }}
+      >
         Artikel Terkait
       </h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {related.map((article) => (
           <Link
             key={article.id}
             href={`/artikel/${article.id}`}
-            className="flex items-center rounded-xl shadow-md hover:shadow-lg transition overflow-hidden"
+            className="group flex items-center rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden"
             style={{
               background: colors.card,
               color: colors.cardText,
               border: `1px solid ${colors.border || '#e5e7eb'}`,
             }}
           >
-            <div className="w-[65px] h-[65px] min-w-[65px] relative">
+            <div className="w-[70px] h-[70px] min-w-[70px] relative overflow-hidden">
               <Image
                 src={article.image}
                 alt={article.title}
                 fill
-                className="object-cover rounded-l-xl"
+                className="object-cover transition-transform duration-200 group-hover:scale-105"
               />
             </div>
-            <div className="p-3 pr-4 overflow-hidden">
+            <div className="p-4 pr-5 overflow-hidden flex-1">
               <h3
-                className="text-sm font-semibold truncate"
-                style={{ color: colors.cardText }}
+                className="text-sm sm:text-base font-semibold overflow-hidden group-hover:text-opacity-80 transition-colors"
+                style={{
+                  color: colors.cardText,
+                  fontFamily: 'var(--font-sharp-bold)',
+                  lineHeight: '1.3',
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical' as const,
+                  textOverflow: 'ellipsis'
+                }}
               >
                 {article.title}
               </h3>
               {article.date && (
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate">
-                  Program - {article.date}
-                </p>
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="text-xs px-2 py-1 rounded-full" style={{
+                    backgroundColor: `${colors.accent}20`,
+                    color: colors.accent
+                  }}>
+                    Program
+                  </span>
+                  <span className="text-xs" style={{ color: colors.subheading }}>
+                    {article.date}
+                  </span>
+                </div>
               )}
             </div>
           </Link>

@@ -215,7 +215,7 @@ export default function MasjidHeader() {
                 letterSpacing: '0.08em'
               }}
             >
-              {theme === 'light' ? 'Siang' : theme === 'dark' ? 'Malam' : 'Senja'}
+              {theme === 'light'}
             </span>
           </div>
         </div>

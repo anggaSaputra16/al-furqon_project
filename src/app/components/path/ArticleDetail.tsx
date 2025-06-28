@@ -31,37 +31,35 @@ export default function ArticleDetail({ articleId, showRelated = true }: Props) 
     id,
   } = article
 
-  const imageClasses = clsx('relative rounded-xl overflow-hidden shadow', {
-    'aspect-square w-full h-full': imageSize === 'large',
-    'w-full max-w-md aspect-[4/3]': imageSize === 'medium',
-    'w-full max-w-xs aspect-[4/3]': imageSize === 'small',
+  const imageClasses = clsx('relative rounded-xl overflow-hidden shadow-lg', {
+    'aspect-square': imageSize === 'large',
+    'aspect-[4/3]': imageSize === 'medium',
+    'aspect-[3/2]': imageSize === 'small',
   })
 
   const isImageLeft = imagePosition === 'left'
 
   return (
-    <section className="max-w-7xl mx-auto px-6 py-10 space-y-8">
-      <div className="space-y-1">
+    <article className="w-full space-y-6 md:space-y-8">
+      {/* Header Section */}
+      <header className="space-y-3">
         {tag && (
           <span
-            className="text-sm font-semibold uppercase"
+            className="inline-block text-xs sm:text-sm font-semibold uppercase tracking-wider px-3 py-1 rounded-full"
             style={{
               color: colors.accent,
+              backgroundColor: `${colors.accent}20`,
               fontFamily: 'var(--font-sharp-bold)',
-              fontSize: '14px',
-              letterSpacing: '0.05em'
             }}
           >
             {tag}
           </span>
         )}
         <h1
-          className="text-3xl font-extrabold"
+          className="text-2xl sm:text-3xl lg:text-4xl font-bold leading-tight"
           style={{
             color: colors.heading,
             fontFamily: 'var(--font-header-masjid)',
-            fontSize: '36px',
-            lineHeight: '1.2',
             fontWeight: '900',
             letterSpacing: '-0.02em'
           }}
@@ -69,45 +67,85 @@ export default function ArticleDetail({ articleId, showRelated = true }: Props) 
           {title}
         </h1>
         {date && (
-          <p
-            className="text-sm"
+          <div className="flex items-center gap-2 text-sm">
+            <svg className="w-4 h-4" style={{ color: colors.subheading }} fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+            </svg>
+            <span
+              style={{
+                color: colors.subheading,
+                fontFamily: 'var(--font-sharp-light)',
+              }}
+            >
+              {date}
+            </span>
+          </div>
+        )}
+      </header>
+
+      {/* Content Section */}
+      <div className="grid gap-6 lg:gap-8">
+        {/* Mobile: Stack vertically */}
+        <div className="block lg:hidden space-y-6">
+          <div className={imageClasses}>
+            <Image src={image} alt={title} fill className="object-cover" />
+          </div>
+          <div
+            className="space-y-4 text-justify leading-relaxed"
             style={{
-              color: colors.subheading,
+              color: colors.detail,
               fontFamily: 'var(--font-sharp-light)',
-              fontSize: '14px'
+              fontSize: '16px',
+              lineHeight: '1.7'
             }}
           >
-            {date}
-          </p>
-        )}
-      </div>
-
-      <div className="grid md:grid-cols-2 gap-6 items-start">
-        {isImageLeft && (
-          <div className={imageClasses}>
-            <Image src={image} alt={title} fill className="object-cover" />
+            {(content || '').split('\n').map((paragraph, index) => (
+              paragraph.trim() && (
+                <p key={index} className="mb-4">
+                  {paragraph}
+                </p>
+              )
+            ))}
           </div>
-        )}
-        <div
-          className="space-y-4 text-justify whitespace-pre-line"
-          style={{
-            color: colors.detail,
-            fontFamily: 'var(--font-sharp-light)',
-            fontSize: '16px',
-            lineHeight: '1.6'
-          }}
-        >
-          {content}
         </div>
 
-        {!isImageLeft && (
-          <div className={imageClasses}>
-            <Image src={image} alt={title} fill className="object-cover" />
+        {/* Desktop: Side by side */}
+        <div className="hidden lg:grid lg:grid-cols-2 lg:gap-8 lg:items-start">
+          {isImageLeft && (
+            <div className={imageClasses}>
+              <Image src={image} alt={title} fill className="object-cover" />
+            </div>
+          )}
+          <div
+            className="space-y-4 text-justify leading-relaxed"
+            style={{
+              color: colors.detail,
+              fontFamily: 'var(--font-sharp-light)',
+              fontSize: '16px',
+              lineHeight: '1.7'
+            }}
+          >
+            {(content || '').split('\n').map((paragraph, index) => (
+              paragraph.trim() && (
+                <p key={index} className="mb-4">
+                  {paragraph}
+                </p>
+              )
+            ))}
           </div>
-        )}
+          {!isImageLeft && (
+            <div className={imageClasses}>
+              <Image src={image} alt={title} fill className="object-cover" />
+            </div>
+          )}
+        </div>
       </div>
 
-      {showRelated && category && <RelatedArticles category={category} excludeId={id} />}
-    </section>
+      {showRelated && category && (
+        <div className="mt-8 pt-8 border-t" style={{ borderColor: colors.border }}>
+          <RelatedArticles category={category} excludeId={id} />
+        </div>
+      )}
+    </article>
   )
 }

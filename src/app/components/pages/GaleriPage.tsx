@@ -6,7 +6,6 @@ import GalleryMasonry from '@/app/components/path/GalleryMasonry'
 import GalleryModal from '@/app/components/path/GalleryModal'
 import MasjidHeader from '@/app/components/path/MasjidHeader'
 import Footer from '@/app/components/path/Footer'
-import ThemeToggle from '@/app/components/path/ThemeToggle'
 import { FaBars, FaTimes, FaRoute } from 'react-icons/fa'
 import UniversalNavGrid, { NavItem } from '@/app/components/path/UniversalNavGrid'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -20,7 +19,7 @@ export default function GaleriPage() {
   const { search } = useSearchStore()
   const [showNav, setShowNav] = useState(true)
   const { menus, fetchMenus } = useMenuStore()
-   const { colors } = useTheme()
+  const { colors } = useTheme()
 
   useEffect(() => {
     setImages([
@@ -168,18 +167,18 @@ export default function GaleriPage() {
     }
   })
 
-const filteredImages = (images || []).filter((img) => {
-  const searchWords = search.toLowerCase().split(' ').filter(Boolean)
-  const combinedText = [img.alt, img.description, img.detail, img.author]
-    .filter(Boolean)
-    .join(' ')
-    .toLowerCase()
+  const filteredImages = (images || []).filter((img) => {
+    const searchWords = search.toLowerCase().split(' ').filter(Boolean)
+    const combinedText = [img.alt, img.description, img.detail, img.author]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase()
 
-  return searchWords.every((word) => combinedText.includes(word))
-})
+    return searchWords.every((word) => combinedText.includes(word))
+  })
 
   return (
-     <main
+    <main
       style={{ background: colors.background, color: colors.cardText }}
       className="transition-colors duration-500"
     >

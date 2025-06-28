@@ -14,9 +14,7 @@ import MasjidHeader from '../path/MasjidHeader'
 import Footer from '../path/Footer'
 import ArticleCard from '../path/ArticleCard'
 import UniversalNavGrid, { NavItem } from '../path/UniversalNavGrid'
-import FacilityCard from '../path/FacilityCard'
 import FacilityRow from '../path/FacilityRow'
-import FacilityInfoModal from '../path/FacilityInfoModal'
 import { facilityCards } from '../../utils/staticData'
 
 export default function FasilitasPage() {
