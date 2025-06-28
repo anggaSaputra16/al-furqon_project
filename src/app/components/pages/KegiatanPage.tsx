@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useMemo } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
 import { FaSearch, FaRoute, FaChevronUp } from 'react-icons/fa'
 
@@ -20,12 +21,14 @@ export default function KegiatanPage() {
   const articles = useArticleStore((state) => state.articles)
   const fetchArticles = useArticleStore((state) => state.fetchArticles)
   const { menus, fetchMenus } = useMenuStore()
+  const searchParams = useSearchParams()
 
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('')
   const [selectedArticle, setSelectedArticle] = useState<string | null>(null)
   const [showScrollToTop, setShowScrollToTop] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
+  const [filterFromURL, setFilterFromURL] = useState(false)
 
   const ARTICLES_PER_PAGE = 8
 
@@ -33,6 +36,15 @@ export default function KegiatanPage() {
     fetchMenus()
     fetchArticles()
   }, [fetchMenus, fetchArticles])
+
+  // Handle URL filter parameter
+  useEffect(() => {
+    const filterParam = searchParams.get('filter')
+    if (filterParam) {
+      setSearchQuery(filterParam)
+      setFilterFromURL(true)
+    }
+  }, [searchParams])
 
   // Handle scroll to show scroll-to-top button
   useEffect(() => {
@@ -101,6 +113,7 @@ export default function KegiatanPage() {
   const clearAllFilters = () => {
     setSelectedCategory('')
     setSearchQuery('')
+    setFilterFromURL(false)
   }
 
   const hasActiveFilters = searchQuery !== '' || selectedCategory !== ''
@@ -213,7 +226,7 @@ export default function KegiatanPage() {
             >
               {searchQuery && (
                 <span
-                  className="px-3 py-1 rounded-full text-sm font-medium"
+                  className="px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1"
                   style={{
                     backgroundColor: colors.accent + '20',
                     color: colors.accent,
@@ -221,6 +234,11 @@ export default function KegiatanPage() {
                   }}
                 >
                   Pencarian: "{searchQuery}"
+                  {filterFromURL && (
+                    <span className="text-xs bg-blue-100 text-blue-600 px-1 rounded">
+                      dari fasilitas
+                    </span>
+                  )}
                 </span>
               )}
               {selectedCategory && (

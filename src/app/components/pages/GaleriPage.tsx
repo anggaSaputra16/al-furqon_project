@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
 import { FaRoute, FaChevronUp, FaSearch, FaTimes, FaImages } from 'react-icons/fa'
 
@@ -22,9 +23,21 @@ export default function GaleriPage() {
   const { search, setSearch } = useSearchStore()
   const { menus, fetchMenus } = useMenuStore()
   const { colors } = useTheme()
+  const searchParams = useSearchParams()
 
   const [showScrollToTop, setShowScrollToTop] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [filterFromURL, setFilterFromURL] = useState(false)
+
+  // Handle URL filter parameter
+  useEffect(() => {
+    const filterParam = searchParams.get('filter')
+    if (filterParam) {
+      setSearchQuery(filterParam)
+      setSearch(filterParam)
+      setFilterFromURL(true)
+    }
+  }, [searchParams, setSearch])
 
   // Handle scroll to show scroll-to-top button
   useEffect(() => {
@@ -199,11 +212,13 @@ export default function GaleriPage() {
   const handleSearchChange = (value: string) => {
     setSearchQuery(value)
     setSearch(value)
+    setFilterFromURL(false) // Clear URL filter indicator when user manually searches
   }
 
   const clearSearch = () => {
     setSearchQuery('')
     setSearch('')
+    setFilterFromURL(false)
   }
 
   const filteredImages = (images || []).filter((img) => {
@@ -315,14 +330,19 @@ export default function GaleriPage() {
             </div>
             {search && (
               <div
-                className="text-xs px-3 py-1 rounded-full"
+                className="text-xs px-3 py-1 rounded-full flex items-center gap-2"
                 style={{
                   backgroundColor: colors.accent + '15',
                   color: colors.accent,
                   fontFamily: 'var(--font-sharp-bold)'
                 }}
               >
-                Pencarian aktif: "{search}"
+                <span>Pencarian aktif: "{search}"</span>
+                {filterFromURL && (
+                  <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">
+                    dari fasilitas
+                  </span>
+                )}
               </div>
             )}
           </div>
