@@ -1,25 +1,53 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { FaRoute, FaChevronUp, FaSearch, FaTimes, FaImages } from 'react-icons/fa'
+
 import { useGalleryStore } from '../../stores/useGalleryStore'
+import { useMenuStore } from '../../stores/useMenuStore'
+import { useSearchStore } from '../../stores/useSearchStore'
+import { useTheme } from '@/context/themeContext'
+import { iconMap } from '@/app/utils/iconMapper'
+
 import GalleryMasonry from '@/app/components/path/GalleryMasonry'
 import GalleryModal from '@/app/components/path/GalleryModal'
 import MasjidHeader from '@/app/components/path/MasjidHeader'
 import Footer from '@/app/components/path/Footer'
-import { FaBars, FaTimes, FaRoute } from 'react-icons/fa'
+import ThemeToggle from '@/app/components/path/ThemeToggle'
 import UniversalNavGrid, { NavItem } from '@/app/components/path/UniversalNavGrid'
-import { AnimatePresence, motion } from 'framer-motion'
-import { useMenuStore } from '@/app/stores/useMenuStore'
-import { iconMap } from '@/app/utils/iconMapper'
-import { useSearchStore } from '@/app/stores/useSearchStore'
-import { useTheme } from '@/context/themeContext'
 
 export default function GaleriPage() {
   const { setImages, images } = useGalleryStore()
-  const { search } = useSearchStore()
-  const [showNav, setShowNav] = useState(true)
+  const { search, setSearch } = useSearchStore()
   const { menus, fetchMenus } = useMenuStore()
   const { colors } = useTheme()
+
+  const [showScrollToTop, setShowScrollToTop] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+
+  // Handle scroll to show scroll-to-top button
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY
+      const isMobile = window.innerWidth < 768
+      const scrollThreshold = isMobile ? 200 : 300
+      const shouldShow = scrollY > scrollThreshold
+
+      setShowScrollToTop(shouldShow)
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  // Scroll to top function
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    })
+  }
 
   useEffect(() => {
     setImages([
@@ -156,7 +184,7 @@ export default function GaleriPage() {
 
   useEffect(() => {
     fetchMenus()
-  }, [])
+  }, [fetchMenus])
 
   const navItems: NavItem[] = menus.map((menu) => {
     const Icon = iconMap[menu.icon] || FaRoute
@@ -166,6 +194,17 @@ export default function GaleriPage() {
       icon: <Icon />,
     }
   })
+
+  // Handle search input change
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value)
+    setSearch(value)
+  }
+
+  const clearSearch = () => {
+    setSearchQuery('')
+    setSearch('')
+  }
 
   const filteredImages = (images || []).filter((img) => {
     const searchWords = search.toLowerCase().split(' ').filter(Boolean)
@@ -183,38 +222,211 @@ export default function GaleriPage() {
       className="transition-colors duration-500"
     >
       <MasjidHeader />
-      <div className="max-w-7xl mx-auto px-6 space-y-8 mt-5">
-        <div className="flex justify-between items-center">
-          <div className="flex gap-2 items-center">
-            <button
-              onClick={() => setShowNav((prev) => !prev)}
-              className="text-xl p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition"
-              aria-label="Toggle Navigation"
-            >
-              {showNav ? <FaTimes /> : <FaBars />}
-            </button>
-          </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6 sm:space-y-8 mt-5">
+        {/* Navigation Grid */}
+        <div>
+          <UniversalNavGrid
+            items={navItems}
+            variant="default"
+            customClass="mb-8"
+          />
         </div>
 
-        <AnimatePresence>
-          {showNav && (
-            <motion.div
-              key="navgrid"
-              initial={{ opacity: 0, y: -20, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -20, scale: 0.95 }}
-              transition={{ duration: 0.3, ease: 'easeInOut' }}
+        {/* Page Header */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center space-y-6 py-8 sm:py-12"
+        >
+          <div className="space-y-4">
+            <h1
+              className="text-3xl sm:text-4xl font-bold"
+              style={{
+                color: colors.cardText,
+                fontFamily: 'var(--font-header-modern)',
+                fontSize: 'clamp(32px, 6vw, 48px)',
+                lineHeight: '1.1',
+                fontWeight: '700',
+                letterSpacing: '-0.02em'
+              }}
             >
-              <UniversalNavGrid items={navItems} />
-            </motion.div>
-          )}
-        </AnimatePresence>
+              Galeri Foto
+            </h1>
+            <p
+              className="text-lg sm:text-xl max-w-3xl mx-auto"
+              style={{
+                color: colors.detail,
+                fontFamily: 'var(--font-body)',
+                fontSize: 'clamp(16px, 4vw, 20px)',
+                lineHeight: '1.6'
+              }}
+            >
+              Dokumentasi kegiatan dan momen-momen berkesan di Masjid Al-Furqon
+            </p>
+          </div>
 
-        <section className="space-y-4">
-          <h1 className="text-2xl font-bold">Galeri</h1>
-          <GalleryMasonry images={filteredImages} />
+          {/* Search Bar */}
+          <div className="max-w-2xl mx-auto mt-8">
+            <div className="relative">
+              <FaSearch
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                size={16}
+              />
+              <input
+                type="text"
+                placeholder="Cari foto berdasarkan deskripsi, penulis, atau kata kunci..."
+                value={searchQuery}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                className="w-full pl-10 pr-12 py-3 rounded-xl border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-opacity-50"
+                style={{
+                  backgroundColor: colors.card,
+                  borderColor: colors.border,
+                  color: colors.cardText,
+                  fontFamily: 'var(--font-body)',
+                  fontSize: '16px'
+                }}
+              />
+              {searchQuery && (
+                <button
+                  onClick={clearSearch}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                >
+                  <FaTimes className="text-gray-400" size={14} />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Search Results Info */}
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+            <div
+              className="text-sm font-medium"
+              style={{
+                color: colors.detail,
+                fontFamily: 'var(--font-body)'
+              }}
+            >
+              {search ? (
+                <>Ditemukan {filteredImages.length} dari {images.length} foto</>
+              ) : (
+                <>Menampilkan {images.length} foto</>
+              )}
+            </div>
+            {search && (
+              <div
+                className="text-xs px-3 py-1 rounded-full"
+                style={{
+                  backgroundColor: colors.accent + '15',
+                  color: colors.accent,
+                  fontFamily: 'var(--font-sharp-bold)'
+                }}
+              >
+                Pencarian aktif: "{search}"
+              </div>
+            )}
+          </div>
+        </motion.section>
+
+        {/* Gallery Section */}
+        <section className="space-y-6 sm:space-y-8">
+          {filteredImages.length > 0 ? (
+            <div className="space-y-6">
+              {/* Gallery Header */}
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+                <h2
+                  className="text-2xl sm:text-3xl font-bold"
+                  style={{
+                    color: colors.cardText,
+                    fontFamily: 'var(--font-header-modern)',
+                    fontSize: 'clamp(24px, 4vw, 32px)',
+                    lineHeight: '1.2',
+                    fontWeight: '700',
+                    letterSpacing: '-0.01em'
+                  }}
+                >
+                  {search ? 'Hasil Pencarian' : 'Semua Foto'}
+                </h2>
+                <div
+                  className="text-sm px-4 py-2 rounded-full flex items-center gap-2"
+                  style={{
+                    backgroundColor: colors.accent + '20',
+                    color: colors.accent,
+                    fontFamily: 'var(--font-sharp-bold)',
+                    fontSize: '14px'
+                  }}
+                >
+                  <FaImages size={14} />
+                  {filteredImages.length} foto
+                </div>
+              </div>
+
+              {/* Gallery Masonry */}
+              <GalleryMasonry images={filteredImages} />
+            </div>
+          ) : (
+            <div className="text-center py-20 px-6">
+              <div className="max-w-md mx-auto space-y-6">
+                <div
+                  className="text-8xl opacity-50"
+                  style={{ color: colors.detail }}
+                >
+                  🖼️
+                </div>
+                <h3
+                  className="text-2xl font-bold"
+                  style={{
+                    color: colors.cardText,
+                    fontFamily: 'var(--font-header-modern)'
+                  }}
+                >
+                  Tidak Ada Foto Ditemukan
+                </h3>
+                <p
+                  className="text-base leading-relaxed"
+                  style={{
+                    color: colors.detail,
+                    fontFamily: 'var(--font-body)',
+                    lineHeight: '1.6'
+                  }}
+                >
+                  Maaf, tidak ada foto yang sesuai dengan pencarian Anda. Silakan coba dengan kata kunci yang berbeda.
+                </p>
+                <button
+                  onClick={clearSearch}
+                  className="px-6 py-3 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg"
+                  style={{
+                    backgroundColor: colors.accent,
+                    color: 'white',
+                    fontFamily: 'var(--font-sharp-bold)'
+                  }}
+                >
+                  Lihat Semua Foto
+                </button>
+              </div>
+            </div>
+          )}
         </section>
       </div>
+
+      {/* Scroll to Top Button */}
+      <AnimatePresence>
+        {showScrollToTop && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            onClick={scrollToTop}
+            className="fixed bottom-6 right-6 p-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 z-40"
+            style={{
+              backgroundColor: colors.accent,
+              color: 'white'
+            }}
+          >
+            <FaChevronUp size={20} />
+          </motion.button>
+        )}
+      </AnimatePresence>
 
       <GalleryModal />
       <Footer />
