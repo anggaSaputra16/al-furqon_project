@@ -11,7 +11,7 @@ const lightTheme = {
   card: '#ffffff', // pure white for cards
   cardText: '#7c5c3b', // brown for text (lihat gambar)
   accent: '#e29547', // warm orange accent
-  footer: '#f3ede7', // pastel cream for footer
+  footer: '#7c5c3b', // darker brown for better contrast
   border: '#e7e1d7', // border beige
   secondary: '#b89c7d', // gold/brown secondary
   muted: '#f3ede7', // background section
@@ -28,7 +28,7 @@ const darkTheme = {
   card: '#232336',
   cardText: '#f1f5f9',
   accent: '#7f9cf5',
-  footer: '#111', // solid black for footer
+  footer: '#0d1117', // darker than background for contrast
   border: '#232336',
   secondary: '#7f9cf5',
   muted: '#181c24',
@@ -46,7 +46,7 @@ const duskTheme = {
   card: '#3e2210',              // coklat kemerahan gelap
   cardText: '#ffbe6a',          // oranye keemasan terang
   accent: '#ff9900',            // oranye sunset hangat
-  footer: '#241106',            // coklat tua
+  footer: '#0f0704',            // much darker brown for contrast
   border: '#a86c2c',            // coklat emas
   secondary: '#e6a86a',         // pastel oranye
   muted: '#2a1407',             // latar redup
