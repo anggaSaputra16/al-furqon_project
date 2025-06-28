@@ -56,6 +56,30 @@ export default function MasjidHeader() {
     }
     return jadwalSholatRange[0]
   }
+  // Function untuk mendapatkan sholat selanjutnya
+  function getNextSholat() {
+    const currentIndex = jadwalSholat.findIndex(j => j.name === currentSholat.name)
+    const nextIndex = (currentIndex + 1) % jadwalSholat.length
+    return jadwalSholat[nextIndex]
+  }
+
+  // Function untuk format hari dan tanggal
+  function getDateInfo() {
+    const now = new Date()
+    const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
+
+    const dayName = days[now.getDay()]
+    const date = now.getDate()
+    const month = months[now.getMonth()]
+    const year = now.getFullYear()
+
+    return {
+      dayName,
+      dateString: `${date} ${month} ${year}`
+    }
+  }
+
   const currentSholat = getCurrentSholat()
 
   useEffect(() => {
@@ -127,13 +151,16 @@ export default function MasjidHeader() {
     }
   }
 
-  // Pilih icon sesuai waktu sholat
-  let sholatIcon = <FaRegClock className="text-2xl text-accent" />
-  if (currentSholat.name === 'Fajr') sholatIcon = <FaSun className="text-2xl text-yellow-400" />
-  else if (currentSholat.name === 'Dhuhr') sholatIcon = <FaCloudSun className="text-2xl text-yellow-500" />
-  else if (currentSholat.name === 'Asr') sholatIcon = <FaCloudSun className="text-2xl text-orange-400" />
-  else if (currentSholat.name === 'Maghrib') sholatIcon = <FaCloudMoon className="text-2xl text-orange-500" />
-  else if (currentSholat.name === 'Isha') sholatIcon = <FaMoon className="text-2xl text-blue-400" />
+  // Pilih icon sesuai waktu sholat selanjutnya
+  const nextSholat = getNextSholat()
+  const dateInfo = getDateInfo()
+
+  let nextSholatIcon = <FaRegClock className="text-3xl text-white" />
+  if (nextSholat?.name === 'Fajr') nextSholatIcon = <FaSun className="text-3xl text-yellow-400" />
+  else if (nextSholat?.name === 'Dhuhr') nextSholatIcon = <FaCloudSun className="text-3xl text-yellow-500" />
+  else if (nextSholat?.name === 'Asr') nextSholatIcon = <FaCloudSun className="text-3xl text-orange-400" />
+  else if (nextSholat?.name === 'Maghrib') nextSholatIcon = <FaCloudMoon className="text-3xl text-orange-500" />
+  else if (nextSholat?.name === 'Isha') nextSholatIcon = <FaMoon className="text-3xl text-blue-400" />
 
   return (
     <div
@@ -201,37 +228,65 @@ export default function MasjidHeader() {
           className="absolute inset-0 flex flex-col items-center justify-center z-20 pointer-events-none"
           style={{ color: colors.cardText }}
         >
-          <div className="bg-black/40 px-8 py-6 rounded-2xl flex flex-col gap-2 items-center shadow-lg">
-            <div className="mb-2">{sholatIcon}</div>            <div
-              className="text-2xl font-bold tracking-widest mb-2"
-              style={{
-                fontFamily: 'var(--font-header-masjid)',
-                fontSize: '26px',
-                letterSpacing: '0.15em',
-                fontWeight: '900'
-              }}
-            >
-              Jadwal Sholat
+          <div className="bg-black/50 backdrop-blur-sm px-6 py-4 rounded-2xl flex flex-col md:flex-row gap-4 md:gap-8 items-center shadow-2xl border border-white/20 max-w-4xl mx-4">
+            {/* Date Info Section */}
+            <div className="text-center min-w-[120px]">
+              <div
+                className="text-lg font-semibold text-white mb-1"
+                style={{
+                  fontFamily: 'var(--font-header-modern)',
+                  fontSize: '18px',
+                  fontWeight: '600'
+                }}
+              >
+                {dateInfo.dayName}
+              </div>
+              <div
+                className="text-sm text-white/80"
+                style={{
+                  fontFamily: 'var(--font-sharp-light)',
+                  fontSize: '14px'
+                }}
+              >
+                {dateInfo.dateString}
+              </div>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 text-center">
+
+            {/* Divider - Horizontal on mobile, Vertical on desktop */}
+            <div className="w-20 h-[1px] md:w-[1px] md:h-16 bg-white/30"></div>
+
+            {/* Quick Prayer Times - Responsive Layout */}
+            <div className="grid grid-cols-5 md:flex gap-2 md:gap-4 text-center">
               {jadwalSholat.map((item) => {
-                const isActive = item.name === currentSholat.name
+                const isNext = item.name === nextSholat?.name
+                const isCurrent = item.name === currentSholat.name
                 return (
-                  <div key={item.name}>                    <div
-                    className={`text-xs uppercase ${isActive ? 'text-yellow-400 font-bold' : 'text-gray-200'}`}
-                    style={{
-                      fontFamily: 'var(--font-sharp-light)',
-                      fontSize: '11px',
-                      letterSpacing: '0.05em'
-                    }}
+                  <div
+                    key={item.name}
+                    className={`transition-all duration-300 min-w-[50px] md:min-w-[60px] ${isNext ? 'scale-110 opacity-100' :
+                      isCurrent ? 'opacity-80' : 'opacity-60'
+                      }`}
                   >
-                    {item.name}
-                  </div>
                     <div
-                      className={`text-2xl font-mono font-extrabold ${isActive ? 'text-yellow-300' : ''}`}
+                      className={`text-[10px] md:text-xs uppercase ${isNext ? 'text-yellow-300' :
+                        isCurrent ? 'text-white/70' : 'text-white/50'
+                        }`}
+                      style={{
+                        fontFamily: 'var(--font-sharp-light)',
+                        fontSize: '10px',
+                        letterSpacing: '0.05em'
+                      }}
+                    >
+                      {item.name}
+                    </div>
+                    <div
+                      className={`text-sm md:text-lg font-mono ${isNext ? 'text-yellow-300 font-bold' :
+                        isCurrent ? 'text-white/80' : 'text-white/60'
+                        }`}
                       style={{
                         fontFamily: 'var(--font-sharp-bold)',
-                        fontSize: '22px'
+                        fontSize: '14px',
+                        fontWeight: '700'
                       }}
                     >
                       {item.time}
@@ -242,7 +297,8 @@ export default function MasjidHeader() {
             </div>
           </div>
         </div>
-      )}      <div
+      )}
+      <div
         className={`absolute bottom-0 left-0 right-0 flex items-center justify-between gap-3 p-4 rounded-t-xl shadow-lg transition-all duration-300 z-10 ${minimized ? 'bg-opacity-90 bg-black/60' : ''
           }`}
         style={{ background: minimized ? colors.card : colors.card, color: colors.cardText }}
