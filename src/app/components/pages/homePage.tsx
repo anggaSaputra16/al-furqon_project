@@ -147,35 +147,6 @@ export default function HomePage() {
           <ActivityCarousel articles={articles} autoplay={true} autoplayInterval={10000} />
         </section>
 
-        {/* Program Mendatang Section */}
-        <section className="space-y-4 sm:space-y-6 mt-8 sm:mt-12">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-            <h2
-              className="text-2xl sm:text-3xl font-bold"
-              style={{
-                color: colors.cardText,
-                fontFamily: 'var(--font-header-modern)',
-                fontSize: 'clamp(24px, 4vw, 28px)',
-                lineHeight: '1.2',
-                fontWeight: '700'
-              }}
-            >
-              Program Mendatang
-            </h2>
-            <a
-              href="#"
-              className="text-blue-600 text-sm hover:underline transition-colors self-start sm:self-auto"
-              style={{
-                fontFamily: 'var(--font-sharp-light)',
-                fontSize: '13px'
-              }}
-            >
-              Lihat Semua
-            </a>
-          </div>
-          <CardLayout cards={upcomingCards} onReorder={handleReorderUpcoming} onShowDetail={setModalData} />
-        </section>
-
         {/* Bantuan Keagamaan Section */}
         <section className="space-y-4 sm:space-y-6 mt-8 sm:mt-12">
           <h2
@@ -346,7 +317,7 @@ export default function HomePage() {
               fontSize: 'clamp(15px, 3.5vw, 16px)'
             }}
           >
-            Bayar Sekarang
+            Donasi Sekarang
           </button>
         </form>
         <div

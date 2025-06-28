@@ -23,9 +23,9 @@ interface ActivityCarouselProps {
   autoplayInterval?: number
 }
 
-export default function ActivityCarousel({ 
-  articles = [], 
-  autoplay = true, 
+export default function ActivityCarousel({
+  articles = [],
+  autoplay = true,
   autoplayInterval = 10000 // 10 seconds
 }: ActivityCarouselProps) {
   const { colors } = useTheme()
@@ -48,10 +48,10 @@ export default function ActivityCarousel({
       setCurrentIndex((prevIndex) => {
         // Same logic as goToNext for autoplay
         const isDesktop = window.innerWidth >= 768
-        const maxIndex = isDesktop 
-          ? Math.max(0, latestArticles.length - 3) 
+        const maxIndex = isDesktop
+          ? Math.max(0, latestArticles.length - 3)
           : latestArticles.length - 1
-        
+
         const nextIndex = prevIndex + 1
         return nextIndex > maxIndex ? 0 : nextIndex
       })
@@ -73,10 +73,10 @@ export default function ActivityCarousel({
   const goToNext = () => {
     setDirection(1)
     // For desktop: move by 1, for mobile: move through all articles
-    const maxIndex = window.innerWidth >= 768 
+    const maxIndex = window.innerWidth >= 768
       ? Math.max(0, latestArticles.length - 3) // Desktop: stop when showing last 3 articles
       : latestArticles.length - 1 // Mobile: go through all articles
-    
+
     setCurrentIndex((prevIndex) => {
       const nextIndex = prevIndex + 1
       return nextIndex > maxIndex ? 0 : nextIndex
@@ -86,10 +86,10 @@ export default function ActivityCarousel({
 
   const goToPrev = () => {
     setDirection(-1)
-    const maxIndex = window.innerWidth >= 768 
+    const maxIndex = window.innerWidth >= 768
       ? Math.max(0, latestArticles.length - 3)
       : latestArticles.length - 1
-    
+
     setCurrentIndex((prevIndex) => {
       const nextIndex = prevIndex - 1
       return nextIndex < 0 ? maxIndex : nextIndex
@@ -130,10 +130,10 @@ export default function ActivityCarousel({
   const formatDate = (dateString: string) => {
     // Handle different date formats
     if (!dateString) return 'Tanggal tidak tersedia'
-    
+
     // Try to parse the date string
     let date: Date
-    
+
     // Check if it's already in DD Month YYYY format (Indonesian)
     if (dateString.includes(' ')) {
       // For dates like "27 Mei 2025", we need to convert to valid format
@@ -142,7 +142,7 @@ export default function ActivityCarousel({
         'Mei': '05', 'Juni': '06', 'Juli': '07', 'Agustus': '08',
         'September': '09', 'Oktober': '10', 'November': '11', 'Desember': '12'
       }
-      
+
       const parts = dateString.split(' ')
       if (parts.length === 3) {
         const day = parts[0].padStart(2, '0')
@@ -155,16 +155,16 @@ export default function ActivityCarousel({
     } else {
       date = new Date(dateString)
     }
-    
+
     // Check if date is valid
     if (isNaN(date.getTime())) {
       return dateString // Return original string if can't parse
     }
-    
-    return date.toLocaleDateString('id-ID', { 
-      day: 'numeric', 
-      month: 'long', 
-      year: 'numeric' 
+
+    return date.toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
     })
   }
 
@@ -178,14 +178,14 @@ export default function ActivityCarousel({
   }
 
   return (
-    <div 
+    <div
       className="relative w-full"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
       {/* Mobile: Show 1 card at a time with smooth transition */}
       <div className="block md:hidden">
-        <div 
+        <div
           className="relative overflow-hidden rounded-xl"
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
@@ -243,7 +243,7 @@ export default function ActivityCarousel({
                   <div className="p-4">
                     {/* Meta info */}
                     <div className="flex items-center gap-3 mb-3 text-xs">
-                      <div 
+                      <div
                         className="flex items-center gap-1"
                         style={{ color: colors.subheading }}
                       >
@@ -251,7 +251,7 @@ export default function ActivityCarousel({
                         <span>{article.date ? formatDate(article.date) : 'Tanggal tidak tersedia'}</span>
                       </div>
                       {article.author && (
-                        <div 
+                        <div
                           className="flex items-center gap-1"
                           style={{ color: colors.subheading }}
                         >
@@ -358,7 +358,7 @@ export default function ActivityCarousel({
                   <div className="p-4 md:p-5">
                     {/* Meta info */}
                     <div className="flex items-center gap-4 mb-3 text-xs">
-                      <div 
+                      <div
                         className="flex items-center gap-1"
                         style={{ color: colors.subheading }}
                       >
@@ -366,7 +366,7 @@ export default function ActivityCarousel({
                         <span>{article.date ? formatDate(article.date) : 'Tanggal tidak tersedia'}</span>
                       </div>
                       {article.author && (
-                        <div 
+                        <div
                           className="flex items-center gap-1"
                           style={{ color: colors.subheading }}
                         >
@@ -457,19 +457,18 @@ export default function ActivityCarousel({
         {/* For desktop: show dots based on number of possible slides */}
         {(() => {
           const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768
-          const totalDots = isDesktop 
+          const totalDots = isDesktop
             ? Math.max(1, latestArticles.length - 2) // Desktop: number of possible slide positions
             : latestArticles.length // Mobile: one dot per article
-          
+
           return Array.from({ length: totalDots }).map((_, index) => (
             <button
               key={index}
               onClick={() => goToSlide(index)}
-              className={`rounded-full transition-all duration-300 touch-manipulation ${
-                index === currentIndex 
-                  ? 'w-8 h-2 opacity-100' 
+              className={`rounded-full transition-all duration-300 touch-manipulation ${index === currentIndex
+                  ? 'w-8 h-2 opacity-100'
                   : 'w-2 h-2 opacity-50 hover:opacity-75'
-              }`}
+                }`}
               style={{
                 backgroundColor: colors.accent
               }}
@@ -497,7 +496,7 @@ export default function ActivityCarousel({
             <div className="w-1 h-1 bg-current opacity-70 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
           </div>
         </div>
-        
+
         {/* Auto-play progress indicator */}
         {isAutoPlaying && latestArticles.length > 1 && (
           <div className="mt-2 mx-auto w-16 h-1 bg-gray-200 rounded-full overflow-hidden">
@@ -506,7 +505,7 @@ export default function ActivityCarousel({
               style={{ backgroundColor: colors.accent }}
               initial={{ width: '0%' }}
               animate={{ width: '100%' }}
-              transition={{ 
+              transition={{
                 duration: autoplayInterval / 1000,
                 ease: 'linear',
                 repeat: Infinity
