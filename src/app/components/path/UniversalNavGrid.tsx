@@ -15,82 +15,153 @@ export interface NavItem {
 interface UniversalNavGridProps {
   items: NavItem[]
   customClass?: string
+  variant?: 'default' | 'compact'
 }
 
-export default function UniversalNavGrid({ items, customClass = '' }: UniversalNavGridProps) {
+export default function UniversalNavGrid({
+  items,
+  customClass = '',
+  variant = 'default'
+}: UniversalNavGridProps) {
   const { colors } = useTheme()
   const pathname = usePathname()
+  const [scrollY, setScrollY] = useState(0)
+  const [isVisible, setIsVisible] = useState(true)
+  const [isMobile, setIsMobile] = useState(false)
 
-  // Sticky nav state
-  const [isSticky, setIsSticky] = useState(false)
-  const [showNav, setShowNav] = useState(true)
+  // Update mobile state on resize
+  useEffect(() => {
+    const updateMobileState = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+
+    updateMobileState() // Call once on mount
+    window.addEventListener('resize', updateMobileState, { passive: true })
+    return () => window.removeEventListener('resize', updateMobileState)
+  }, [])
 
   useEffect(() => {
+    let ticking = false
+
     const handleScroll = () => {
-      if (window.scrollY > 80) {
-        setIsSticky(true)
-        setShowNav(true)
-      } else {
-        setIsSticky(false)
-        setShowNav(false)
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          const currentScrollY = window.scrollY
+          setScrollY(currentScrollY)
+
+          // Simplified show/hide logic
+          if (currentScrollY > 150) {
+            setIsVisible(false)
+          } else {
+            setIsVisible(true)
+          }
+
+          ticking = false
+        })
+        ticking = true
       }
     }
-    window.addEventListener('scroll', handleScroll)
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  // Determine if we should show compact mode - only for mobile
+  const isCompact = variant === 'compact' && isMobile
 
   return (
     <div className={clsx('w-full flex justify-center', customClass)}>
       <div
         className={clsx(
-          isSticky
-            ? 'fixed bottom-0 left-0 right-0 z-50 backdrop-blur-md bg-white/40 dark:bg-black/30 py-2 transition-all duration-300'
+          'w-full transition-all duration-500 ease-in-out',
+          isCompact && scrollY > 150 && isMobile
+            ? 'fixed bottom-0 left-0 right-0 z-40 backdrop-blur-lg border-t md:relative md:backdrop-blur-none md:border-t-0'
             : 'relative',
-          'w-full flex justify-center pointer-events-none'
+          !isVisible && isCompact && isMobile && 'translate-y-full opacity-0'
         )}
         style={{
-          background: isSticky ? undefined : 'transparent',
-          color: colors.cardText,
-          boxShadow: isSticky ? '0 -2px 16px 0 rgba(0,0,0,0.10)' : 'none',
+          backgroundColor: isCompact && scrollY > 150 && isMobile
+            ? colors.background + 'F5'
+            : 'transparent',
+          borderTopColor: isCompact && scrollY > 150 && isMobile
+            ? colors.cardText + '20'
+            : 'transparent',
+          boxShadow: isCompact && scrollY > 150 && isMobile
+            ? `0 -4px 20px 0 ${colors.background}40`
+            : 'none',
         }}
       >
         <div
           className={clsx(
-            'max-w-5xl mx-auto flex flex-wrap gap-4 justify-center items-center px-4 pointer-events-auto',
-            isSticky ? 'py-2' : 'py-6'
+            'max-w-5xl mx-auto flex flex-wrap gap-2 sm:gap-4 md:gap-4 justify-center items-center px-2 sm:px-4 transition-all duration-300',
+            isCompact && scrollY > 150 && isMobile ? 'py-2 sm:py-3' : 'py-4 sm:py-6'
           )}
         >
           {items.map((item, index) => {
             const isActive = pathname === item.href
+            const shouldShowCompact = isCompact && scrollY > 150 && isMobile
+
             return (
               <Link href={item.href} key={index}>
                 <div
                   className={clsx(
-                    'transition-all duration-200 flex flex-col justify-center items-center shadow-sm border',
-                    isSticky
-                      ? 'w-12 h-12 p-0 rounded-full bg-opacity-80'
-                      : 'w-[120px] h-[105px] rounded-2xl',
-                    isActive && 'ring-2 ring-accent ring-offset-2 ring-offset-transparent'
+                    'group relative transition-all duration-300 flex flex-col justify-center items-center border border-opacity-30 hover:border-opacity-60 touch-manipulation',
+                    shouldShowCompact
+                      ? 'w-10 h-10 sm:w-12 sm:h-12 rounded-full hover:scale-110'
+                      : 'w-[100px] h-[90px] sm:w-[120px] sm:h-[105px] md:w-[130px] md:h-[115px] rounded-2xl hover:scale-105 hover:shadow-lg',
+                    isActive && !shouldShowCompact && 'ring-2 ring-opacity-50 shadow-lg',
+                    isActive && shouldShowCompact && 'ring-2 ring-opacity-60'
                   )}
                   style={{
-                    background: isActive ? colors.accent : colors.card,
+                    background: isActive
+                      ? `linear-gradient(135deg, ${colors.accent}, ${colors.accent}E0)`
+                      : shouldShowCompact
+                        ? colors.card + 'E0'
+                        : colors.card,
                     color: isActive ? '#fff' : colors.cardText,
-                    border: isActive ? '2px solid transparent' : `1px solid ${colors.card}`
+                    borderColor: isActive ? colors.accent : colors.cardText + '30',
+                    ['--tw-ring-color' as any]: colors.accent,
+                    backdropFilter: shouldShowCompact ? 'blur(10px)' : 'none'
                   }}
                 >
+                  {/* Icon */}
                   <div
                     className={clsx(
-                      isSticky ? 'text-lg mb-0' : 'text-[28px] mb-1',
-                      'transition-colors duration-200'
+                      'transition-all duration-300 flex items-center justify-center',
+                      shouldShowCompact
+                        ? 'text-base sm:text-lg'
+                        : 'text-[22px] sm:text-[28px] md:text-[30px] mb-1'
                     )}
                     style={{ color: isActive ? '#fff' : colors.cardText }}
                   >
                     {item.icon}
                   </div>
-                  {!isSticky && (
-                    <span className="text-sm font-medium text-center mt-1">
+
+                  {/* Title - always show on desktop, conditional on mobile */}
+                  {!shouldShowCompact && (
+                    <span
+                      className="text-xs sm:text-sm md:text-base font-medium text-center leading-tight transition-colors duration-300 px-1"
+                      style={{
+                        color: isActive ? '#fff' : colors.cardText,
+                        fontFamily: 'var(--font-body-light)'
+                      }}
+                    >
                       {item.title}
                     </span>
+                  )}
+
+                  {/* Tooltip for compact mode */}
+                  {shouldShowCompact && (
+                    <div
+                      className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50"
+                      style={{
+                        backgroundColor: colors.background + 'F0',
+                        color: colors.cardText,
+                        border: `1px solid ${colors.cardText}20`
+                      }}
+                    >
+                      {item.title}
+                    </div>
                   )}
                 </div>
               </Link>

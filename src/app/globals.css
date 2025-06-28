@@ -67,3 +67,79 @@ body {
 .font-arabic {
   font-family: var(--font-arabic) !important;
 }
+
+/* Mobile-first responsive utilities */
+.touch-manipulation {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Extra small screen utility (for very small phones) */
+@media (min-width: 475px) {
+  .xs\:inline {
+    display: inline;
+  }
+  
+  .xs\:block {
+    display: block;
+  }
+  
+  .xs\:flex {
+    display: flex;
+  }
+}
+
+/* Better mobile scrolling */
+.mobile-scroll {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Modal specific mobile improvements */
+.modal-mobile {
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-top: env(safe-area-inset-top);
+}
+
+/* Improved touch targets for mobile */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Navigation specific mobile improvements */
+.nav-mobile-friendly {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+/* Better modal backdrop for mobile */
+.backdrop-mobile {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Scroll to top button mobile optimization */
+.scroll-to-top-mobile {
+  position: fixed !important;
+  z-index: 9999 !important;
+  bottom: 1rem !important;
+  right: 1rem !important;
+  pointer-events: auto !important;
+  touch-action: manipulation !important;
+}
+
+@media (min-width: 640px) {
+  .scroll-to-top-mobile {
+    bottom: 1.5rem !important;
+    right: 1.5rem !important;
+  }
+}
+
+/* Ensure scroll button is always visible on mobile */
+@media (max-width: 767px) {
+  .scroll-to-top-mobile {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+}

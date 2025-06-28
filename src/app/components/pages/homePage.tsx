@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import GuideSection from '@/app/contents/section/GuideSection'
 import AboutSection from '@/app/contents/section/AboutSection'
 import UniversalNavGrid, { NavItem } from '../path/UniversalNavGrid'
-import { FaBars, FaTimes, FaRoute } from 'react-icons/fa'
+import { FaRoute, FaChevronUp } from 'react-icons/fa'
 import { AnimatePresence, motion } from 'framer-motion'
 import Footer from '../path/Footer'
 import ThemeToggle from '../path/ThemeToggle'
@@ -22,8 +22,8 @@ import UniversalCard from '../path/UniversalCard'
 import { donationCards as donationCardsStatic, newsCards, activityCards as activityCardsStatic, upcomingCards as upcomingCardsStatic } from '../../utils/staticData'
 
 export default function HomePage() {
-  const [showNav, setShowNav] = useState(true)
   const [modalData, setModalData] = useState<CardData | null>(null)
+  const [showScrollToTop, setShowScrollToTop] = useState(false)
   const { colors } = useTheme()
   const { menus, fetchMenus } = useMenuStore()
   const { articles, fetchArticles } = useArticleStore()
@@ -32,6 +32,31 @@ export default function HomePage() {
     fetchMenus()
     fetchArticles()
   }, [fetchMenus, fetchArticles])
+
+  // Handle scroll to show scroll-to-top button only
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY
+
+      // Show scroll-to-top button after 200px scroll (earlier for mobile)
+      const isMobile = window.innerWidth < 768
+      const scrollThreshold = isMobile ? 200 : 300
+      const shouldShow = scrollY > scrollThreshold
+
+      setShowScrollToTop(shouldShow)
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  // Scroll to top function
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    })
+  }
 
   const navItems: NavItem[] = menus.map((menu) => {
     const Icon = iconMap[menu.icon] || FaRoute
@@ -80,65 +105,55 @@ export default function HomePage() {
   return (
     <main style={{ background: colors.background, color: colors.cardText }} className="transition-colors duration-500">
       <MasjidHeader />
-      <div className="max-w-7xl mx-auto px-6 space-y-8 mt-5">
-        <div className="flex justify-between items-center">
-          <div className="flex gap-2 items-center">
-            <button
-              onClick={() => setShowNav((prev) => !prev)}
-              className="text-xl p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition"
-              aria-label="Toggle Navigation"
-            >
-              {showNav ? <FaTimes /> : <FaBars />}
-            </button>
-          </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6 sm:space-y-8 mt-5">
+        {/* Navigation Grid - Always visible in default mode for both desktop and mobile */}
+        <div>
+          <UniversalNavGrid
+            items={navItems}
+            variant="default"
+            customClass="mb-8"
+          />
         </div>
 
-        <AnimatePresence>
-          {showNav && (
-            <motion.div
-              key="navgrid"
-              initial={{ opacity: 0, y: -20, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -20, scale: 0.95 }}
-              transition={{ duration: 0.3, ease: 'easeInOut' }}
-            >
-              <UniversalNavGrid items={navItems} />
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {detailArticle && <ArticleDetail articleId={detailArticle.id} />}
 
-        {detailArticle && <ArticleDetail articleId={detailArticle.id} />}        <section className="space-y-6">          <div className="flex justify-between items-center">
-          <h2
-            className="text-3xl font-bold"
-            style={{
-              color: colors.cardText,
-              fontFamily: 'var(--font-header-modern)',
-              fontSize: '28px',
-              lineHeight: '1.2',
-              fontWeight: '700'
-            }}
-          >
-            Aktivitas Terkini
-          </h2>
-          <a
-            href="#"
-            className="text-blue-600 text-sm hover:underline transition-colors font-sharp-light"
-            style={{
-              fontSize: '14px'
-            }}
-          >
-            Lebih Lengkap
-          </a>
-        </div>
-          <CardLayout cards={cards} onReorder={handleReorder} onShowDetail={setModalData} />
-        </section>        <section className="space-y-6 mt-12">
-          <div className="flex justify-between items-center">
+        {/* Aktivitas Terkini Section */}
+        <section className="space-y-4 sm:space-y-6">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
             <h2
-              className="text-3xl font-bold"
+              className="text-2xl sm:text-3xl font-bold"
               style={{
                 color: colors.cardText,
                 fontFamily: 'var(--font-header-modern)',
-                fontSize: '28px',
+                fontSize: 'clamp(24px, 4vw, 28px)',
+                lineHeight: '1.2',
+                fontWeight: '700'
+              }}
+            >
+              Aktivitas Terkini
+            </h2>
+            <a
+              href="#"
+              className="text-blue-600 text-sm hover:underline transition-colors font-sharp-light self-start sm:self-auto"
+              style={{
+                fontSize: '13px'
+              }}
+            >
+              Lebih Lengkap
+            </a>
+          </div>
+          <CardLayout cards={cards} onReorder={handleReorder} onShowDetail={setModalData} />
+        </section>
+
+        {/* Program Mendatang Section */}
+        <section className="space-y-4 sm:space-y-6 mt-8 sm:mt-12">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+            <h2
+              className="text-2xl sm:text-3xl font-bold"
+              style={{
+                color: colors.cardText,
+                fontFamily: 'var(--font-header-modern)',
+                fontSize: 'clamp(24px, 4vw, 28px)',
                 lineHeight: '1.2',
                 fontWeight: '700'
               }}
@@ -147,23 +162,26 @@ export default function HomePage() {
             </h2>
             <a
               href="#"
-              className="text-blue-600 text-sm hover:underline transition-colors"
+              className="text-blue-600 text-sm hover:underline transition-colors self-start sm:self-auto"
               style={{
                 fontFamily: 'var(--font-sharp-light)',
-                fontSize: '14px'
+                fontSize: '13px'
               }}
             >
               Lihat Semua
             </a>
           </div>
           <CardLayout cards={upcomingCards} onReorder={handleReorderUpcoming} onShowDetail={setModalData} />
-        </section>        <section className="space-y-6 mt-12">
+        </section>
+
+        {/* Bantuan Keagamaan Section */}
+        <section className="space-y-4 sm:space-y-6 mt-8 sm:mt-12">
           <h2
-            className="text-3xl font-bold text-center mb-8"
+            className="text-2xl sm:text-3xl font-bold text-center mb-6 sm:mb-8"
             style={{
               color: colors.cardText,
               fontFamily: 'var(--font-header-masjid)',
-              fontSize: '34px',
+              fontSize: 'clamp(26px, 5vw, 34px)',
               lineHeight: '1.2',
               fontWeight: '900',
               letterSpacing: '-0.02em'
@@ -171,7 +189,7 @@ export default function HomePage() {
           >
             Bantuan Keagamaan Kami
           </h2>
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
             {donationCards.map((card) => (
               <UniversalCard
                 key={card.id}
@@ -184,13 +202,16 @@ export default function HomePage() {
               />
             ))}
           </div>
-        </section>        <section className="space-y-6 mt-12">
+        </section>
+
+        {/* Berita Utama Section */}
+        <section className="space-y-4 sm:space-y-6 mt-8 sm:mt-12">
           <h2
-            className="text-3xl font-bold text-center mb-8"
+            className="text-2xl sm:text-3xl font-bold text-center mb-6 sm:mb-8"
             style={{
               color: colors.cardText,
               fontFamily: 'var(--font-header-masjid)',
-              fontSize: '34px',
+              fontSize: 'clamp(26px, 5vw, 34px)',
               lineHeight: '1.2',
               fontWeight: '900',
               letterSpacing: '-0.02em'
@@ -198,7 +219,7 @@ export default function HomePage() {
           >
             Berita Utama
           </h2>
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
             {newsCards.map((news, idx) => (
               <UniversalCard
                 key={news.title + idx}
@@ -216,10 +237,46 @@ export default function HomePage() {
 
       </div>
 
+      {/* Scroll to Top Button - Enhanced for both desktop and mobile */}
+      <AnimatePresence>
+        {showScrollToTop && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 20 }}
+            transition={{ duration: 0.3, ease: 'easeInOut' }}
+            onClick={scrollToTop}
+            className="scroll-to-top-mobile fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[9999] p-3 sm:p-4 rounded-full shadow-2xl hover:shadow-3xl transition-all duration-200 hover:scale-110 active:scale-95 touch-manipulation group"
+            style={{
+              backgroundColor: colors.accent,
+              color: colors.card,
+              border: `2px solid ${colors.accent}`,
+              minWidth: '52px',
+              minHeight: '52px',
+              boxShadow: '0 8px 25px rgba(0,0,0,0.15), 0 4px 10px rgba(0,0,0,0.1)'
+            }}
+            aria-label="Scroll to top"
+          >
+            <motion.div
+              className="flex items-center justify-center"
+              initial={{ y: 0 }}
+              animate={{ y: [-1, 0, -1] }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            >
+              <FaChevronUp className="w-5 h-5 sm:w-6 sm:h-6" />
+            </motion.div>
+          </motion.button>
+        )}
+      </AnimatePresence>
+
       <ActivityModal data={modalData} onClose={() => setModalData(null)} />
       <Footer />
 
-      {/* Modal Donasi */}
+      {/* Modal Donasi - Mobile Optimized */}
       <UniversalModal
         open={!!showDonationModal}
         onClose={() => setShowDonationModal(null)}
@@ -233,7 +290,7 @@ export default function HomePage() {
             style={{
               color: colors.detail,
               fontFamily: 'var(--font-sharp-light)',
-              fontSize: '16px',
+              fontSize: 'clamp(14px, 3vw, 16px)',
               lineHeight: '1.5'
             }}
           >
@@ -244,45 +301,47 @@ export default function HomePage() {
             style={{
               color: colors.subheading,
               fontFamily: 'var(--font-sharp-light)',
-              fontSize: '12px'
+              fontSize: 'clamp(11px, 2.5vw, 12px)'
             }}
           >
             Rekening: 1234567890 (Bank Syariah)
           </span>
-        </div>        <form className="space-y-3">
+        </div>
+
+        <form className="space-y-3">
           <input
             type="text"
             placeholder="Nama Donatur"
-            className="w-full px-3 py-2 rounded border transition-colors"
+            className="w-full px-3 py-3 sm:py-2 rounded border transition-colors touch-manipulation"
             style={{
               background: colors.card,
               color: colors.cardText,
               border: `1px solid ${colors.border}`,
               fontFamily: 'var(--font-sharp-light)',
-              fontSize: '14px'
+              fontSize: 'clamp(14px, 3vw, 16px)'
             }}
           />
           <input
             type="number"
             placeholder="Nominal Donasi"
-            className="w-full px-3 py-2 rounded border transition-colors"
+            className="w-full px-3 py-3 sm:py-2 rounded border transition-colors touch-manipulation"
             style={{
               background: colors.card,
               color: colors.cardText,
               border: `1px solid ${colors.border}`,
               fontFamily: 'var(--font-sharp-light)',
-              fontSize: '14px'
+              fontSize: 'clamp(14px, 3vw, 16px)'
             }}
           />
           <button
             type="button"
-            className="w-full py-2 rounded-lg font-semibold transition"
+            className="w-full py-3 sm:py-2 rounded-lg font-semibold transition touch-manipulation"
             style={{
               background: colors.accent,
               color: colors.card,
               border: `1px solid ${colors.accent}`,
               fontFamily: 'var(--font-sharp-bold)',
-              fontSize: '16px'
+              fontSize: 'clamp(15px, 3.5vw, 16px)'
             }}
           >
             Bayar Sekarang
@@ -293,13 +352,14 @@ export default function HomePage() {
           style={{
             color: colors.subheading,
             fontFamily: 'var(--font-sharp-light)',
-            fontSize: '11px'
+            fontSize: 'clamp(10px, 2vw, 11px)'
           }}
         >
           Simulasi Payment Gateway (QRIS, Transfer, dll)
         </div>
       </UniversalModal>
 
+      {/* Modal Berita - Mobile Optimized */}
       <UniversalModal
         open={!!selectedNews}
         onClose={() => setSelectedNews(null)}
@@ -308,30 +368,37 @@ export default function HomePage() {
         maxWidth="max-w-2xl"
       >
         {selectedNews?.image && (
-          <div className="mb-6 w-full h-80 relative rounded-xl overflow-hidden">
-            <img src={selectedNews.image} alt={selectedNews.title} className="object-cover w-full h-full" />
+          <div className="mb-4 sm:mb-6 w-full h-60 sm:h-80 relative rounded-xl overflow-hidden">
+            <img
+              src={selectedNews.image}
+              alt={selectedNews.title}
+              className="object-cover w-full h-full"
+            />
           </div>
-        )}        {selectedNews?.detail && (
+        )}
+
+        {selectedNews?.detail && (
           <div
-            className="mb-4 text-xs text-right"
+            className="mb-3 sm:mb-4 text-xs text-right"
             style={{
               color: colors.detail,
               fontFamily: 'var(--font-sharp-light)',
-              fontSize: '12px'
+              fontSize: 'clamp(11px, 2.5vw, 12px)'
             }}
           >
             {selectedNews.detail}
           </div>
         )}
+
         {selectedNews?.description && (
           <div
-            className="text-base leading-relaxed whitespace-pre-line"
+            className="text-base leading-relaxed whitespace-pre-line mobile-scroll"
             style={{
               color: colors.cardText,
-              maxHeight: 350,
+              maxHeight: 'clamp(300px, 50vh, 350px)',
               overflowY: 'auto',
               fontFamily: 'var(--font-sharp-light)',
-              fontSize: '16px',
+              fontSize: 'clamp(15px, 3.5vw, 16px)',
               lineHeight: '1.6'
             }}
           >
