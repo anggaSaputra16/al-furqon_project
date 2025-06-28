@@ -14,9 +14,8 @@ import { useMenuStore } from '../../stores/useMenuStore'
 import { iconMap } from '../../utils/iconMapper'
 import ActivityModal from '../path/ActivityModal'
 import { useTheme } from '@/context/themeContext'
-import ArticleDetail from '../path/ArticleDetail'
+import HomeHeader from '../path/HomeHeader'
 import { useArticleStore } from '../../stores/useArticleStore'
-import { ArticleMode } from '../../types/articleTypes'
 import UniversalModal from '../path/UniversalModal'
 import UniversalCard from '../path/UniversalCard'
 import { donationCards as donationCardsStatic, newsCards, activityCards as activityCardsStatic, upcomingCards as upcomingCardsStatic } from '../../utils/staticData'
@@ -67,8 +66,6 @@ export default function HomePage() {
     }
   })
 
-  const detailArticle = articles.find((a) => a.id === 'masjid-overview' && a.mode === ArticleMode.DETAIL)
-
   const [cards, setCards] = useState<CardData[]>(
     activityCardsStatic.map(card => ({ ...card, size: card.size as 'large' | 'small' }))
   )
@@ -115,7 +112,8 @@ export default function HomePage() {
           />
         </div>
 
-        {detailArticle && <ArticleDetail articleId={detailArticle.id} />}
+        {/* Home Header Section */}
+        <HomeHeader />
 
         {/* Aktivitas Terkini Section */}
         <section className="space-y-4 sm:space-y-6">
