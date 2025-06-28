@@ -86,7 +86,7 @@ export default function MasjidHeader() {
           { name: 'Isha', time: jadwal.isya },
         ])
       })
-      .catch(() => {/* fallback ke default jika error */})
+      .catch(() => {/* fallback ke default jika error */ })
   }, [])
 
   // --- Auto theme by waktu sholat ---
@@ -137,9 +137,8 @@ export default function MasjidHeader() {
 
   return (
     <div
-      className={`relative w-full overflow-hidden shadow-md transition-all duration-300 ${
-        minimized ? 'h-[80px]' : 'h-[500px]'
-      }`}
+      className={`relative w-full overflow-hidden shadow-md transition-all duration-300 ${minimized ? 'h-[80px]' : 'h-[500px]'
+        }`}
       style={{ background: colors.background, color: colors.cardText }}
     >
       {/* Header Top Bar: Theme Toggle & Close/Menu */}
@@ -153,8 +152,15 @@ export default function MasjidHeader() {
           <div className="rounded-full bg-white/80 dark:bg-gray-800/80 shadow p-1 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200">
             {/* ThemeToggle component, pastikan import dan gunakan di sini */}
             <ThemeToggle />
-            {/* Label theme */}
-            <span className="ml-2 text-xs font-semibold uppercase tracking-wide" style={{ color: colors.accent }}>
+            {/* Label theme */}            <span
+              className="ml-2 text-xs font-semibold uppercase tracking-wide"
+              style={{
+                color: colors.accent,
+                fontFamily: 'var(--font-sharp-light)',
+                fontSize: '11px',
+                letterSpacing: '0.08em'
+              }}
+            >
               {theme === 'light' ? 'Siang' : theme === 'dark' ? 'Malam' : 'Senja'}
             </span>
           </div>
@@ -196,19 +202,38 @@ export default function MasjidHeader() {
           style={{ color: colors.cardText }}
         >
           <div className="bg-black/40 px-8 py-6 rounded-2xl flex flex-col gap-2 items-center shadow-lg">
-            <div className="mb-2">{sholatIcon}</div>
-            <div className="text-2xl font-bold tracking-widest mb-2" style={{ fontFamily: 'monospace, monospace' }}>
+            <div className="mb-2">{sholatIcon}</div>            <div
+              className="text-2xl font-bold tracking-widest mb-2"
+              style={{
+                fontFamily: 'var(--font-header-masjid)',
+                fontSize: '26px',
+                letterSpacing: '0.15em',
+                fontWeight: '900'
+              }}
+            >
               Jadwal Sholat
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 text-center">
               {jadwalSholat.map((item) => {
                 const isActive = item.name === currentSholat.name
                 return (
-                  <div key={item.name}>
-                    <div className={`text-xs uppercase ${isActive ? 'text-yellow-400 font-bold' : 'text-gray-200'}`}>
-                      {item.name}
-                    </div>
-                    <div className={`text-2xl font-mono font-extrabold ${isActive ? 'text-yellow-300' : ''}`}>
+                  <div key={item.name}>                    <div
+                    className={`text-xs uppercase ${isActive ? 'text-yellow-400 font-bold' : 'text-gray-200'}`}
+                    style={{
+                      fontFamily: 'var(--font-sharp-light)',
+                      fontSize: '11px',
+                      letterSpacing: '0.05em'
+                    }}
+                  >
+                    {item.name}
+                  </div>
+                    <div
+                      className={`text-2xl font-mono font-extrabold ${isActive ? 'text-yellow-300' : ''}`}
+                      style={{
+                        fontFamily: 'var(--font-sharp-bold)',
+                        fontSize: '22px'
+                      }}
+                    >
                       {item.time}
                     </div>
                   </div>
@@ -217,12 +242,9 @@ export default function MasjidHeader() {
             </div>
           </div>
         </div>
-      )}
-
-      <div
-        className={`absolute bottom-0 left-0 right-0 flex items-center justify-between gap-3 p-4 rounded-t-xl shadow-lg transition-all duration-300 z-10 ${
-          minimized ? 'bg-opacity-90 bg-black/60' : ''
-        }`}
+      )}      <div
+        className={`absolute bottom-0 left-0 right-0 flex items-center justify-between gap-3 p-4 rounded-t-xl shadow-lg transition-all duration-300 z-10 ${minimized ? 'bg-opacity-90 bg-black/60' : ''
+          }`}
         style={{ background: minimized ? colors.card : colors.card, color: colors.cardText }}
       >
         <div className="flex items-center gap-2">
@@ -231,33 +253,60 @@ export default function MasjidHeader() {
             alt="Logo"
             className="h-10 w-10 object-contain rounded-full bg-white p-1 shadow"
           />
-          <span className="text-lg font-bold tracking-widest">Al-Furqon</span>
+          <span
+            className="text-lg font-bold tracking-widest"
+            style={{
+              fontFamily: 'var(--font-header-masjid)',
+              fontSize: '22px',
+              letterSpacing: '0.15em',
+              fontWeight: '900'
+            }}
+          >
+            Al-Furqon
+          </span>
         </div>
 
         <div
-          className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300 shadow ${
-            hovered ? 'w-full sm:w-96' : 'w-10 justify-center'
-          }`}
+          className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300 shadow ${hovered ? 'w-full sm:w-96' : 'w-10 justify-center'
+            }`}
           style={{ background: colors.background, color: colors.cardText, minWidth: minimized ? 120 : undefined }}
           onMouseEnter={() => setHovered(true)}
           onMouseLeave={() => setHovered(false)}
         >
           <FaSearch style={{ color: colors.secondary }} />
-          {hovered && (
-            <input
-              type="text"
-              placeholder="Cari..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-transparent outline-none text-sm placeholder-gray-500 dark:placeholder-gray-400"
-              style={{ color: colors.cardText }}
-            />
+          {hovered && (<input
+            type="text"
+            placeholder="Cari..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full bg-transparent outline-none text-sm placeholder-gray-500 dark:placeholder-gray-400"
+            style={{
+              color: colors.cardText,
+              fontFamily: 'var(--font-sharp-light)',
+              fontSize: '14px'
+            }}
+          />
           )}
-        </div>
-
-        <div className="flex flex-col items-end">
-          <span className="text-sm font-semibold uppercase">{currentSholat.name}</span>
-          <span className="text-lg font-mono font-extrabold">{currentTime}</span>
+        </div>        <div className="flex flex-col items-end">
+          <span
+            className="text-sm font-semibold uppercase"
+            style={{
+              fontFamily: 'var(--font-sharp-light)',
+              fontSize: '12px',
+              letterSpacing: '0.05em'
+            }}
+          >
+            {currentSholat.name}
+          </span>
+          <span
+            className="text-lg font-mono font-extrabold"
+            style={{
+              fontFamily: 'var(--font-sharp-bold)',
+              fontSize: '18px'
+            }}
+          >
+            {currentTime}
+          </span>
         </div>
 
         {/* Tombol minimize hanya saat minimized, posisinya di kanan bawah search bar agar tidak overlap */}

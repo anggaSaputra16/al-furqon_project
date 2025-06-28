@@ -45,16 +45,38 @@ export default function ArticleDetail({ articleId, showRelated = true }: Props) 
         {tag && (
           <span
             className="text-sm font-semibold uppercase"
-            style={{ color: colors.accent }}
+            style={{
+              color: colors.accent,
+              fontFamily: 'var(--font-sharp-bold)',
+              fontSize: '14px',
+              letterSpacing: '0.05em'
+            }}
           >
             {tag}
           </span>
         )}
-        <h1 className="text-3xl font-extrabold" style={{ color: colors.heading }}>
+        <h1
+          className="text-3xl font-extrabold"
+          style={{
+            color: colors.heading,
+            fontFamily: 'var(--font-header-masjid)',
+            fontSize: '36px',
+            lineHeight: '1.2',
+            fontWeight: '900',
+            letterSpacing: '-0.02em'
+          }}
+        >
           {title}
         </h1>
         {date && (
-          <p className="text-sm" style={{ color: colors.subheading }}>
+          <p
+            className="text-sm"
+            style={{
+              color: colors.subheading,
+              fontFamily: 'var(--font-sharp-light)',
+              fontSize: '14px'
+            }}
+          >
             {date}
           </p>
         )}
@@ -66,10 +88,14 @@ export default function ArticleDetail({ articleId, showRelated = true }: Props) 
             <Image src={image} alt={title} fill className="object-cover" />
           </div>
         )}
-
         <div
           className="space-y-4 text-justify whitespace-pre-line"
-          style={{ color: colors.detail }}
+          style={{
+            color: colors.detail,
+            fontFamily: 'var(--font-sharp-light)',
+            fontSize: '16px',
+            lineHeight: '1.6'
+          }}
         >
           {content}
         </div>

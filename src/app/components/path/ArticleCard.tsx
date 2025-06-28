@@ -42,9 +42,8 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
   return (
     <>
       <div
-        className={`flex flex-col md:flex-row rounded-3xl overflow-hidden my-8 transition-colors duration-200 ${
-          imagePosition === 'right' ? 'md:flex-row-reverse' : ''
-        }`}
+        className={`flex flex-col md:flex-row rounded-3xl overflow-hidden my-8 transition-colors duration-200 ${imagePosition === 'right' ? 'md:flex-row-reverse' : ''
+          }`}
         style={{
           background: colors.card,
           border: `1.5px solid ${colors.border}`,
@@ -72,16 +71,41 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
         {/* Content */}
         <div className="md:w-2/3 p-8 flex flex-col justify-between">
           <div>
-            <h3 className="text-2xl font-bold mb-3" style={{ color: colors.heading }}>
+            <h3
+              className="text-2xl font-bold mb-3"
+              style={{
+                color: colors.heading,
+                fontFamily: 'var(--font-header-modern)',
+                fontSize: '26px',
+                lineHeight: '1.3',
+                fontWeight: '700'
+              }}
+            >
               {title}
             </h3>
             {description && (
-              <p className="text-base mb-2 font-semibold" style={{ color: colors.subheading }}>
+              <p
+                className="text-base mb-2 font-semibold"
+                style={{
+                  color: colors.subheading,
+                  fontFamily: 'var(--font-sharp-bold)',
+                  fontSize: '16px',
+                  lineHeight: '1.4'
+                }}
+              >
                 {description}
               </p>
             )}
             {detail && (
-              <p className="mb-6 text-[15px] leading-relaxed" style={{ color: colors.detail }}>
+              <p
+                className="mb-6 text-[15px] leading-relaxed"
+                style={{
+                  color: colors.detail,
+                  fontFamily: 'var(--font-sharp-light)',
+                  fontSize: '15px',
+                  lineHeight: '1.6'
+                }}
+              >
                 {detail}
               </p>
             )}
@@ -95,7 +119,11 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
                   href={link.href}
                   onClick={(e) => handleLinkClick(link.label, link.href, e)}
                   className="text-base font-semibold hover:underline cursor-pointer transition-colors duration-200"
-                  style={{ color: colors.link }}
+                  style={{
+                    color: colors.link,
+                    fontFamily: 'var(--font-sharp-bold)',
+                    fontSize: '16px'
+                  }}
                 >
                   {link.label}
                 </a>
