@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState } from 'react'
+import ClientOnly from '@/app/components/ClientOnly'
 
 export type Theme = 'light' | 'dark' | 'dusk'
 
@@ -61,36 +62,69 @@ interface ThemeContextProps {
   theme: Theme
   toggleTheme: () => void
   colors: typeof lightTheme
+  isAutoMode: boolean
+  setAutoMode: (auto: boolean) => void
 }
 
 const ThemeContext = createContext<ThemeContextProps | undefined>(undefined)
 
+// Function to get theme based on time
+const getTimeBasedTheme = (): Theme => {
+  const hour = new Date().getHours()
+  if (hour >= 5 && hour < 12) return 'light'    // 05:00-11:59 = pagi (light)
+  if (hour >= 12 && hour < 18) return 'dusk'    // 12:00-17:59 = sore (dusk)
+  return 'dark'                                  // 18:00-04:59 = malam (dark)
+}
+
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
   const [theme, setTheme] = useState<Theme>('light')
   const [colors, setColors] = useState(lightTheme)
+  const [isAutoMode, setIsAutoModeState] = useState(true)
+  const [isInitialized, setIsInitialized] = useState(false)
 
+  // Initialize theme on client side
   useEffect(() => {
     const storedTheme = localStorage.getItem('theme') as Theme | null
-    const root = document.documentElement
+    const storedAutoMode = localStorage.getItem('autoMode')
+    const autoMode = storedAutoMode !== 'false' // default to true if not set
 
-    if (storedTheme === 'dark') {
-      setTheme('dark')
-      setColors(darkTheme)
-      root.classList.add('dark')
-    } else if (storedTheme === 'dusk') {
-      setTheme('dusk')
-      setColors(duskTheme)
-      root.classList.remove('dark')
+    setIsAutoModeState(autoMode)
+
+    let initialTheme: Theme
+    if (autoMode) {
+      initialTheme = getTimeBasedTheme()
     } else {
-      setTheme('light')
-      setColors(lightTheme)
-      root.classList.remove('dark')
+      initialTheme = storedTheme || getTimeBasedTheme()
     }
+
+    setThemeAndColors(initialTheme, false) // don't save to localStorage on init
+    setIsInitialized(true)
   }, [])
 
-  const setThemeAndColors = (newTheme: Theme) => {
+  // Auto-update theme based on time (only in auto mode)
+  useEffect(() => {
+    if (!isAutoMode || !isInitialized) return
+
+    const updateTheme = () => {
+      const newTheme = getTimeBasedTheme()
+      if (newTheme !== theme) {
+        setThemeAndColors(newTheme, false) // don't save to localStorage for auto updates
+      }
+    }
+
+    // Update immediately
+    updateTheme()
+
+    // Set interval to check every minute
+    const interval = setInterval(updateTheme, 60000)
+    return () => clearInterval(interval)
+  }, [isAutoMode, theme, isInitialized])
+
+  const setThemeAndColors = (newTheme: Theme, saveToStorage = true) => {
     setTheme(newTheme)
-    localStorage.setItem('theme', newTheme)
+    if (saveToStorage) {
+      localStorage.setItem('theme', newTheme)
+    }
 
     const root = document.documentElement
     if (newTheme === 'dark') {
@@ -105,17 +139,33 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }
 
+  const setAutoMode = (auto: boolean) => {
+    setIsAutoModeState(auto)
+    localStorage.setItem('autoMode', auto.toString())
+
+    if (auto) {
+      // Switch to time-based theme
+      const timeBasedTheme = getTimeBasedTheme()
+      setThemeAndColors(timeBasedTheme, false)
+    }
+  }
+
   const toggleTheme = () => {
+    if (isAutoMode) {
+      // First toggle turns off auto mode and sets to next theme
+      setAutoMode(false)
+    }
+
     const nextTheme: Theme =
       theme === 'light' ? 'dusk' : theme === 'dusk' ? 'dark' : 'light'
-    setThemeAndColors(nextTheme)
+    setThemeAndColors(nextTheme, true)
   }
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, colors }}>
-      <div suppressHydrationWarning>
+    <ThemeContext.Provider value={{ theme, toggleTheme, colors, isAutoMode, setAutoMode }}>
+      <ClientOnly fallback={<div style={{ opacity: 0 }}>{children}</div>}>
         {children}
-      </div>
+      </ClientOnly>
     </ThemeContext.Provider>
   )
 }
