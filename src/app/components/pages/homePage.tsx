@@ -33,6 +33,8 @@ export default function HomePage() {
     fetchArticles()
   }, [fetchMenus, fetchArticles])
 
+
+  
   // Handle scroll to show scroll-to-top button only
   useEffect(() => {
     const handleScroll = () => {
