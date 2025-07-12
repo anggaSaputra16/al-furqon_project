@@ -125,9 +125,7 @@ class HttpClient {
       signal: AbortSignal.timeout(this.timeout)
     }
 
-    try {
-      this.logRequest(endpoint, config.method || 'GET', options.body)
-      
+    try {      
       const response = await fetch(url, config)
       const duration = Date.now() - startTime
       
@@ -138,7 +136,6 @@ class HttpClient {
       }
 
       const data = await response.json()
-      this.logResponse(endpoint, data, duration)
       
       return data
     } catch (error) {
@@ -147,17 +144,6 @@ class HttpClient {
     }
   }
 
-  private logRequest(endpoint: string, method: string, body?: any) {
-    if (process.env.NEXT_PUBLIC_APP_ENV === 'development') {
-      console.log(`[API] ${method} ${endpoint}`, body ? JSON.parse(body) : '')
-    }
-  }
-
-  private logResponse(endpoint: string, response: any, duration: number) {
-    if (process.env.NEXT_PUBLIC_APP_ENV === 'development') {
-      console.log(`[API] Response ${endpoint} (${duration}ms)`, response)
-    }
-  }
 
   private logError(endpoint: string, error: any) {
     console.error(`[API] Error ${endpoint}`, error)
@@ -219,7 +205,8 @@ export class ArticleRepository implements IArticleRepository {
   }
 
   async getFeaturedArticles(limit = 6): Promise<ApiResponse<ArticleResponse[]>> {
-    return this.httpClient.get('/articles/featured', { limit })
+    // Use general articles endpoint since API response shows articles endpoint works
+    return this.httpClient.get('/articles', { limit, featured: true })
   }
 
   async getRelatedArticles(articleId: string, limit = 3): Promise<ApiResponse<ArticleResponse[]>> {

@@ -645,28 +645,6 @@ export default function HomePage() {
             </div>
           )}
         </section>
-
-        {/* Debug Info - Remove in production */}
-        {process.env.NODE_ENV === 'development' && (
-          <div className="fixed bottom-4 left-4 p-3 bg-black/80 text-white text-xs rounded-lg space-y-1 z-50 max-w-xs">
-            <div className="font-bold text-yellow-300 mb-2">🐛 Debug Info</div>
-            <div>Articles Loading: <span className={articlesLoading ? 'text-yellow-300' : 'text-green-300'}>{articlesLoading.toString()}</span></div>
-            <div>Has Backend Articles: <span className={hasBackendArticles ? 'text-green-300' : 'text-red-300'}>{hasBackendArticles.toString()}</span></div>
-            <div>Articles Count: <span className="text-blue-300">{featuredArticles?.length || 0}</span></div>
-            <hr className="border-gray-600 my-1" />
-            <div>Donations Loading: <span className={donationsLoading ? 'text-yellow-300' : 'text-green-300'}>{donationsLoading.toString()}</span></div>
-            <div>Has Backend Donations: <span className={hasBackendDonations ? 'text-green-300' : 'text-red-300'}>{hasBackendDonations.toString()}</span></div>
-            <div>Donations Count: <span className="text-blue-300">{donationPrograms?.length || 0}</span></div>
-            <hr className="border-gray-600 my-1" />
-            <div>News Loading: <span className={newsLoading ? 'text-yellow-300' : 'text-green-300'}>{newsLoading.toString()}</span></div>
-            <div>Has Backend News: <span className={hasBackendNews ? 'text-green-300' : 'text-red-300'}>{hasBackendNews.toString()}</span></div>
-            <div>News Count: <span className="text-blue-300">{latestNews?.length || 0}</span></div>
-            <hr className="border-gray-600 my-1" />
-            <div>Use Fallback: <span className={useFallbackData ? 'text-red-300' : 'text-green-300'}>{useFallbackData.toString()}</span></div>
-            <div>Initial Loading: <span className={isInitialLoading ? 'text-yellow-300' : 'text-green-300'}>{isInitialLoading.toString()}</span></div>
-          </div>
-        )}
-
       </div>
 
       {/* Scroll to Top Button - Enhanced for both desktop and mobile */}

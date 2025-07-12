@@ -64,10 +64,7 @@ class BackendAvailabilityManager {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), this.TIMEOUT)
       
-      const healthUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/health`
-      
-      console.log('🔍 Checking backend health at:', healthUrl)
-      
+      const healthUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/health`      
       const response = await fetch(healthUrl, {
         method: 'GET',
         headers: {
@@ -83,12 +80,6 @@ class BackendAvailabilityManager {
       
       this.isAvailable = newAvailability
       this.lastCheck = now
-      
-      console.log('🔍 Backend health check result:', {
-        available: newAvailability,
-        status: response.status,
-        statusChanged
-      })
       
       // Only notify if status changed or this is the first check
       if (statusChanged || this.lastCheck === now) {

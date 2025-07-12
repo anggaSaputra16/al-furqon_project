@@ -41,7 +41,6 @@ export const useHomePageData = () => {
     
     try {
       if (!backendAvailable) {
-        console.log('🔄 Backend not available, skipping homepage data fetch')
         setLoading(false)
         return
       }
@@ -96,9 +95,7 @@ export const useFeaturedArticles = (limit = 6) => {
     setError(null)
     
     try {
-      if (!backendAvailable) {
-        console.log('🔄 Backend not available, using static data fallback for featured articles')
-        
+      if (!backendAvailable) {        
         // Transform static activity cards to article format
         const staticArticles: ArticleResponse[] = activityCards.slice(0, limit).map((card, index) => ({
           id: card.id,
@@ -127,11 +124,18 @@ export const useFeaturedArticles = (limit = 6) => {
         return
       }
 
-      const result = await homePageUseCases.getFeaturedArticles(limit)
-      
+      const result = await homePageUseCases.getFeaturedArticles(limit)      
       if (result.success) {
         // Transform backend data to match frontend expectations
-        const transformedArticles = (result.data || []).map((article: any) => ({
+        // Handle both direct array and nested data structure
+        let articleData = result.data
+
+        // Check if data is nested (like {data: [...], pagination: {...}})
+        if (articleData && typeof articleData === 'object' && 'data' in articleData) {
+          articleData = (articleData as any).data
+        }
+        
+        const transformedArticles = (articleData || []).map((article: any) => ({
           id: article.id,
           title: article.title,
           slug: article.slug || article.title.toLowerCase().replace(/ /g, '-'),
@@ -228,9 +232,7 @@ export const useActiveDonations = (limit = 3) => {
     setError(null)
     
     try {
-      if (!backendAvailable) {
-        console.log('🔄 Backend not available, using static data fallback for donations')
-        
+      if (!backendAvailable) {        
         // Transform static donation cards to donation response format
         const staticDonations: DonationResponse[] = donationCards.slice(0, limit).map((card) => {
           const percentage = Math.round((card.collected / card.target) * 100)

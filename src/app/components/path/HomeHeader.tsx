@@ -1,27 +1,18 @@
 'use client'
 
-import { useArticleStore } from '../../stores/useArticleStore'
 import { useTheme } from '@/context/themeContext'
 
 export default function HomeHeader() {
-  const { articles } = useArticleStore()
   const { colors } = useTheme()
 
-  const article = articles.find((a) => a.id === 'intro-fasilitas')
+  // Use static content instead of depending on dynamic articles
+  const title = "Masjid Besar Al-Furqon"
+  const image = "/images/al-furqon.png"
+  const content = `Masjid Besar Al-Furqon, Bekasi Barat bukan hanya tempat ibadah yang luas dan nyaman, tetapi juga pusat kegiatan umat yang menghadirkan berbagai fasilitas penunjang di bawah naungan Yayasan Pondok Mulya Bekasi.
 
-  if (!article) {
-    return (
-      <section className="space-y-6 md:space-y-8 mb-8">
-        <div className="text-center text-gray-500">
-          Loading content...
-        </div>
-      </section>
-    )
-  }
+Dilengkapi dengan aula serbaguna Graha Subagdja, masjid ini siap menjadi pilihan untuk berbagai acara penting seperti pertemuan komunitas, kajian, hingga resepsi pernikahan yang berkesan.
 
-  const { content } = article
-  const title = "Masjid Besar Al-Furqon" // Custom title instead of using article title
-  const image = "/images/al-furqon.png" // Custom image
+Area parkir yang luas memberikan kenyamanan bagi para jamaah, sementara ruang belajar TPO menjadi wadah pembinaan generasi Qurani sejak dini. Tersedia pula ruang keserikatan yang mendukung kolaborasi dan kegiatan sosial masyarakat. Semua hadir dalam suasana yang teduh, bersih, dan penuh berkah.`
 
   return (
     <section className="space-y-6 md:space-y-8 mb-8">
