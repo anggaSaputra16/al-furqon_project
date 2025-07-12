@@ -4,7 +4,9 @@ import {
   AdminUser,
   AdminDashboardStats,
   AdminSettingsResponse,
-  AdminActivity
+  AdminActivity,
+  DashboardStatsResponse,
+  DashboardChartsData
 } from '../types/adminResponseTypes'
 
 interface AdminAuthState {
@@ -77,6 +79,43 @@ interface AdminNotification {
   timestamp: string
   autoClose?: boolean
   duration?: number
+}
+
+interface DashboardStatsState {
+  // Dashboard Stats State
+  stats: DashboardStatsResponse | null
+  charts: DashboardChartsData | null
+  realtimeActivity: {
+    onlineUsers: number
+    todayViews: number
+    todayDonations: number
+    recentActions: any[]
+  } | null
+  
+  // Loading States
+  isStatsLoading: boolean
+  isChartsLoading: boolean
+  isActivityLoading: boolean
+  
+  // Cache Management
+  lastStatsUpdate: string | null
+  lastChartsUpdate: string | null
+  statsDateRange: {
+    startDate: string
+    endDate: string
+  } | null
+  
+  // Actions
+  setStats: (stats: DashboardStatsResponse) => void
+  setCharts: (charts: DashboardChartsData) => void
+  setRealtimeActivity: (activity: any) => void
+  setStatsLoading: (loading: boolean) => void
+  setChartsLoading: (loading: boolean) => void
+  setActivityLoading: (loading: boolean) => void
+  setStatsDateRange: (dateRange: { startDate: string; endDate: string } | null) => void
+  updateSingleStat: (key: keyof DashboardStatsResponse, value: any) => void
+  refreshStats: () => void
+  clearDashboardStats: () => void
 }
 
 // Auth Store
@@ -273,6 +312,72 @@ export const useAdminUIStore = create<AdminUIState>()(
   )
 )
 
+// Dashboard Stats Store
+export const useDashboardStatsStore = create<DashboardStatsState>((set, get) => ({
+  // State
+  stats: null,
+  charts: null,
+  realtimeActivity: null,
+  isStatsLoading: false,
+  isChartsLoading: false,
+  isActivityLoading: false,
+  lastStatsUpdate: null,
+  lastChartsUpdate: null,
+  statsDateRange: null,
+
+  // Actions
+  setStats: (stats) => set({
+    stats,
+    lastStatsUpdate: new Date().toISOString()
+  }),
+
+  setCharts: (charts) => set({
+    charts,
+    lastChartsUpdate: new Date().toISOString()
+  }),
+
+  setRealtimeActivity: (realtimeActivity) => set({
+    realtimeActivity
+  }),
+
+  setStatsLoading: (isStatsLoading) => set({ isStatsLoading }),
+  setChartsLoading: (isChartsLoading) => set({ isChartsLoading }),
+  setActivityLoading: (isActivityLoading) => set({ isActivityLoading }),
+
+  setStatsDateRange: (statsDateRange) => set({ statsDateRange }),
+
+  updateSingleStat: (key, value) => {
+    const currentStats = get().stats
+    if (currentStats) {
+      set({
+        stats: { ...currentStats, [key]: value },
+        lastStatsUpdate: new Date().toISOString()
+      })
+    }
+  },
+
+  refreshStats: () => {
+    const { stats } = get()
+    if (stats) {
+      set({
+        lastStatsUpdate: new Date().toISOString()
+      })
+    }
+  },
+
+  clearDashboardStats: () => set({
+    stats: null,
+    charts: null,
+    realtimeActivity: null,
+    lastStatsUpdate: null,
+    lastChartsUpdate: null,
+    statsDateRange: null,
+    isStatsLoading: false,
+    isChartsLoading: false,
+    isActivityLoading: false
+  })
+}))
+
 // Selector Hooks for better performance
 export const useAdminUser = () => useAdminAuthStore((state) => state.user)
 export const useAdminToken = () => useAdminAuthStore((state) => state.token)
@@ -291,6 +396,16 @@ export const useAdminTheme = () => useAdminUIStore((state) => state.activeTheme)
 export const useAdminSidebarCollapsed = () => useAdminUIStore((state) => state.sidebarCollapsed)
 export const useAdminNotifications = () => useAdminUIStore((state) => state.notifications)
 export const useAdminModals = () => useAdminUIStore((state) => state.modals)
+
+export const useDashboardStatsData = () => useDashboardStatsStore((state) => state.stats)
+export const useDashboardCharts = () => useDashboardStatsStore((state) => state.charts)
+export const useRealtimeActivity = () => useDashboardStatsStore((state) => state.realtimeActivity)
+export const useIsStatsLoading = () => useDashboardStatsStore((state) => state.isStatsLoading)
+export const useIsChartsLoading = () => useDashboardStatsStore((state) => state.isChartsLoading)
+export const useIsActivityLoading = () => useDashboardStatsStore((state) => state.isActivityLoading)
+export const useLastStatsUpdate = () => useDashboardStatsStore((state) => state.lastStatsUpdate)
+export const useLastChartsUpdate = () => useDashboardStatsStore((state) => state.lastChartsUpdate)
+export const useStatsDateRange = () => useDashboardStatsStore((state) => state.statsDateRange)
 
 // Combined hooks for common use cases
 export const useAdminAuth = () => {
@@ -336,5 +451,33 @@ export const useAdminUI = () => {
     openModal: ui.openModal,
     closeModal: ui.closeModal,
     clearNotifications: ui.clearNotifications,
+  }
+}
+
+export const useDashboardStatsComplete = () => {
+  const store = useDashboardStatsStore()
+  return {
+    // State
+    stats: store.stats,
+    charts: store.charts,
+    realtimeActivity: store.realtimeActivity,
+    isStatsLoading: store.isStatsLoading,
+    isChartsLoading: store.isChartsLoading,
+    isActivityLoading: store.isActivityLoading,
+    lastStatsUpdate: store.lastStatsUpdate,
+    lastChartsUpdate: store.lastChartsUpdate,
+    statsDateRange: store.statsDateRange,
+
+    // Actions
+    setStats: store.setStats,
+    setCharts: store.setCharts,
+    setRealtimeActivity: store.setRealtimeActivity,
+    setStatsLoading: store.setStatsLoading,
+    setChartsLoading: store.setChartsLoading,
+    setActivityLoading: store.setActivityLoading,
+    setStatsDateRange: store.setStatsDateRange,
+    updateSingleStat: store.updateSingleStat,
+    refreshStats: store.refreshStats,
+    clearDashboardStats: store.clearDashboardStats
   }
 }

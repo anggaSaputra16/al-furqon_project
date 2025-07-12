@@ -245,3 +245,71 @@ export interface AdminSystemInfo {
     free: number
   }
 }
+
+// Dashboard Stats Response Types
+export interface DashboardStatsResponse {
+  totalArticles?: number
+  totalDonations?: number
+  totalGallery?: number
+  totalUsers?: number
+  monthlyViews?: number
+  activeDonations?: number
+  monthlyIncome?: number
+  monthlyExpense?: number
+  totalBalance?: number
+  todayViews?: number
+  weeklyViews?: number
+  yearlyViews?: number
+  totalRevenue?: number
+  monthlyGrowth?: {
+    articles: number
+    donations: number
+    users: number
+    revenue: number
+    views: number
+  }
+  topArticles?: {
+    id: string
+    title: string
+    views: number
+    publishedAt: string
+  }[]
+  recentDonations?: {
+    id: string
+    amount: number
+    donorName?: string
+    purpose: string
+    createdAt: string
+  }[]
+  recentActivities?: AdminActivity[]
+  monthlyFinancialSummary: {
+    totalIncome: number
+    totalExpense: number
+    netBalance: number
+    categories: {
+      category: string
+      income: number
+      expense: number
+    }[]
+  }
+}
+
+export interface DashboardChartsData {
+  monthlyStats: {
+    month: string
+    articles: number
+    donations: number
+    views: number
+    revenue: number
+  }[]
+  categoryBreakdown: {
+    category: string
+    count: number
+    percentage: number
+  }[]
+  userActivity: {
+    date: string
+    activeUsers: number
+    newUsers: number
+  }[]
+}

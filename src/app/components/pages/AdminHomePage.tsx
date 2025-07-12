@@ -6,10 +6,12 @@ import {
     FaHome, FaNewspaper, FaDonate, FaImages, FaUsers, FaCog,
     FaChartBar, FaFileAlt, FaCalendarAlt, FaSignOutAlt,
     FaEye, FaEdit, FaTrash, FaPlus, FaBell, FaSearch,
-    FaMoneyBillWave, FaFileInvoiceDollar, FaChevronDown, FaChevronRight
+    FaMoneyBillWave, FaFileInvoiceDollar, FaChevronDown, FaChevronRight, FaSync
 } from 'react-icons/fa'
 import { useTheme } from '@/context/themeContext'
-import { useAdminAuthentication, useAdminDashboard } from '../../hooks/useAdmin'
+import { useAdminAuthentication } from '../../hooks/useAdmin'
+import { useDashboardStats } from '../../hooks/useDashboardStats'
+import { AdminActivity } from '../../types/adminResponseTypes'
 import AdminArticlePage from './AdminArticlePage'
 import AdminDonationPage from './AdminDonationPage'
 import AdminUserPage from './AdminUserPage'
@@ -29,14 +31,6 @@ interface AdminStats {
     monthlyIncome: number
     monthlyExpense: number
     totalBalance: number
-}
-
-interface RecentActivity {
-    id: string
-    type: 'article' | 'donation' | 'gallery' | 'user'
-    title: string
-    timestamp: string
-    status: 'published' | 'draft' | 'pending'
 }
 
 interface AdminHomePageProps {
@@ -64,55 +58,27 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
     // ALL HOOKS MUST BE CALLED FIRST - BEFORE ANY CONDITIONAL LOGIC
     const { colors } = useTheme()
     const { logout } = useAdminAuthentication()
-    const { stats: dashboardStats } = useAdminDashboard()
+    const { stats: dashboardStats, formattedStats, isLoading: isStatsLoading, refreshStats } = useDashboardStats()
     const [currentPage, setCurrentPage] = useState<'dashboard' | 'articles' | 'donations' | 'users' | 'reports' | 'settings' | 'finance' | 'financial-reports' | 'notifications'>('dashboard')
     const [mounted, setMounted] = useState(false)
     const [isReportsDropdownOpen, setIsReportsDropdownOpen] = useState(false)
     const [isNotificationDropdownOpen, setIsNotificationDropdownOpen] = useState(false)
 
-    // Use static data - no dependencies to avoid re-render loops
-    const [stats] = useState<AdminStats>({
-        totalArticles: 45,
-        totalDonations: 12,
-        totalGallery: 156, // Gallery images dari artikel
-        totalUsers: 3, // Admin CMS users
-        monthlyViews: 8750,
-        activeDonations: 8,
-        monthlyIncome: 18250000, // Pemasukan bulan ini
-        monthlyExpense: 8750000, // Pengeluaran bulan ini
-        totalBalance: 9500000 // Saldo bersih bulan ini
-    })
+    // Use backend data directly - no more static fallbacks
+    const stats = {
+        totalArticles: dashboardStats?.totalArticles ?? 0,
+        totalDonations: dashboardStats?.totalDonations ?? 0,
+        totalGallery: dashboardStats?.totalGallery ?? 0,
+        totalUsers: dashboardStats?.totalUsers ?? 0,
+        monthlyViews: dashboardStats?.monthlyViews ?? 0,
+        activeDonations: dashboardStats?.activeDonations ?? 0,
+        monthlyIncome: dashboardStats?.monthlyIncome ?? 0,
+        monthlyExpense: dashboardStats?.monthlyExpense ?? 0,
+        totalBalance: dashboardStats?.totalBalance ?? 0
+    }
 
-    const [recentActivities] = useState<RecentActivity[]>([
-        {
-            id: '1',
-            type: 'article',
-            title: 'Kajian Rutin Minggu Pagi',
-            timestamp: '2 jam yang lalu',
-            status: 'published'
-        },
-        {
-            id: '2',
-            type: 'donation',
-            title: 'Donasi Renovasi Mihrab - Rp 5.000.000',
-            timestamp: '4 jam yang lalu',
-            status: 'published'
-        },
-        {
-            id: '3',
-            type: 'donation',
-            title: 'Pengeluaran Listrik & Air - Rp 450.000',
-            timestamp: '1 hari yang lalu',
-            status: 'published'
-        },
-        {
-            id: '4',
-            type: 'article',
-            title: 'Pengumuman Libur Hari Raya',
-            timestamp: '2 hari yang lalu',
-            status: 'draft'
-        }
-    ])
+    // Recent activities from backend, empty array if no data
+    const recentActivities = dashboardStats?.recentActivities || []
 
     // Ensure component is mounted before rendering
     useEffect(() => {
@@ -157,31 +123,66 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
         { title: 'Kelola Pengguna', icon: FaUsers, action: () => setCurrentPage('users'), color: '#6366f1' }
     ]
 
-    const getStatusColor = (status: string) => {
+    const getActivityIcon = (resource: string) => {
+        switch (resource.toLowerCase()) {
+            case 'article':
+            case 'articles':
+                return FaFileAlt
+            case 'donation':
+            case 'donations':
+                return FaDonate
+            case 'gallery':
+            case 'galleries':
+                return FaImages
+            case 'user':
+            case 'users':
+                return FaUsers
+            case 'finance':
+            case 'financial':
+                return FaMoneyBillWave
+            default:
+                return FaFileAlt
+        }
+    }
+
+    const getActivityStatusColor = (status: string) => {
         switch (status) {
-            case 'published': return '#10b981'
-            case 'draft': return '#f59e0b'
-            case 'pending': return '#ef4444'
+            case 'success': return '#10b981'
+            case 'failed': return '#ef4444'
             default: return colors.detail
         }
     }
 
-    const getStatusText = (status: string) => {
+    const getActivityStatusText = (status: string) => {
         switch (status) {
-            case 'published': return 'Dipublikasi'
-            case 'draft': return 'Draft'
-            case 'pending': return 'Menunggu'
+            case 'success': return 'Berhasil'
+            case 'failed': return 'Gagal'
             default: return status
         }
     }
 
-    const getActivityIcon = (type: string) => {
-        switch (type) {
-            case 'article': return FaFileAlt
-            case 'donation': return FaDonate
-            case 'gallery': return FaImages
-            case 'user': return FaUsers
-            default: return FaFileAlt
+    const formatActivityTimestamp = (timestamp: string) => {
+        const date = new Date(timestamp)
+        const now = new Date()
+        const diffInMs = now.getTime() - date.getTime()
+        const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60))
+        const diffInDays = Math.floor(diffInHours / 24)
+
+        if (diffInHours < 1) {
+            const diffInMinutes = Math.floor(diffInMs / (1000 * 60))
+            return `${diffInMinutes} menit yang lalu`
+        } else if (diffInHours < 24) {
+            return `${diffInHours} jam yang lalu`
+        } else if (diffInDays === 1) {
+            return '1 hari yang lalu'
+        } else if (diffInDays < 7) {
+            return `${diffInDays} hari yang lalu`
+        } else {
+            return date.toLocaleDateString('id-ID', {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric'
+            })
         }
     }
 
@@ -255,6 +256,25 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
                     </div>
 
                     <div className="flex items-center space-x-4">
+                        {/* Refresh Dashboard */}
+                        <button
+                            onClick={refreshStats}
+                            disabled={isStatsLoading}
+                            className="relative p-2 rounded-lg transition-colors duration-200 hover:bg-gray-100 disabled:opacity-50"
+                            style={{
+                                backgroundColor: colors.background,
+                                color: colors.cardText
+                            }}
+                            title="Refresh dashboard data"
+                        >
+                            <motion.div
+                                animate={isStatsLoading ? { rotate: 360 } : { rotate: 0 }}
+                                transition={{ duration: 1, repeat: isStatsLoading ? Infinity : 0, ease: "linear" }}
+                            >
+                                <FaSync size={16} />
+                            </motion.div>
+                        </button>
+
                         {/* Notifications */}
                         <div className="relative">
                             <button
@@ -270,7 +290,7 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
                                     className="absolute -top-1 -right-1 w-5 h-5 rounded-full text-xs flex items-center justify-center text-white"
                                     style={{ backgroundColor: '#ef4444' }}
                                 >
-                                    3
+                                    {recentActivities.length > 0 ? Math.min(recentActivities.length, 9) : 0}
                                 </span>
                             </button>
 
@@ -290,38 +310,44 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
                                         <h3 className="font-semibold" style={{ color: colors.cardText }}>Notifikasi</h3>
                                     </div>
                                     <div className="max-h-96 overflow-y-auto">
-                                        {[
-                                            { id: 1, title: 'Artikel baru dipublikasi', desc: 'Kajian Rutin Minggu Pagi telah dipublikasi', time: '2 jam lalu', type: 'success' },
-                                            { id: 2, title: 'Donasi diterima', desc: 'Donasi sebesar Rp 500.000 diterima', time: '4 jam lalu', type: 'info' },
-                                            { id: 3, title: 'Artikel menunggu review', desc: 'Draft artikel perlu direview', time: '1 hari lalu', type: 'warning' }
-                                        ].map((notif) => (
-                                            <div
-                                                key={notif.id}
-                                                className="p-4 border-b last:border-b-0 hover:bg-gray-50 cursor-pointer"
-                                                style={{ borderColor: colors.border + '20' }}
-                                            >
-                                                <div className="flex items-start space-x-3">
-                                                    <div
-                                                        className="w-2 h-2 rounded-full mt-2"
-                                                        style={{
-                                                            backgroundColor: notif.type === 'success' ? '#10b981' :
-                                                                notif.type === 'info' ? '#3b82f6' : '#f59e0b'
-                                                        }}
-                                                    />
-                                                    <div className="flex-1">
-                                                        <div className="font-medium text-sm" style={{ color: colors.cardText }}>
-                                                            {notif.title}
-                                                        </div>
-                                                        <div className="text-xs mt-1" style={{ color: colors.detail }}>
-                                                            {notif.desc}
-                                                        </div>
-                                                        <div className="text-xs mt-1" style={{ color: colors.detail }}>
-                                                            {notif.time}
+                                        {recentActivities.length > 0 ? (
+                                            recentActivities.slice(0, 5).map((activity: AdminActivity) => (
+                                                <div
+                                                    key={activity.id}
+                                                    className="p-4 border-b last:border-b-0 hover:bg-gray-50 cursor-pointer"
+                                                    style={{ borderColor: colors.border + '20' }}
+                                                >
+                                                    <div className="flex items-start space-x-3">
+                                                        <div
+                                                            className="w-2 h-2 rounded-full mt-2"
+                                                            style={{
+                                                                backgroundColor: getActivityStatusColor(activity.status)
+                                                            }}
+                                                        />
+                                                        <div className="flex-1">
+                                                            <div className="font-medium text-sm" style={{ color: colors.cardText }}>
+                                                                {activity.action}
+                                                            </div>
+                                                            <div className="text-xs mt-1" style={{ color: colors.detail }}>
+                                                                {activity.description}
+                                                            </div>
+                                                            <div className="text-xs mt-1" style={{ color: colors.detail }}>
+                                                                {formatActivityTimestamp(activity.timestamp)}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
+                                            ))
+                                        ) : (
+                                            <div className="p-4 text-center">
+                                                <div
+                                                    className="text-sm"
+                                                    style={{ color: colors.detail }}
+                                                >
+                                                    Belum ada notifikasi
+                                                </div>
                                             </div>
-                                        ))}
+                                        )}
                                     </div>
                                     <div className="p-3 text-center border-t" style={{ borderColor: colors.border + '30' }}>
                                         <button
@@ -509,11 +535,35 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
                             Selamat datang, {adminName}! 👋
                         </h2>
                         <p
-                            className="text-lg"
+                            className="text-lg mb-2"
                             style={{ color: colors.detail }}
                         >
                             Kelola konten Masjid Al-Furqon dengan mudah dari dashboard ini.
                         </p>
+
+                        {/* Data Status Indicator */}
+                        <div className="flex items-center space-x-2">
+                            <div
+                                className="w-2 h-2 rounded-full"
+                                style={{
+                                    backgroundColor: dashboardStats ? '#10b981' : '#f59e0b'
+                                }}
+                            />
+                            <span
+                                className="text-sm"
+                                style={{ color: colors.detail }}
+                            >
+                                {dashboardStats ? 'Data terbaru dari server' : 'Menggunakan data simulasi'}
+                            </span>
+                            {isStatsLoading && (
+                                <span
+                                    className="text-sm"
+                                    style={{ color: colors.accent }}
+                                >
+                                    • Memperbarui...
+                                </span>
+                            )}
+                        </div>
                     </motion.div>
 
                     {/* Stats Grid */}
@@ -530,7 +580,7 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
                                 icon: FaFileAlt,
                                 color: colors.accent,
                                 description: 'Artikel yang telah dipublikasi',
-                                formatter: (value: number) => value.toString()
+                                formatter: (value: number) => (value ?? 0).toString()
                             },
                             {
                                 label: 'Program Donasi',
@@ -538,7 +588,7 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
                                 icon: FaDonate,
                                 color: '#10b981',
                                 description: 'Program donasi aktif',
-                                formatter: (value: number) => value.toString()
+                                formatter: (value: number) => (value ?? 0).toString()
                             },
                             {
                                 label: 'Pemasukan Bulan Ini',
@@ -550,7 +600,7 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
                                     style: 'currency',
                                     currency: 'IDR',
                                     minimumFractionDigits: 0
-                                }).format(value)
+                                }).format(value ?? 0)
                             },
                             {
                                 label: 'Saldo Bersih',
@@ -562,19 +612,26 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
                                     style: 'currency',
                                     currency: 'IDR',
                                     minimumFractionDigits: 0
-                                }).format(value)
+                                }).format(value ?? 0)
                             }
                         ].map((stat, index) => {
                             const Icon = stat.icon
                             return (
                                 <div
                                     key={stat.label}
-                                    className="p-6 rounded-xl border hover:shadow-lg transition-all duration-300 group"
+                                    className="p-6 rounded-xl border hover:shadow-lg transition-all duration-300 group relative"
                                     style={{
                                         backgroundColor: colors.card,
                                         borderColor: colors.border + '30'
                                     }}
                                 >
+                                    {/* Loading Overlay */}
+                                    {isStatsLoading && (
+                                        <div className="absolute inset-0 bg-white bg-opacity-50 rounded-xl flex items-center justify-center z-10">
+                                            <div className="w-6 h-6 border-2 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+                                        </div>
+                                    )}
+
                                     <div className="flex items-center justify-between mb-4">
                                         <div
                                             className="w-12 h-12 rounded-lg flex items-center justify-center"
@@ -586,7 +643,7 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
                                             className="text-2xl font-bold"
                                             style={{ color: colors.cardText }}
                                         >
-                                            {stat.formatter(stat.value)}
+                                            {isStatsLoading ? '...' : stat.formatter(stat.value)}
                                         </div>
                                     </div>
                                     <div
@@ -677,44 +734,77 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
                                     Aktivitas Terbaru
                                 </h3>
                                 <div className="space-y-4">
-                                    {recentActivities.map((activity, index) => {
-                                        const Icon = getActivityIcon(activity.type)
-                                        return (
-                                            <div key={activity.id} className="flex items-start space-x-3">
-                                                <div
-                                                    className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                                                    style={{ backgroundColor: colors.accent + '20' }}
-                                                >
-                                                    <Icon size={14} style={{ color: colors.accent }} />
-                                                </div>
-                                                <div className="flex-1 min-w-0">
+                                    {recentActivities.length > 0 ? (
+                                        recentActivities.slice(0, 5).map((activity: AdminActivity) => {
+                                            const Icon = getActivityIcon(activity.resource)
+                                            return (
+                                                <div key={activity.id} className="flex items-start space-x-3">
                                                     <div
-                                                        className="text-sm font-medium truncate"
-                                                        style={{ color: colors.cardText }}
+                                                        className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                                                        style={{
+                                                            backgroundColor: getActivityStatusColor(activity.status) + '20'
+                                                        }}
                                                     >
-                                                        {activity.title}
+                                                        <Icon size={14} style={{
+                                                            color: getActivityStatusColor(activity.status)
+                                                        }} />
                                                     </div>
-                                                    <div className="flex items-center space-x-2 mt-1">
-                                                        <span
-                                                            className="text-xs"
+                                                    <div className="flex-1 min-w-0">
+                                                        <div
+                                                            className="text-sm font-medium truncate"
+                                                            style={{ color: colors.cardText }}
+                                                        >
+                                                            {activity.description}
+                                                        </div>
+                                                        <div
+                                                            className="text-xs mt-1 truncate"
                                                             style={{ color: colors.detail }}
                                                         >
-                                                            {activity.timestamp}
-                                                        </span>
-                                                        <span
-                                                            className="px-2 py-0.5 rounded-full text-xs font-medium"
-                                                            style={{
-                                                                backgroundColor: getStatusColor(activity.status) + '20',
-                                                                color: getStatusColor(activity.status)
-                                                            }}
-                                                        >
-                                                            {getStatusText(activity.status)}
-                                                        </span>
+                                                            {activity.action} • {activity.userName}
+                                                        </div>
+                                                        <div className="flex items-center space-x-2 mt-1">
+                                                            <span
+                                                                className="text-xs"
+                                                                style={{ color: colors.detail }}
+                                                            >
+                                                                {formatActivityTimestamp(activity.timestamp)}
+                                                            </span>
+                                                            <span
+                                                                className="px-2 py-0.5 rounded-full text-xs font-medium"
+                                                                style={{
+                                                                    backgroundColor: getActivityStatusColor(activity.status) + '20',
+                                                                    color: getActivityStatusColor(activity.status)
+                                                                }}
+                                                            >
+                                                                {getActivityStatusText(activity.status)}
+                                                            </span>
+                                                        </div>
                                                     </div>
                                                 </div>
+                                            )
+                                        })
+                                    ) : (
+                                        <div className="text-center py-8">
+                                            <div
+                                                className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+                                                style={{ backgroundColor: colors.detail + '20' }}
+                                            >
+                                                <FaFileAlt size={24} style={{ color: colors.detail }} />
                                             </div>
-                                        )
-                                    })}
+                                            <div
+                                                className="text-sm font-medium mb-1"
+                                                style={{ color: colors.detail }}
+                                            >
+                                                Belum ada aktivitas
+                                            </div>
+                                            <div
+                                                className="text-xs"
+                                                style={{ color: colors.detail + '80' }}
+                                            >
+                                                Aktivitas terbaru akan muncul di sini
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </motion.div>

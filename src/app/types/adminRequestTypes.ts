@@ -68,6 +68,28 @@ export interface GetAdminStatsRequest {
   endDate?: string
 }
 
+// Dashboard Stats Request Types
+export interface GetDashboardStatsRequest {
+  dateRange?: {
+    startDate: string // ISO date string
+    endDate: string   // ISO date string
+  }
+  includeCharts?: boolean
+  includeTopArticles?: boolean
+  includeRecentDonations?: boolean
+  includeFinancialSummary?: boolean
+  timezone?: string
+}
+
+export interface GetDashboardChartsRequest {
+  chartType: 'monthly' | 'weekly' | 'daily' | 'yearly'
+  dateRange?: {
+    startDate: string
+    endDate: string
+  }
+  metrics?: ('articles' | 'donations' | 'views' | 'revenue' | 'users')[]
+}
+
 // Admin Bulk Operations Request Types
 export interface BulkDeleteRequest {
   ids: string[]
