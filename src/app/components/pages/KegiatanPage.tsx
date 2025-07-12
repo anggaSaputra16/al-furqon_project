@@ -5,10 +5,10 @@ import { useSearchParams } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
 import { FaSearch, FaRoute, FaChevronUp } from 'react-icons/fa'
 
-import { useArticleStore } from '../../stores/useArticleStore'
 import { useMenuStore } from '../../stores/useMenuStore'
 import { useTheme } from '@/context/themeContext'
 import { iconMap } from '@/app/utils/iconMapper'
+import { useFeaturedArticles } from '../../hooks/useHomePageApi'
 
 import MasjidHeader from '../path/MasjidHeader'
 import Footer from '../path/Footer'
@@ -18,8 +18,8 @@ import UniversalNavGrid, { NavItem } from '../path/UniversalNavGrid'
 
 export default function KegiatanPage() {
   const { colors } = useTheme()
-  const articles = useArticleStore((state) => state.articles)
-  const fetchArticles = useArticleStore((state) => state.fetchArticles)
+  // Use the new API hook instead of useArticleStore - get all articles (no limit)
+  const { articles: apiArticles, loading: articlesLoading, error: articlesError } = useFeaturedArticles(100)
   const { menus, fetchMenus } = useMenuStore()
   const searchParams = useSearchParams()
 
@@ -34,8 +34,7 @@ export default function KegiatanPage() {
 
   useEffect(() => {
     fetchMenus()
-    fetchArticles()
-  }, [fetchMenus, fetchArticles])
+  }, [fetchMenus])
 
   // Handle URL filter parameter
   useEffect(() => {
@@ -60,6 +59,28 @@ export default function KegiatanPage() {
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  // Transform API articles to match the expected format for this component
+  const articles = useMemo(() => {
+    return apiArticles.map(article => ({
+      id: article.id,
+      title: article.title,
+      description: article.description,
+      detail: article.content,
+      content: article.content,
+      image: article.image,
+      category: article.category === 'kegiatan' ? 'Kegiatan' :
+        article.category === 'berita' ? 'Berita' :
+          article.category === 'sumbangan' ? 'Sumbangan' :
+            article.category === 'fasilitas' ? 'Fasilitas' : 'Profil',
+      date: article.publishedAt ? new Date(article.publishedAt).toLocaleDateString('id-ID', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }) : undefined,
+      tag: article.tags?.[0] || article.category
+    }))
+  }, [apiArticles])
 
   // Get unique categories from articles
   const categories = useMemo(() => {
@@ -117,6 +138,61 @@ export default function KegiatanPage() {
   }
 
   const hasActiveFilters = searchQuery !== '' || selectedCategory !== ''
+
+  // Loading and Error States
+  if (articlesLoading) {
+    return (
+      <main
+        style={{ background: colors.background, color: colors.cardText }}
+        className="transition-colors duration-500"
+      >
+        <MasjidHeader />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6 sm:space-y-8 mt-5">
+          <div className="text-center py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4" style={{ borderColor: colors.accent }}></div>
+            <p style={{ color: colors.detail, fontFamily: 'var(--font-body)' }}>
+              Memuat artikel...
+            </p>
+          </div>
+        </div>
+        <Footer />
+      </main>
+    )
+  }
+
+  if (articlesError && articles.length === 0) {
+    return (
+      <main
+        style={{ background: colors.background, color: colors.cardText }}
+        className="transition-colors duration-500"
+      >
+        <MasjidHeader />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6 sm:space-y-8 mt-5">
+          <div className="text-center py-20">
+            <div className="text-red-500 text-6xl mb-4">⚠️</div>
+            <h3 className="text-2xl font-bold mb-2" style={{ color: colors.cardText, fontFamily: 'var(--font-header-modern)' }}>
+              Gagal Memuat Artikel
+            </h3>
+            <p className="text-base mb-6" style={{ color: colors.detail, fontFamily: 'var(--font-body)' }}>
+              Terjadi kesalahan saat memuat artikel. Silakan refresh halaman atau coba lagi nanti.
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-6 py-3 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg"
+              style={{
+                backgroundColor: colors.accent,
+                color: 'white',
+                fontFamily: 'var(--font-sharp-bold)'
+              }}
+            >
+              Refresh Halaman
+            </button>
+          </div>
+        </div>
+        <Footer />
+      </main>
+    )
+  }
 
   return (
     <main
@@ -277,24 +353,31 @@ export default function KegiatanPage() {
               }}
             >
               Ditemukan {filteredArticles.length} dari {articles.length} artikel
+              {articlesLoading && (
+                <span className="ml-2 text-xs animate-pulse" style={{ color: colors.accent }}>
+                  • Memuat data...
+                </span>
+              )}
               {filteredArticles.length > ARTICLES_PER_PAGE && (
                 <span className="ml-2 text-xs opacity-75">
                   (Menampilkan {ARTICLES_PER_PAGE} per halaman)
                 </span>
               )}
             </div>
-            {hasActiveFilters && (
-              <div
-                className="text-xs px-3 py-1 rounded-full"
-                style={{
-                  backgroundColor: colors.accent + '15',
-                  color: colors.accent,
-                  fontFamily: 'var(--font-sharp-bold)'
-                }}
-              >
-                Filter aktif
-              </div>
-            )}
+            <div className="flex items-center gap-2">
+              {hasActiveFilters && (
+                <div
+                  className="text-xs px-3 py-1 rounded-full"
+                  style={{
+                    backgroundColor: colors.accent + '15',
+                    color: colors.accent,
+                    fontFamily: 'var(--font-sharp-bold)'
+                  }}
+                >
+                  Filter aktif
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -406,6 +489,20 @@ export default function KegiatanPage() {
                           {article.category}
                         </div>
 
+                        {/* Published indicator for API articles */}
+                        {article.date && (
+                          <div
+                            className="absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-bold shadow-lg"
+                            style={{
+                              backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                              color: 'white',
+                              fontFamily: 'var(--font-sharp-bold)'
+                            }}
+                          >
+                            📅 {article.date}
+                          </div>
+                        )}
+
                         {/* Hover overlay with read more text */}
                         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                           <div
@@ -459,14 +556,27 @@ export default function KegiatanPage() {
 
                         {/* Metadata */}
                         <div className="mt-4 pt-3 border-t flex items-center justify-between" style={{ borderColor: colors.border }}>
-                          <div
-                            className="text-xs font-medium opacity-75"
-                            style={{
-                              color: colors.detail,
-                              fontFamily: 'var(--font-body)'
-                            }}
-                          >
-                            {article.date || 'Artikel'}
+                          <div className="flex flex-col">
+                            <div
+                              className="text-xs font-medium opacity-75"
+                              style={{
+                                color: colors.detail,
+                                fontFamily: 'var(--font-body)'
+                              }}
+                            >
+                              {article.date || 'Artikel Terbaru'}
+                            </div>
+                            {article.tag && (
+                              <div
+                                className="text-xs font-medium opacity-60 mt-1"
+                                style={{
+                                  color: colors.accent,
+                                  fontFamily: 'var(--font-sharp-bold)'
+                                }}
+                              >
+                                #{article.tag}
+                              </div>
+                            )}
                           </div>
                           <div
                             className="text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-300"
