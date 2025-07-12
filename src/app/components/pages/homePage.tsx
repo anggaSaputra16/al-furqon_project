@@ -1,13 +1,10 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import GuideSection from '@/app/contents/section/GuideSection'
-import AboutSection from '@/app/contents/section/AboutSection'
 import UniversalNavGrid, { NavItem } from '../path/UniversalNavGrid'
 import { FaRoute, FaChevronUp } from 'react-icons/fa'
 import { AnimatePresence, motion } from 'framer-motion'
 import Footer from '../path/Footer'
-import ThemeToggle from '../path/ThemeToggle'
 import CardLayout, { CardData } from '../../layouts/CardLayout'
 import MasjidHeader from '../path/MasjidHeader'
 import { useMenuStore } from '../../stores/useMenuStore'
@@ -18,9 +15,8 @@ import HomeHeader from '../path/HomeHeader'
 import ActivityCarousel from '../path/ActivityCarousel'
 import { useArticleStore } from '../../stores/useArticleStore'
 import UniversalModal from '../path/UniversalModal'
-import UniversalCard from '../path/UniversalCard'
 import { donationCards as donationCardsStatic, newsCards, activityCards as activityCardsStatic, upcomingCards as upcomingCardsStatic } from '../../utils/staticData'
-// Import new API hooks
+
 import {
   useHomePageData,
   useFeaturedArticles,
@@ -42,7 +38,6 @@ export default function HomePage() {
   const { articles: featuredArticles, loading: articlesLoading, error: articlesError } = useFeaturedArticles()
   const { donations: donationPrograms, loading: donationsLoading } = useActiveDonations()
   const { news: latestNews, loading: newsLoading } = useLatestNews()
-  const { stats: homeStats, loading: statsLoading } = useHomeStats()
   const { submitDonation, submitting: donationSubmitting } = useDonationSubmission()
 
   // Smart fallback logic - use backend data if available, otherwise static data
@@ -165,7 +160,6 @@ export default function HomePage() {
   useEffect(() => {
     fetchMenus()
     fetchArticles()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Handle scroll to show scroll-to-top button only

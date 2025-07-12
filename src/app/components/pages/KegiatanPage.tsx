@@ -12,7 +12,6 @@ import { useFeaturedArticles } from '../../hooks/useHomePageApi'
 
 import MasjidHeader from '../path/MasjidHeader'
 import Footer from '../path/Footer'
-import ThemeToggle from '../path/ThemeToggle'
 import ArticleDetail from '../path/ArticleDetail'
 import UniversalNavGrid, { NavItem } from '../path/UniversalNavGrid'
 

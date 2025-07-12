@@ -1,25 +1,25 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
 import { FaRoute, FaChevronUp, FaSearch, FaTimes, FaImages } from 'react-icons/fa'
 
-import { useGalleryStore } from '../../stores/useGalleryStore'
 import { useMenuStore } from '../../stores/useMenuStore'
 import { useSearchStore } from '../../stores/useSearchStore'
 import { useTheme } from '@/context/themeContext'
 import { iconMap } from '@/app/utils/iconMapper'
+import { useFeaturedArticles } from '../../hooks/useHomePageApi'
 
 import GalleryMasonry from '@/app/components/path/GalleryMasonry'
 import GalleryModal from '@/app/components/path/GalleryModal'
 import MasjidHeader from '@/app/components/path/MasjidHeader'
 import Footer from '@/app/components/path/Footer'
-import ThemeToggle from '@/app/components/path/ThemeToggle'
 import UniversalNavGrid, { NavItem } from '@/app/components/path/UniversalNavGrid'
 
 export default function GaleriPage() {
-  const { setImages, images } = useGalleryStore()
+  // Use API hook to get articles and extract images
+  const { articles: apiArticles, loading: articlesLoading, error: articlesError } = useFeaturedArticles(100)
   const { search, setSearch } = useSearchStore()
   const { menus, fetchMenus } = useMenuStore()
   const { colors } = useTheme()
@@ -28,6 +28,60 @@ export default function GaleriPage() {
   const [showScrollToTop, setShowScrollToTop] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterFromURL, setFilterFromURL] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+
+  const IMAGES_PER_PAGE = 50
+
+  // Transform articles to gallery images format
+  const images = useMemo(() => {
+    if (!apiArticles || apiArticles.length === 0) {
+      return []
+    }
+
+    // Extract images from articles
+    return apiArticles.map((article, index) => ({
+      id: article.id,
+      src: article.image,
+      alt: article.title,
+      author: article.author?.name || 'Admin Al-Furqon',
+      description: article.description || article.title,
+      detail: article.content ? article.content.substring(0, 200) + '...' : article.description,
+      articleTitle: article.title,
+      articleDate: article.publishedAt ? new Date(article.publishedAt).toLocaleDateString('id-ID', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }) : undefined,
+      category: article.category
+    }))
+  }, [apiArticles])
+
+  // Filter images based on search
+  const filteredImages = useMemo(() => {
+    if (!searchQuery && !search) return images
+
+    const searchTerm = (searchQuery || search).toLowerCase()
+    return images.filter((img) => {
+      const searchWords = searchTerm.split(' ').filter(Boolean)
+      const combinedText = [img.alt, img.description, img.detail, img.author, img.category]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+
+      return searchWords.every((word) => combinedText.includes(word))
+    })
+  }, [images, searchQuery, search])
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredImages.length / IMAGES_PER_PAGE)
+  const startIndex = (currentPage - 1) * IMAGES_PER_PAGE
+  const endIndex = startIndex + IMAGES_PER_PAGE
+  const paginatedImages = filteredImages.slice(startIndex, endIndex)
+
+  // Reset to first page when search changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchQuery, search])
 
   // Handle URL filter parameter
   useEffect(() => {
@@ -61,140 +115,6 @@ export default function GaleriPage() {
       behavior: 'smooth'
     })
   }
-
-  useEffect(() => {
-    setImages([
-      {
-        id: '1',
-        src: '/images/gambar1.jpg',
-        alt: 'Al-Qur’an berdiri',
-        author: 'Dokumentasi Masjid',
-        description: 'Al-Qur’an berdiri di atas meja',
-        detail: 'Gambaran kemuliaan kitab suci dengan posisi berdiri penuh hormat.',
-      },
-      {
-        id: '2',
-        src: '/images/gambar2.jpg',
-        alt: 'Al-Qur’an di atas meja kayu',
-        author: 'Studio Dakwah',
-        description: 'Meja kayu dengan Al-Qur’an',
-        detail: 'Sederhana namun penuh makna, tempat Al-Qur’an diletakkan saat dibaca.',
-      },
-      {
-        id: '3',
-        src: '/images/gambar3.jpg',
-        alt: 'Anak-anak belajar Al-Qur’an',
-        author: 'TPA Al-Furqon',
-        description: 'Belajar mengaji bersama',
-        detail: 'Anak-anak membaca Al-Qur’an dalam bimbingan ustadz di masjid.',
-      },
-      {
-        id: '4',
-        src: '/images/gambar4.jpg',
-        alt: 'Suasana masjid setelah shalat',
-        author: 'Relawan Masjid',
-        description: 'Masjid tenang nan megah',
-        detail: 'Interior masjid menenangkan setelah jamaah menyelesaikan ibadah.',
-      },
-      {
-        id: '5',
-        src: '/images/gambar5.jpg',
-        alt: 'Shalat berjamaah di luar ruangan',
-        author: 'Komunitas Muslim',
-        description: 'Shalat di jalan raya',
-        detail: 'Momen unik umat Muslim tetap shalat berjamaah di tengah kota.',
-      },
-      {
-        id: '6',
-        src: '/images/gambar6.jpg',
-        alt: 'Al-Qur’an dengan bunga',
-        author: 'Muslimah Design',
-        description: 'Hiasan bunga dan mushaf',
-        detail: 'Menunjukkan penghormatan terhadap Al-Qur’an dalam tata artistik.',
-      },
-      {
-        id: '7',
-        src: '/images/gambar7.jpg',
-        alt: 'Ayah dan anak shalat bersama',
-        author: 'Keluarga Dakwah',
-        description: 'Mendidik anak lewat ibadah',
-        detail: 'Anak kecil belajar shalat dari sang ayah dengan penuh kasih sayang.',
-      },
-      {
-        id: '8',
-        src: '/images/gambar8.jpg',
-        alt: 'Arsitektur masjid putih modern',
-        author: 'Arsitektur Islami',
-        description: 'Pilar dan lengkung masjid',
-        detail: 'Desain arsitektur masjid bernuansa putih yang bersih dan agung.',
-      },
-      {
-        id: '9',
-        src: '/images/gambar9.jpg',
-        alt: 'Al-Qur’an terbuka',
-        author: 'Dokumentasi Madrasah',
-        description: 'Tadabbur Al-Qur’an',
-        detail: 'Mushaf terbuka dengan cahaya memancar, mengajak umat memahami ayat.',
-      },
-      {
-        id: '10',
-        src: '/images/gambar10.jpg',
-        alt: 'Al-Qur’an dan cahaya terang',
-        author: 'Fotografer Dakwah',
-        description: 'Belajar dalam terang',
-        detail: 'Cahaya dari jendela menerangi halaman Al-Qur’an yang dibaca.',
-      },
-      {
-        id: '11',
-        src: '/images/gambar11.jpg',
-        alt: 'Shalat di lorong masjid',
-        author: 'Santri Dokumentasi',
-        description: 'Shalat di lorong',
-        detail: 'Jamaah mengambil tempat di lorong masjid saat masjid utama penuh.',
-      },
-      {
-        id: '12',
-        src: '/images/gambar12.jpg',
-        alt: 'Al-Qur’an dan tasbih',
-        author: 'Studio Ibadah',
-        description: 'Tasbih di samping mushaf',
-        detail: 'Simbol zikir dan tilawah bersatu dalam foto yang menenangkan.',
-      },
-      {
-        id: '13',
-        src: '/images/gambar13.jpg',
-        alt: 'Mushaf tua berornamen',
-        author: 'Pustaka Islam',
-        description: 'Keindahan mushaf klasik',
-        detail: 'Halaman mushaf penuh warna dan kaligrafi mencerminkan sejarah Islam.',
-      },
-      {
-        id: '14',
-        src: '/images/gambar14.jpg',
-        alt: 'Jamaah masjid',
-        author: 'Media Masjid',
-        description: 'Jamaah mendengarkan khutbah',
-        detail: 'Momen hening penuh perhatian saat mendengar ceramah di masjid.',
-      },
-      {
-        id: '15',
-        src: '/images/gambar15.jpg',
-        alt: 'Pemandangan dalam masjid megah',
-        author: 'Arsitektur Muslim',
-        description: 'Kemegahan dalam kesederhanaan',
-        detail: 'Masjid dengan lampu gantung, karpet merah dan langit-langit tinggi.',
-      },
-      {
-        id: '16',
-        src: '/images/gambar16.jpg',
-        alt: 'Pintu masuk masjid',
-        author: 'Dokumentasi',
-        description: 'Gerbang masjid',
-        detail: 'Gerbang yang megah menyambut jamaah dengan keramahan dan keindahan.',
-      },
-    ])
-  }, [setImages])
-
   useEffect(() => {
     fetchMenus()
   }, [fetchMenus])
@@ -212,7 +132,7 @@ export default function GaleriPage() {
   const handleSearchChange = (value: string) => {
     setSearchQuery(value)
     setSearch(value)
-    setFilterFromURL(false) // Clear URL filter indicator when user manually searches
+    setFilterFromURL(false)
   }
 
   const clearSearch = () => {
@@ -221,15 +141,61 @@ export default function GaleriPage() {
     setFilterFromURL(false)
   }
 
-  const filteredImages = (images || []).filter((img) => {
-    const searchWords = search.toLowerCase().split(' ').filter(Boolean)
-    const combinedText = [img.alt, img.description, img.detail, img.author]
-      .filter(Boolean)
-      .join(' ')
-      .toLowerCase()
+  // Loading State
+  if (articlesLoading) {
+    return (
+      <main
+        style={{ background: colors.background, color: colors.cardText }}
+        className="transition-colors duration-500"
+      >
+        <MasjidHeader />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6 sm:space-y-8 mt-5">
+          <div className="text-center py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4" style={{ borderColor: colors.accent }}></div>
+            <p style={{ color: colors.detail, fontFamily: 'var(--font-body)' }}>
+              Memuat galeri foto...
+            </p>
+          </div>
+        </div>
+        <Footer />
+      </main>
+    )
+  }
 
-    return searchWords.every((word) => combinedText.includes(word))
-  })
+  // Error State
+  if (articlesError && images.length === 0) {
+    return (
+      <main
+        style={{ background: colors.background, color: colors.cardText }}
+        className="transition-colors duration-500"
+      >
+        <MasjidHeader />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6 sm:space-y-8 mt-5">
+          <div className="text-center py-20">
+            <div className="text-red-500 text-6xl mb-4">📷</div>
+            <h3 className="text-2xl font-bold mb-2" style={{ color: colors.cardText, fontFamily: 'var(--font-header-modern)' }}>
+              Gagal Memuat Galeri
+            </h3>
+            <p className="text-base mb-6" style={{ color: colors.detail, fontFamily: 'var(--font-body)' }}>
+              Terjadi kesalahan saat memuat foto dari artikel. Silakan refresh halaman atau coba lagi nanti.
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-6 py-3 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg"
+              style={{
+                backgroundColor: colors.accent,
+                color: 'white',
+                fontFamily: 'var(--font-sharp-bold)'
+              }}
+            >
+              Refresh Halaman
+            </button>
+          </div>
+        </div>
+        <Footer />
+      </main>
+    )
+  }
 
   return (
     <main
@@ -325,26 +291,38 @@ export default function GaleriPage() {
               {search ? (
                 <>Ditemukan {filteredImages.length} dari {images.length} foto</>
               ) : (
-                <>Menampilkan {images.length} foto</>
+                <>Menampilkan {images.length} foto dari {apiArticles.length} artikel</>
+              )}
+              {articlesLoading && (
+                <span className="ml-2 text-xs animate-pulse" style={{ color: colors.accent }}>
+                  • Memuat data...
+                </span>
+              )}
+              {filteredImages.length > IMAGES_PER_PAGE && (
+                <span className="ml-2 text-xs opacity-75">
+                  (Menampilkan {IMAGES_PER_PAGE} per halaman)
+                </span>
               )}
             </div>
-            {search && (
-              <div
-                className="text-xs px-3 py-1 rounded-full flex items-center gap-2"
-                style={{
-                  backgroundColor: colors.accent + '15',
-                  color: colors.accent,
-                  fontFamily: 'var(--font-sharp-bold)'
-                }}
-              >
-                <span>Pencarian aktif: "{search}"</span>
-                {filterFromURL && (
-                  <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">
-                    dari fasilitas
-                  </span>
-                )}
-              </div>
-            )}
+            <div className="flex items-center gap-2">
+              {search && (
+                <div
+                  className="text-xs px-3 py-1 rounded-full flex items-center gap-2"
+                  style={{
+                    backgroundColor: colors.accent + '15',
+                    color: colors.accent,
+                    fontFamily: 'var(--font-sharp-bold)'
+                  }}
+                >
+                  <span>Pencarian: "{search}"</span>
+                  {filterFromURL && (
+                    <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">
+                      dari fasilitas
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </motion.section>
 
@@ -378,11 +356,143 @@ export default function GaleriPage() {
                 >
                   <FaImages size={14} />
                   {filteredImages.length} foto
+                  {totalPages > 1 && (
+                    <span className="ml-1 opacity-75">
+                      • Hal {currentPage}/{totalPages}
+                    </span>
+                  )}
                 </div>
               </div>
 
-              {/* Gallery Masonry */}
-              <GalleryMasonry images={filteredImages} />
+              {/* Gallery Masonry - Show paginated images */}
+              <GalleryMasonry images={paginatedImages} />
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-12 pt-8 border-t"
+                  style={{ borderColor: colors.border }}
+                >
+                  {/* Page Info */}
+                  <div
+                    className="text-sm"
+                    style={{
+                      color: colors.detail,
+                      fontFamily: 'var(--font-body)'
+                    }}
+                  >
+                    Halaman {currentPage} dari {totalPages} - Menampilkan {startIndex + 1} hingga {Math.min(endIndex, filteredImages.length)} dari {filteredImages.length} foto
+                  </div>
+
+                  {/* Pagination Controls */}
+                  <div className="flex items-center gap-2">
+                    {/* Previous Button */}
+                    <button
+                      onClick={() => {
+                        setCurrentPage(prev => Math.max(prev - 1, 1))
+                        scrollToTop()
+                      }}
+                      disabled={currentPage === 1}
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{
+                        backgroundColor: currentPage === 1 ? 'transparent' : colors.card,
+                        color: currentPage === 1 ? colors.detail : colors.cardText,
+                        border: `1px solid ${colors.border}`,
+                        fontFamily: 'var(--font-body)'
+                      }}
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                      Sebelumnya
+                    </button>
+
+                    {/* Page Numbers */}
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: totalPages }, (_, index) => {
+                        const pageNumber = index + 1
+                        const isCurrentPage = pageNumber === currentPage
+
+                        // Show first page, last page, current page, and pages around current page
+                        const shouldShow =
+                          pageNumber === 1 ||
+                          pageNumber === totalPages ||
+                          Math.abs(pageNumber - currentPage) <= 1
+
+                        if (!shouldShow) {
+                          // Show ellipsis for gaps
+                          if (pageNumber === 2 && currentPage > 4) {
+                            return (
+                              <span
+                                key={pageNumber}
+                                className="px-2 py-1 text-sm"
+                                style={{ color: colors.detail }}
+                              >
+                                ...
+                              </span>
+                            )
+                          }
+                          if (pageNumber === totalPages - 1 && currentPage < totalPages - 3) {
+                            return (
+                              <span
+                                key={pageNumber}
+                                className="px-2 py-1 text-sm"
+                                style={{ color: colors.detail }}
+                              >
+                                ...
+                              </span>
+                            )
+                          }
+                          return null
+                        }
+
+                        return (
+                          <button
+                            key={pageNumber}
+                            onClick={() => {
+                              setCurrentPage(pageNumber)
+                              scrollToTop()
+                            }}
+                            className="w-10 h-10 rounded-lg font-medium transition-all duration-300 hover:shadow-md"
+                            style={{
+                              backgroundColor: isCurrentPage ? colors.accent : colors.card,
+                              color: isCurrentPage ? 'white' : colors.cardText,
+                              border: `1px solid ${isCurrentPage ? colors.accent : colors.border}`,
+                              fontFamily: 'var(--font-sharp-bold)',
+                              fontSize: '14px'
+                            }}
+                          >
+                            {pageNumber}
+                          </button>
+                        )
+                      })}
+                    </div>
+
+                    {/* Next Button */}
+                    <button
+                      onClick={() => {
+                        setCurrentPage(prev => Math.min(prev + 1, totalPages))
+                        scrollToTop()
+                      }}
+                      disabled={currentPage === totalPages}
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{
+                        backgroundColor: currentPage === totalPages ? 'transparent' : colors.card,
+                        color: currentPage === totalPages ? colors.detail : colors.cardText,
+                        border: `1px solid ${colors.border}`,
+                        fontFamily: 'var(--font-body)'
+                      }}
+                    >
+                      Selanjutnya
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </div>
+                </motion.div>
+              )}
             </div>
           ) : (
             <div className="text-center py-20 px-6">
