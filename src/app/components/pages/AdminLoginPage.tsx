@@ -4,44 +4,40 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { FaEye, FaEyeSlash, FaUser, FaLock, FaShieldAlt } from 'react-icons/fa'
 import { useTheme } from '@/context/themeContext'
+import { useAdminAuthentication } from '../../hooks/useAdmin'
 
 interface LoginCredentials {
     username: string
     password: string
+    rememberMe?: boolean
 }
 
-interface AdminLoginPageProps {
-    onLogin: (credentials: LoginCredentials) => Promise<boolean>
-}
-
-export default function AdminLoginPage({ onLogin }: AdminLoginPageProps) {
+export default function AdminLoginPage() {
     const { colors } = useTheme()
+    const { login, isLoading } = useAdminAuthentication()
     const [credentials, setCredentials] = useState<LoginCredentials>({
         username: '',
-        password: ''
+        password: '',
+        rememberMe: false
     })
     const [showPassword, setShowPassword] = useState(false)
-    const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState('')
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setError('')
-        setIsLoading(true)
 
         try {
-            const success = await onLogin(credentials)
-            if (!success) {
-                setError('Username atau password salah')
+            const result = await login(credentials)
+            if (!result.success) {
+                setError(result.message || 'Username atau password salah')
             }
         } catch (error) {
             setError('Terjadi kesalahan saat login')
-        } finally {
-            setIsLoading(false)
         }
     }
 
-    const handleInputChange = (field: keyof LoginCredentials, value: string) => {
+    const handleInputChange = (field: keyof LoginCredentials, value: string | boolean) => {
         setCredentials(prev => ({ ...prev, [field]: value }))
         if (error) setError('')
     }
@@ -209,6 +205,30 @@ export default function AdminLoginPage({ onLogin }: AdminLoginPageProps) {
                                     )}
                                 </button>
                             </div>
+                        </div>
+
+                        {/* Remember Me */}
+                        <div className="flex items-center">
+                            <input
+                                id="remember-me"
+                                type="checkbox"
+                                checked={credentials.rememberMe || false}
+                                onChange={(e) => handleInputChange('rememberMe', e.target.checked)}
+                                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                style={{
+                                    accentColor: colors.accent
+                                }}
+                            />
+                            <label
+                                htmlFor="remember-me"
+                                className="ml-2 block text-sm"
+                                style={{
+                                    color: colors.cardText,
+                                    fontFamily: 'var(--font-body)'
+                                }}
+                            >
+                                Ingat saya
+                            </label>
                         </div>
 
                         {/* Login Button */}
