@@ -17,6 +17,7 @@ import AdminReportPage from './AdminReportPage'
 import AdminSettingsPage from './AdminSettingsPage'
 import AdminFinancePage from './AdminFinancePage'
 import AdminFinancialReportPage from './AdminFinancialReportPage'
+import AdminNotificationPage from './AdminNotificationPage'
 
 interface AdminStats {
     totalArticles: number
@@ -45,14 +46,14 @@ interface AdminHomePageProps {
 interface MenuSubItem {
     title: string
     icon: any
-    page: 'dashboard' | 'articles' | 'donations' | 'users' | 'reports' | 'settings' | 'finance' | 'financial-reports'
+    page: 'dashboard' | 'articles' | 'donations' | 'users' | 'reports' | 'settings' | 'finance' | 'financial-reports' | 'notifications'
     active: boolean
 }
 
 interface MenuItem {
     title: string
     icon: any
-    page?: 'dashboard' | 'articles' | 'donations' | 'users' | 'reports' | 'settings' | 'finance' | 'financial-reports'
+    page?: 'dashboard' | 'articles' | 'donations' | 'users' | 'reports' | 'settings' | 'finance' | 'financial-reports' | 'notifications'
     count?: number
     active: boolean
     hasDropdown?: boolean
@@ -64,7 +65,7 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
     const { colors } = useTheme()
     const { logout } = useAdminAuthentication()
     const { stats: dashboardStats } = useAdminDashboard()
-    const [currentPage, setCurrentPage] = useState<'dashboard' | 'articles' | 'donations' | 'users' | 'reports' | 'settings' | 'finance' | 'financial-reports'>('dashboard')
+    const [currentPage, setCurrentPage] = useState<'dashboard' | 'articles' | 'donations' | 'users' | 'reports' | 'settings' | 'finance' | 'financial-reports' | 'notifications'>('dashboard')
     const [mounted, setMounted] = useState(false)
     const [isReportsDropdownOpen, setIsReportsDropdownOpen] = useState(false)
     const [isNotificationDropdownOpen, setIsNotificationDropdownOpen] = useState(false)
@@ -197,6 +198,10 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
         return <AdminFinancePage onBack={() => setCurrentPage('dashboard')} />
     }
 
+    if (currentPage === 'notifications') {
+        return <AdminNotificationPage onBack={() => setCurrentPage('dashboard')} />
+    }
+
     if (currentPage === 'financial-reports') {
         return <AdminFinancialReportPage onBack={() => setCurrentPage('dashboard')} />
     }
@@ -322,6 +327,10 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
                                         <button
                                             className="text-sm hover:underline"
                                             style={{ color: colors.accent }}
+                                            onClick={() => {
+                                                setCurrentPage('notifications')
+                                                setIsNotificationDropdownOpen(false)
+                                            }}
                                         >
                                             Lihat semua notifikasi
                                         </button>
