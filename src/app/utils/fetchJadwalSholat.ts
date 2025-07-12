@@ -10,7 +10,7 @@ export interface JadwalSholat {
   isya: string
 }
 export async function fetchJadwalSholat(kota: string, tanggal: string) {
-  const url = `https://api.myquran.com/v2/sholat/jadwal/kota/${kota}/tanggal/${tanggal}`
+  const url = `https://api.myquran.com/v2/sholat/jadwal/${kota}/${tanggal}`
   const res = await fetch(url)
   if (!res.ok) throw new Error('Gagal mengambil jadwal sholat')
   const data = await res.json()

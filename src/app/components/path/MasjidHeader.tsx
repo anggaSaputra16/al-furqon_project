@@ -23,20 +23,24 @@ export default function MasjidHeader() {
   const banners = theme === 'dark' ? [banner1] : theme === 'dusk' ? [banner3] : [banner2]
 
   const [jadwalSholat, setJadwalSholat] = useState([
-    { name: 'Fajr', time: '04:33' },
-    { name: 'Dhuhr', time: '12:00' },
-    { name: 'Asr', time: '15:30' },
-    { name: 'Maghrib', time: '18:10' },
-    { name: 'Isha', time: '19:20' },
+    { name: 'Fajr', time: '04:44' },
+    { name: 'Dhuhr', time: '12:01' },
+    { name: 'Asr', time: '15:22' },
+    { name: 'Maghrib', time: '17:54' },
+    { name: 'Isha', time: '19:08' },
   ])
 
-  const jadwalSholatRange = [
-    { name: 'Fajr', time: '04:33', start: '04:33', end: '12:00' },
-    { name: 'Dhuhr', time: '12:00', start: '12:00', end: '15:30' },
-    { name: 'Asr', time: '15:30', start: '15:30', end: '18:10' },
-    { name: 'Maghrib', time: '18:10', start: '18:10', end: '19:20' },
-    { name: 'Isha', time: '19:20', start: '19:20', end: '04:33' },
-  ]
+  // Generate jadwalSholatRange dinamis berdasarkan data API
+  const jadwalSholatRange = jadwalSholat.map((item, index) => {
+    const nextIndex = (index + 1) % jadwalSholat.length
+    const endTime = jadwalSholat[nextIndex].time
+    return {
+      name: item.name,
+      time: item.time,
+      start: item.time,
+      end: endTime
+    }
+  })
 
   function getCurrentSholat() {
     const now = new Date()
@@ -79,6 +83,7 @@ export default function MasjidHeader() {
     }
   }
 
+  // Get current sholat berdasarkan jadwalSholatRange yang dinamis
   const currentSholat = getCurrentSholat()
 
   useEffect(() => {
@@ -128,12 +133,13 @@ export default function MasjidHeader() {
   }, [])
 
   useEffect(() => {
-    // Bekasi kota id: 703 (lihat dokumentasi API jika ingin kota lain)
-    const kotaId = '703'
+    // Bekasi kota id: 1221 (KOTA BEKASI)
+    const kotaId = '1221'
     const today = new Date()
     const tanggal = today.toISOString().slice(0, 10)
     fetchJadwalSholat(kotaId, tanggal)
       .then((jadwal) => {
+        // Update jadwal sholat dengan data dari API
         setJadwalSholat([
           { name: 'Fajr', time: jadwal.subuh },
           { name: 'Dhuhr', time: jadwal.dzuhur },
@@ -142,7 +148,10 @@ export default function MasjidHeader() {
           { name: 'Isha', time: jadwal.isya },
         ])
       })
-      .catch(() => {/* fallback ke default jika error */ })
+      .catch((error) => {
+        console.warn('Gagal mengambil jadwal sholat dari API, menggunakan fallback:', error)
+        // fallback sudah ada di initial state
+      })
   }, [])
 
   // --- Auto theme by waktu sholat ---
@@ -154,10 +163,10 @@ export default function MasjidHeader() {
       const [h, m] = time.split(":");
       return parseInt(h) * 60 + parseInt(m);
     };
-    const fajr = jadwalSholat.find(j => j.name === 'Fajr')?.time || '04:33';
-    const ashr = jadwalSholat.find(j => j.name === 'Asr')?.time || '15:30';
-    const maghrib = jadwalSholat.find(j => j.name === 'Maghrib')?.time || '18:10';
-    const isha = jadwalSholat.find(j => j.name === 'Isha')?.time || '19:20';
+    const fajr = jadwalSholat.find(j => j.name === 'Fajr')?.time || '04:44';
+    const ashr = jadwalSholat.find(j => j.name === 'Asr')?.time || '15:22';
+    const maghrib = jadwalSholat.find(j => j.name === 'Maghrib')?.time || '17:54';
+    const isha = jadwalSholat.find(j => j.name === 'Isha')?.time || '19:08';
     const fajrM = getMinutes(fajr);
     const ashrM = getMinutes(ashr);
     const maghribM = getMinutes(maghrib);
