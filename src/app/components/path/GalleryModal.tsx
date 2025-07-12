@@ -98,7 +98,6 @@ export default function GalleryModal() {
       document.body.removeChild(link)
       window.URL.revokeObjectURL(url)
     } catch (error) {
-      console.error('Download failed:', error)
     }
   }
 
@@ -453,8 +452,8 @@ export default function GalleryModal() {
                     key={img.id}
                     onClick={() => setSelectedImage(img)}
                     className={`relative w-12 h-12 rounded overflow-hidden transition-all duration-200 ${actualIndex === currentIndex
-                        ? 'ring-2 ring-white scale-110'
-                        : 'opacity-70 hover:opacity-100'
+                      ? 'ring-2 ring-white scale-110'
+                      : 'opacity-70 hover:opacity-100'
                       }`}
                   >
                     <Image

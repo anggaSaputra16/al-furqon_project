@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import GuideSection from '@/app/contents/section/GuideSection'
 import AboutSection from '@/app/contents/section/AboutSection'
 import UniversalNavGrid, { NavItem } from '../path/UniversalNavGrid'
@@ -20,6 +20,15 @@ import { useArticleStore } from '../../stores/useArticleStore'
 import UniversalModal from '../path/UniversalModal'
 import UniversalCard from '../path/UniversalCard'
 import { donationCards as donationCardsStatic, newsCards, activityCards as activityCardsStatic, upcomingCards as upcomingCardsStatic } from '../../utils/staticData'
+// Import new API hooks
+import {
+  useHomePageData,
+  useFeaturedArticles,
+  useActiveDonations,
+  useLatestNews,
+  useHomeStats,
+  useDonationSubmission
+} from '../../hooks/useHomePageApi'
 
 export default function HomePage() {
   const [modalData, setModalData] = useState<CardData | null>(null)
@@ -28,24 +37,146 @@ export default function HomePage() {
   const { menus, fetchMenus } = useMenuStore()
   const { articles, fetchArticles } = useArticleStore()
 
+  // New API hooks for backend data
+  const { data: homePageData, loading: homeLoading, error: homeError, refetch: refetchHome } = useHomePageData()
+  const { articles: featuredArticles, loading: articlesLoading, error: articlesError } = useFeaturedArticles()
+  const { donations: donationPrograms, loading: donationsLoading } = useActiveDonations()
+  const { news: latestNews, loading: newsLoading } = useLatestNews()
+  const { stats: homeStats, loading: statsLoading } = useHomeStats()
+  const { submitDonation, submitting: donationSubmitting } = useDonationSubmission()
+
+  // Smart fallback logic - use backend data if available, otherwise static data
+  const hasBackendArticles = featuredArticles && featuredArticles.length > 0
+  const hasBackendDonations = donationPrograms && donationPrograms.length > 0
+  const hasBackendNews = latestNews && latestNews.length > 0
+
+  // Fix: Use fallback data only when loading is complete and no backend data is available
+  const useFallbackData = !articlesLoading && !donationsLoading && !newsLoading &&
+    !hasBackendArticles && !hasBackendDonations && !hasBackendNews
+
+  // Fix: Determine if we should show loading state
+  const isInitialLoading = (articlesLoading || donationsLoading || newsLoading) &&
+    !hasBackendArticles && !hasBackendDonations && !hasBackendNews
+
+  // Optimized: useMemo for derived data
+  const activityCards = useMemo(() => (
+    hasBackendArticles ? featuredArticles?.map((article: any) => ({
+      id: article.id,
+      title: article.title,
+      description: article.description,
+      image: article.image,
+      category: 'kegiatan' as const,
+      size: article.featured ? 'large' as const : 'small' as const,
+      details: {
+        date: article.publishedAt,
+        author: article.author?.name || 'Admin',
+        views: article.views,
+        likes: article.likes
+      },
+      extra: {
+        content: article.content,
+        tags: article.tags,
+        slug: article.slug
+      }
+    })) || [] : activityCardsStatic.map(card => ({
+      ...card,
+      size: card.size as 'large' | 'small',
+      category: 'kegiatan' as const
+    }))
+  ), [hasBackendArticles, featuredArticles])
+
+  const donationCards = useMemo(() => {
+    try {
+      // Fix: Check for backend donations first
+      if (hasBackendDonations) {
+        return donationPrograms?.map((donation: any) => {
+          return {
+            id: donation.id,
+            title: donation.title,
+            description: donation.description,
+            image: donation.image,
+            category: 'sumbangan' as const,
+            size: 'large' as const,
+            details: {
+              target: donation.target,
+              collected: donation.collected,
+              percentage: donation.percentage,
+              donors: donation.donors?.total || 0
+            },
+            extra: {
+              bankAccount: donation.bankAccount,
+              status: donation.status
+            }
+          }
+        }) || []
+      } else {
+        // Use static data when no backend data
+        return donationCardsStatic.map(card => ({
+          ...card,
+          size: card.size as 'large' | 'small',
+          // Ensure donors structure exists for fallback data
+          donors: { total: Math.floor(Math.random() * 50) + 20, recent: [] }
+        }))
+      }
+    } catch (error) {
+      // Fallback to static data if there's any error
+      return donationCardsStatic.map(card => ({
+        ...card,
+        size: card.size as 'large' | 'small',
+        donors: { total: Math.floor(Math.random() * 50) + 20, recent: [] }
+      }))
+    }
+  }, [hasBackendDonations, donationPrograms])
+
+  const upcomingCards = useMemo(() => {
+    try {
+      // Fix: Check for backend news first
+      if (hasBackendNews) {
+        return latestNews?.map((news: any) => {
+          // Ensure safe access to nested properties
+          const authorName = news.author?.name || news.author || 'Admin Al-Furqon'
+
+          return {
+            id: news.id,
+            title: news.title,
+            description: news.description,
+            image: news.image,
+            category: 'berita' as const,
+            size: 'large' as const,
+            details: {
+              date: news.publishedAt,
+              author: typeof authorName === 'string' ? authorName : 'Admin Al-Furqon',
+              priority: news.priority,
+              views: news.views
+            }
+          }
+        }) || []
+      } else {
+        // Use static data when no backend data
+        return upcomingCardsStatic.map(card => ({ ...card, size: card.size as 'large' | 'small' }))
+      }
+    } catch (error) {
+      // Fallback to static data if there's any error
+      return upcomingCardsStatic.map(card => ({ ...card, size: card.size as 'large' | 'small' }))
+    }
+  }, [hasBackendNews, latestNews])
+
+  // Only fetchMenus/fetchArticles once on mount
   useEffect(() => {
     fetchMenus()
     fetchArticles()
-  }, [fetchMenus, fetchArticles])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Handle scroll to show scroll-to-top button only
   useEffect(() => {
     const handleScroll = () => {
       const scrollY = window.scrollY
-
-      // Show scroll-to-top button after 200px scroll (earlier for mobile)
       const isMobile = window.innerWidth < 768
       const scrollThreshold = isMobile ? 200 : 300
       const shouldShow = scrollY > scrollThreshold
-
       setShowScrollToTop(shouldShow)
     }
-
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
@@ -69,15 +200,35 @@ export default function HomePage() {
     setDonorName('')
   }
 
-  const handleDonationSubmit = () => {
-    if (!donorName.trim() || !donationAmount.trim()) {
+  const handleDonationSubmit = async () => {
+    if (!donorName.trim() || !donationAmount.trim() || !showDonationModal?.id) {
       alert('Mohon lengkapi nama dan nominal donasi')
       return
     }
 
-    // Here you would typically handle the donation submission
-    alert(`Terima kasih ${donorName} atas donasi Rp ${parseInt(donationAmount).toLocaleString('id-ID')}. Silakan lanjutkan ke pembayaran.`)
-    handleCloseDonationModal()
+    try {
+      const result = await submitDonation({
+        donationId: showDonationModal.id,
+        donorName: donorName.trim(),
+        amount: parseInt(donationAmount),
+        paymentMethod: 'bank_transfer'
+      })
+
+      if (result.success) {
+        alert(`Terima kasih ${donorName} atas donasi Rp ${parseInt(donationAmount).toLocaleString('id-ID')}. ${result.data?.paymentUrl ? 'Silakan lanjutkan ke pembayaran.' : 'Donasi Anda akan segera diproses.'}`)
+
+        // Redirect to payment if available
+        if (result.data?.paymentUrl) {
+          window.open(result.data.paymentUrl, '_blank')
+        }
+      } else {
+        alert(`Terjadi kesalahan: ${result.error}`)
+      }
+    } catch (error) {
+      alert('Terjadi kesalahan saat memproses donasi. Silakan coba lagi.')
+    } finally {
+      handleCloseDonationModal()
+    }
   }
 
   const navItems: NavItem[] = menus.map((menu) => {
@@ -89,16 +240,12 @@ export default function HomePage() {
     }
   })
 
+  // Legacy state variables for reorder functionality (will be removed when API fully integrated)
   const [cards, setCards] = useState<CardData[]>(
     activityCardsStatic.map(card => ({ ...card, size: card.size as 'large' | 'small' }))
   )
-  const [upcomingCards, setUpcomingCards] = useState<CardData[]>(
-    upcomingCardsStatic.map(card => ({ ...card, size: card.size as 'large' | 'small' }))
-  )
 
-  const [donationCards] = useState<CardData[]>(
-    donationCardsStatic.map(card => ({ ...card, size: card.size as 'large' | 'small' }))
-  );
+  // Modal and form state
   const [showDonationModal, setShowDonationModal] = useState<CardData | null>(null)
   const [donationAmount, setDonationAmount] = useState<string>('')
   const [donorName, setDonorName] = useState<string>('')
@@ -111,17 +258,76 @@ export default function HomePage() {
   } | null>(null)
 
   const handleReorder = (from: number, to: number) => {
+    // Legacy function - will be removed when API fully integrated
     const newCards = [...cards]
     const [moved] = newCards.splice(from, 1)
     newCards.splice(to, 0, moved)
     setCards(newCards)
   }
 
-  const handleReorderUpcoming = (from: number, to: number) => {
-    const newCards = [...upcomingCards]
-    const [moved] = newCards.splice(from, 1)
-    newCards.splice(to, 0, moved)
-    setUpcomingCards(newCards)
+  // Fix: Determine if we have any data to show (backend or static)
+  const hasAnyData = hasBackendArticles || hasBackendDonations || hasBackendNews ||
+    activityCards.length > 0 || donationCards.length > 0 || upcomingCards.length > 0
+
+  // ...existing code...
+
+  // Loading component
+  const LoadingSkeleton = () => (
+    <div className="animate-pulse space-y-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+        {[...Array(6)].map((_, i) => (
+          <div key={i} className="bg-gray-200 dark:bg-gray-700 rounded-lg h-24"></div>
+        ))}
+      </div>
+      <div className="bg-gray-200 dark:bg-gray-700 rounded-lg h-48"></div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {[...Array(6)].map((_, i) => (
+          <div key={i} className="bg-gray-200 dark:bg-gray-700 rounded-lg h-64"></div>
+        ))}
+      </div>
+    </div>
+  )
+
+  // Error component with retry
+  const ErrorState = ({ error, onRetry }: { error: string; onRetry: () => void }) => (
+    <div className="text-center py-12 space-y-4">
+      <div className="text-red-500 text-lg font-semibold">
+        Terjadi kesalahan saat memuat data
+      </div>
+      <div className="text-gray-600 dark:text-gray-400 text-sm">
+        {error}
+      </div>
+      <button
+        onClick={onRetry}
+        className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+      >
+        Coba Lagi
+      </button>
+    </div>
+  )
+
+  // Fix: Show loading state only when initially loading and no data available
+  if (isInitialLoading && !hasAnyData) {
+    return (
+      <main style={{ background: colors.background, color: colors.cardText }} className="transition-colors duration-500">
+        <MasjidHeader />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-5">
+          <LoadingSkeleton />
+        </div>
+      </main>
+    )
+  }
+
+  // Fix: Show error state only if all requests failed and no fallback data
+  if ((homeError || articlesError) && !hasAnyData) {
+    return (
+      <main style={{ background: colors.background, color: colors.cardText }} className="transition-colors duration-500">
+        <MasjidHeader />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-5">
+          <ErrorState error={homeError || articlesError || 'Unknown error'} onRetry={refetchHome} />
+        </div>
+      </main>
+    )
   }
 
   return (
@@ -168,7 +374,28 @@ export default function HomePage() {
               <span className="transition-transform duration-200 hover:translate-x-0.5">→</span>
             </a>
           </div>
-          <ActivityCarousel articles={articles} autoplay={true} autoplayInterval={10000} />
+
+          {/* Show loading indicator only for this section if still loading */}
+          {articlesLoading && !hasBackendArticles ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: colors.accent }}></div>
+              <span className="ml-3 text-sm" style={{ color: colors.detail }}>
+                Memuat aktivitas...
+              </span>
+            </div>
+          ) : (
+            <ActivityCarousel
+              articles={hasBackendArticles ?
+                featuredArticles?.map((article: any) => ({
+                  ...article,
+                  author: article.author?.name || article.author || 'Admin'
+                })) :
+                articles
+              }
+              autoplay={true}
+              autoplayInterval={10000}
+            />
+          )}
         </section>
 
         {/* Bantuan Keagamaan Section */}
@@ -200,78 +427,88 @@ export default function HomePage() {
             </a>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {donationCards.map((card, index) => (
-              <div
-                key={card.id}
-                className="group"
-              >
+          {/* Show loading indicator only for this section if still loading */}
+          {donationsLoading && !hasBackendDonations ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: colors.accent }}></div>
+              <span className="ml-3 text-sm" style={{ color: colors.detail }}>
+                Memuat program donasi...
+              </span>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+              {donationCards.map((card: any, index: number) => (
                 <div
-                  className="rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 h-full border"
-                  style={{
-                    backgroundColor: colors.card,
-                    border: `1px solid ${colors.border}20`,
-                    transform: 'translateY(0)',
-                  }}
+                  key={card.id}
+                  className="group"
                 >
-                  {/* Image */}
-                  <div className="relative h-48 sm:h-52 overflow-hidden">
-                    <img
-                      src={card.image}
-                      alt={card.title}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  </div>
+                  <div
+                    className="rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 h-full border"
+                    style={{
+                      backgroundColor: colors.card,
+                      border: `1px solid ${colors.border}20`,
+                      transform: 'translateY(0)',
+                    }}
+                  >
+                    {/* Image */}
+                    <div className="relative h-48 sm:h-52 overflow-hidden">
+                      <img
+                        src={card.image}
+                        alt={card.title}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    </div>
 
-                  {/* Content */}
-                  <div className="p-4 sm:p-5">
-                    {/* Title */}
-                    <h3
-                      className="font-bold text-lg mb-3 line-clamp-2 leading-tight"
-                      style={{
-                        color: colors.cardText,
-                        fontFamily: 'var(--font-header-modern)',
-                        fontSize: 'clamp(16px, 3vw, 18px)'
-                      }}
-                    >
-                      {card.title}
-                    </h3>
+                    {/* Content */}
+                    <div className="p-4 sm:p-5">
+                      {/* Title */}
+                      <h3
+                        className="font-bold text-lg mb-3 line-clamp-2 leading-tight"
+                        style={{
+                          color: colors.cardText,
+                          fontFamily: 'var(--font-header-modern)',
+                          fontSize: 'clamp(16px, 3vw, 18px)'
+                        }}
+                      >
+                        {card.title}
+                      </h3>
 
-                    {/* Description */}
-                    <p
-                      className="text-sm line-clamp-3 mb-4 leading-relaxed"
-                      style={{
-                        color: colors.detail,
-                        fontFamily: 'var(--font-sharp-light)',
-                        fontSize: 'clamp(13px, 2.5vw, 14px)'
-                      }}
-                    >
-                      {card.description}
-                    </p>
+                      {/* Description */}
+                      <p
+                        className="text-sm line-clamp-3 mb-4 leading-relaxed"
+                        style={{
+                          color: colors.detail,
+                          fontFamily: 'var(--font-sharp-light)',
+                          fontSize: 'clamp(13px, 2.5vw, 14px)'
+                        }}
+                      >
+                        {card.description}
+                      </p>
 
-                    {/* CTA Button */}
-                    <button
-                      onClick={() => setShowDonationModal(card)}
-                      className="w-full py-3 px-4 rounded-lg font-semibold transition-all duration-200 hover:transform hover:scale-[1.02] active:scale-[0.98] touch-manipulation group/btn"
-                      style={{
-                        backgroundColor: colors.accent,
-                        color: colors.card,
-                        border: `1px solid ${colors.accent}`,
-                        fontFamily: 'var(--font-sharp-bold)',
-                        fontSize: 'clamp(14px, 3vw, 15px)'
-                      }}
-                    >
-                      <span className="flex items-center justify-center gap-2">
-                        Donasi Sekarang
-                        <span className="transition-transform duration-200 group-hover/btn:translate-x-1">💝</span>
-                      </span>
-                    </button>
+                      {/* CTA Button */}
+                      <button
+                        onClick={() => setShowDonationModal(card)}
+                        className="w-full py-3 px-4 rounded-lg font-semibold transition-all duration-200 hover:transform hover:scale-[1.02] active:scale-[0.98] touch-manipulation group/btn"
+                        style={{
+                          backgroundColor: colors.accent,
+                          color: colors.card,
+                          border: `1px solid ${colors.accent}`,
+                          fontFamily: 'var(--font-sharp-bold)',
+                          fontSize: 'clamp(14px, 3vw, 15px)'
+                        }}
+                      >
+                        <span className="flex items-center justify-center gap-2">
+                          Donasi Sekarang
+                          <span className="transition-transform duration-200 group-hover/btn:translate-x-1">💝</span>
+                        </span>
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </section>
 
         {/* Berita Utama Section */}
@@ -303,101 +540,132 @@ export default function HomePage() {
             </a>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {newsCards.map((news, idx) => (
-              <motion.div
-                key={news.title + idx}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{
-                  duration: 0.5,
-                  delay: idx * 0.1,
-                  ease: 'easeOut'
-                }}
-                className="group"
-              >
-                <div
-                  className="rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 h-full border"
-                  style={{
-                    backgroundColor: colors.card,
-                    border: `1px solid ${colors.border}20`,
-                    transform: 'translateY(0)',
+          {/* Show loading indicator only for this section if still loading */}
+          {newsLoading && !hasBackendNews ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: colors.accent }}></div>
+              <span className="ml-3 text-sm" style={{ color: colors.detail }}>
+                Memuat berita...
+              </span>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+              {(hasBackendNews ? upcomingCards : newsCards).map((news: any, idx: number) => (
+                <motion.div
+                  key={news.title + idx}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    duration: 0.5,
+                    delay: idx * 0.1,
+                    ease: 'easeOut'
                   }}
+                  className="group"
                 >
-                  {/* Image */}
-                  <div className="relative h-48 sm:h-52 overflow-hidden">
-                    <img
-                      src={news.image}
-                      alt={news.title}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div
+                    className="rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 h-full border"
+                    style={{
+                      backgroundColor: colors.card,
+                      border: `1px solid ${colors.border}20`,
+                      transform: 'translateY(0)',
+                    }}
+                  >
+                    {/* Image */}
+                    <div className="relative h-48 sm:h-52 overflow-hidden">
+                      <img
+                        src={news.image}
+                        alt={news.title}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-                    {/* Date Badge */}
-                    {news.detail && (
-                      <div
-                        className="absolute top-3 right-3 px-2 py-1 rounded-lg text-xs font-medium backdrop-blur-md"
+                      {/* Date Badge */}
+                      {news.detail && (
+                        <div
+                          className="absolute top-3 right-3 px-2 py-1 rounded-lg text-xs font-medium backdrop-blur-md"
+                          style={{
+                            backgroundColor: `${colors.accent}90`,
+                            color: colors.card,
+                            fontFamily: 'var(--font-sharp-bold)',
+                            fontSize: 'clamp(10px, 2.5vw, 11px)'
+                          }}
+                        >
+                          {news.detail}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Content */}
+                    <div className="p-4 sm:p-5">
+                      {/* Title */}
+                      <h3
+                        className="font-bold text-lg mb-3 line-clamp-2 leading-tight"
                         style={{
-                          backgroundColor: `${colors.accent}90`,
-                          color: colors.card,
-                          fontFamily: 'var(--font-sharp-bold)',
-                          fontSize: 'clamp(10px, 2.5vw, 11px)'
+                          color: colors.cardText,
+                          fontFamily: 'var(--font-header-modern)',
+                          fontSize: 'clamp(16px, 3vw, 18px)'
                         }}
                       >
-                        {news.detail}
-                      </div>
-                    )}
+                        {news.title}
+                      </h3>
+
+                      {/* Description */}
+                      <p
+                        className="text-sm line-clamp-3 mb-4 leading-relaxed"
+                        style={{
+                          color: colors.detail,
+                          fontFamily: 'var(--font-sharp-light)',
+                          fontSize: 'clamp(13px, 2.5vw, 14px)'
+                        }}
+                      >
+                        {news.description}
+                      </p>
+
+                      {/* CTA Button */}
+                      <button
+                        onClick={() => setSelectedNews(news)}
+                        className="w-full py-3 px-4 rounded-lg font-semibold transition-all duration-200 hover:transform hover:scale-[1.02] active:scale-[0.98] touch-manipulation group/btn border-2 border-transparent hover:border-current"
+                        style={{
+                          backgroundColor: 'transparent',
+                          color: colors.accent,
+                          border: `2px solid ${colors.accent}`,
+                          fontFamily: 'var(--font-sharp-bold)',
+                          fontSize: 'clamp(14px, 3vw, 15px)'
+                        }}
+                      >
+                        <span className="flex items-center justify-center gap-2">
+                          Baca Selengkapnya
+                          <span className="transition-transform duration-200 group-hover/btn:translate-x-1">📖</span>
+                        </span>
+                      </button>
+                    </div>
                   </div>
-
-                  {/* Content */}
-                  <div className="p-4 sm:p-5">
-                    {/* Title */}
-                    <h3
-                      className="font-bold text-lg mb-3 line-clamp-2 leading-tight"
-                      style={{
-                        color: colors.cardText,
-                        fontFamily: 'var(--font-header-modern)',
-                        fontSize: 'clamp(16px, 3vw, 18px)'
-                      }}
-                    >
-                      {news.title}
-                    </h3>
-
-                    {/* Description */}
-                    <p
-                      className="text-sm line-clamp-3 mb-4 leading-relaxed"
-                      style={{
-                        color: colors.detail,
-                        fontFamily: 'var(--font-sharp-light)',
-                        fontSize: 'clamp(13px, 2.5vw, 14px)'
-                      }}
-                    >
-                      {news.description}
-                    </p>
-
-                    {/* CTA Button */}
-                    <button
-                      onClick={() => setSelectedNews(news)}
-                      className="w-full py-3 px-4 rounded-lg font-semibold transition-all duration-200 hover:transform hover:scale-[1.02] active:scale-[0.98] touch-manipulation group/btn border-2 border-transparent hover:border-current"
-                      style={{
-                        backgroundColor: 'transparent',
-                        color: colors.accent,
-                        border: `2px solid ${colors.accent}`,
-                        fontFamily: 'var(--font-sharp-bold)',
-                        fontSize: 'clamp(14px, 3vw, 15px)'
-                      }}
-                    >
-                      <span className="flex items-center justify-center gap-2">
-                        Baca Selengkapnya
-                        <span className="transition-transform duration-200 group-hover/btn:translate-x-1">📖</span>
-                      </span>
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
         </section>
+
+        {/* Debug Info - Remove in production */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="fixed bottom-4 left-4 p-3 bg-black/80 text-white text-xs rounded-lg space-y-1 z-50 max-w-xs">
+            <div className="font-bold text-yellow-300 mb-2">🐛 Debug Info</div>
+            <div>Articles Loading: <span className={articlesLoading ? 'text-yellow-300' : 'text-green-300'}>{articlesLoading.toString()}</span></div>
+            <div>Has Backend Articles: <span className={hasBackendArticles ? 'text-green-300' : 'text-red-300'}>{hasBackendArticles.toString()}</span></div>
+            <div>Articles Count: <span className="text-blue-300">{featuredArticles?.length || 0}</span></div>
+            <hr className="border-gray-600 my-1" />
+            <div>Donations Loading: <span className={donationsLoading ? 'text-yellow-300' : 'text-green-300'}>{donationsLoading.toString()}</span></div>
+            <div>Has Backend Donations: <span className={hasBackendDonations ? 'text-green-300' : 'text-red-300'}>{hasBackendDonations.toString()}</span></div>
+            <div>Donations Count: <span className="text-blue-300">{donationPrograms?.length || 0}</span></div>
+            <hr className="border-gray-600 my-1" />
+            <div>News Loading: <span className={newsLoading ? 'text-yellow-300' : 'text-green-300'}>{newsLoading.toString()}</span></div>
+            <div>Has Backend News: <span className={hasBackendNews ? 'text-green-300' : 'text-red-300'}>{hasBackendNews.toString()}</span></div>
+            <div>News Count: <span className="text-blue-300">{latestNews?.length || 0}</span></div>
+            <hr className="border-gray-600 my-1" />
+            <div>Use Fallback: <span className={useFallbackData ? 'text-red-300' : 'text-green-300'}>{useFallbackData.toString()}</span></div>
+            <div>Initial Loading: <span className={isInitialLoading ? 'text-yellow-300' : 'text-green-300'}>{isInitialLoading.toString()}</span></div>
+          </div>
+        )}
 
       </div>
 
@@ -634,7 +902,8 @@ export default function HomePage() {
             <button
               type="button"
               onClick={handleDonationSubmit}
-              className="w-full py-4 rounded-lg font-semibold transition-all duration-200 hover:transform hover:scale-[1.02] active:scale-[0.98] touch-manipulation group"
+              disabled={donationSubmitting}
+              className="w-full py-4 rounded-lg font-semibold transition-all duration-200 hover:transform hover:scale-[1.02] active:scale-[0.98] touch-manipulation group disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
                 backgroundColor: colors.accent,
                 color: colors.card,
@@ -645,8 +914,17 @@ export default function HomePage() {
               }}
             >
               <span className="flex items-center justify-center gap-2">
-                💝 Donasi Sekarang
-                <span className="transition-transform duration-200 group-hover:translate-x-1">→</span>
+                {donationSubmitting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                    Memproses...
+                  </>
+                ) : (
+                  <>
+                    💝 Donasi Sekarang
+                    <span className="transition-transform duration-200 group-hover:translate-x-1">→</span>
+                  </>
+                )}
               </span>
             </button>
           </form>

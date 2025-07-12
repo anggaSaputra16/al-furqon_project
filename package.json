@@ -6,7 +6,9 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "seed": "node scripts/seed.js",
+    "seed:ts": "ts-node scripts/seed.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

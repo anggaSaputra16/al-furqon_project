@@ -15,8 +15,16 @@ type GuideStore = {
 export const useGuideStore = create<GuideStore>((set) => ({
   cards: [],
   fetchCards: async () => {
-    const res = await fetch('/api/guide-cards')
-    const data = await res.json()
-    set({ cards: data })
+    try {
+      const res = await fetch('/api/guide-cards')
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`)
+      }
+      const data = await res.json()
+      set({ cards: data })
+    } catch (error) {
+      console.warn('Failed to fetch guide cards, using empty array:', error)
+      set({ cards: [] }) // Set empty array as fallback
+    }
   },
 }))
