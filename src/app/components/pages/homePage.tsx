@@ -13,9 +13,8 @@ import ActivityModal from '../path/ActivityModal'
 import { useTheme } from '@/context/themeContext'
 import HomeHeader from '../path/HomeHeader'
 import ActivityCarousel from '../path/ActivityCarousel'
-import { useArticleStore } from '../../stores/useArticleStore'
 import UniversalModal from '../path/UniversalModal'
-import { donationCards as donationCardsStatic, newsCards, activityCards as activityCardsStatic, upcomingCards as upcomingCardsStatic } from '../../utils/staticData'
+import ArticleDetail from '../path/ArticleDetail'
 
 import {
   useHomePageData,
@@ -30,7 +29,6 @@ export default function HomePage() {
   const [showScrollToTop, setShowScrollToTop] = useState(false)
   const { colors } = useTheme()
   const { menus, fetchMenus } = useMenuStore()
-  const { articles, fetchArticles } = useArticleStore()
 
   const { error: homeError, refetch: refetchHome } = useHomePageData()
   const { articles: featuredArticles, loading: articlesLoading, error: articlesError } = useFeaturedArticles()
@@ -45,103 +43,105 @@ export default function HomePage() {
   const isInitialLoading = (articlesLoading || donationsLoading || newsLoading) &&
     !hasBackendArticles && !hasBackendDonations && !hasBackendNews
 
-  const activityCards = useMemo(() => (
-    hasBackendArticles ? featuredArticles?.map((article: any) => ({
-      id: article.id,
-      title: article.title,
-      description: article.description,
-      image: article.image,
-      category: 'kegiatan' as const,
-      size: article.featured ? 'large' as const : 'small' as const,
-      details: {
-        date: article.publishedAt,
-        author: article.author?.name || 'Admin',
-        views: article.views,
-        likes: article.likes
-      },
-      extra: {
-        content: article.content,
-        tags: article.tags,
-        slug: article.slug
-      }
-    })) || [] : activityCardsStatic.map(card => ({
-      ...card,
-      size: card.size as 'large' | 'small',
-      category: 'kegiatan' as const
-    }))
-  ), [hasBackendArticles, featuredArticles])
+  const activityCards = useMemo(() => {
+    // Only use backend data - no static fallback
+    if (!hasBackendArticles || !featuredArticles) {
+      return []
+    }
+
+    try {
+      return featuredArticles.map((article: any) => ({
+        id: article.id,
+        title: article.title,
+        description: article.description,
+        image: article.image,
+        category: 'kegiatan' as const,
+        size: article.featured ? 'large' as const : 'small' as const,
+        details: {
+          date: article.publishedAt,
+          author: article.author?.name || 'Admin',
+          views: article.views,
+          likes: article.likes
+        },
+        extra: {
+          content: article.content,
+          tags: article.tags,
+          slug: article.slug
+        }
+      }))
+    } catch (error) {
+      console.error('Error processing article data:', error)
+      return []
+    }
+  }, [hasBackendArticles, featuredArticles])
 
   const donationCards = useMemo(() => {
+    // Only use backend data - no static fallback
+    if (!hasBackendDonations || !donationPrograms) {
+      return []
+    }
+
     try {
-      if (hasBackendDonations) {
-        return donationPrograms?.map((donation: any) => {
-          return {
-            id: donation.id,
-            title: donation.title,
-            description: donation.description,
-            image: donation.image,
-            category: 'sumbangan' as const,
-            size: 'large' as const,
-            details: {
-              target: donation.target,
-              collected: donation.collected,
-              percentage: donation.percentage,
-              donors: donation.donors?.total || 0
-            },
-            extra: {
-              bankAccount: donation.bankAccount,
-              status: donation.status
-            }
-          }
-        }) || []
-      } else {
-        return donationCardsStatic.map(card => ({
-          ...card,
-          size: card.size as 'large' | 'small',
-          donors: { total: Math.floor(Math.random() * 50) + 20, recent: [] }
-        }))
-      }
-    } catch (error) {
-      return donationCardsStatic.map(card => ({
-        ...card,
-        size: card.size as 'large' | 'small',
-        donors: { total: Math.floor(Math.random() * 50) + 20, recent: [] }
+      return donationPrograms.map((donation: any) => ({
+        id: donation.id,
+        title: donation.title,
+        description: donation.description,
+        image: donation.image,
+        category: 'sumbangan' as const,
+        size: 'large' as const,
+        target: donation.target,
+        collected: donation.collected,
+        percentage: donation.percentage || Math.round((donation.collected / donation.target) * 100),
+        details: {
+          target: donation.target,
+          collected: donation.collected,
+          percentage: donation.percentage || Math.round((donation.collected / donation.target) * 100),
+          donors: donation.donors?.total || 0
+        },
+        extra: {
+          bankAccount: donation.bankAccount,
+          status: donation.status
+        }
       }))
+    } catch (error) {
+      console.error('Error processing donation data:', error)
+      return []
     }
   }, [hasBackendDonations, donationPrograms])
 
   const upcomingCards = useMemo(() => {
-    try {
-      if (hasBackendNews) {
-        return latestNews?.map((news: any) => {
-          const authorName = news.author?.name || news.author || 'Admin Al-Furqon'
+    // Only use backend data - no static fallback  
+    if (!hasBackendNews || !latestNews) {
+      return []
+    }
 
-          return {
-            id: news.id,
-            title: news.title,
-            description: news.description,
-            image: news.image,
-            category: 'berita' as const,
-            size: 'large' as const,
-            details: {
-              date: news.publishedAt,
-              author: typeof authorName === 'string' ? authorName : 'Admin Al-Furqon',
-              priority: news.priority,
-              views: news.views
-            }
+    try {
+      return latestNews.map((news: any) => {
+        const authorName = news.author?.name || news.author || 'Admin Al-Furqon'
+
+        return {
+          id: news.id,
+          title: news.title,
+          description: news.description,
+          image: news.image,
+          category: 'berita' as const,
+          size: 'large' as const,
+          details: {
+            date: news.publishedAt,
+            author: typeof authorName === 'string' ? authorName : 'Admin Al-Furqon',
+            priority: news.priority,
+            views: news.views
           }
-        }) || []
-      } else {
-        return upcomingCardsStatic.map(card => ({ ...card, size: card.size as 'large' | 'small' }))
-      }
+        }
+      })
     } catch (error) {
-      return upcomingCardsStatic.map(card => ({ ...card, size: card.size as 'large' | 'small' }))
+      console.error('Error processing news data:', error)
+      return []
     }
   }, [hasBackendNews, latestNews])
 
   useEffect(() => {
     fetchMenus()
-    fetchArticles()
   }, [])
 
   useEffect(() => {
@@ -223,8 +223,9 @@ export default function HomePage() {
     detail?: string;
   } | null>(null)
 
-  const hasAnyData = hasBackendArticles || hasBackendDonations || hasBackendNews ||
-    activityCards.length > 0 || donationCards.length > 0 || upcomingCards.length > 0
+  const [selectedArticle, setSelectedArticle] = useState<string | null>(null)
+
+  const hasAnyData = hasBackendArticles || hasBackendDonations || hasBackendNews
 
   const LoadingSkeleton = () => (
     <div className="animate-pulse space-y-6">
@@ -284,301 +285,418 @@ export default function HomePage() {
   return (
     <main style={{ background: colors.background, color: colors.cardText }} className="transition-colors duration-500">
       <MasjidHeader />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6 sm:space-y-8 mt-5">
-        <div>
-          <UniversalNavGrid
-            items={navItems}
-            variant="default"
-            customClass="mb-8"
-          />
+
+      {selectedArticle ? (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6 sm:space-y-8 mt-5">
+          <div className="max-w-6xl mx-auto">
+            <div className="mb-8">
+              <button
+                onClick={() => setSelectedArticle(null)}
+                className="flex items-center gap-3 px-6 py-3 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg hover:scale-105"
+                style={{
+                  backgroundColor: colors.card,
+                  color: colors.cardText,
+                  border: `2px solid ${colors.accent}`,
+                  fontFamily: 'var(--font-sharp-bold)',
+                  fontSize: '16px'
+                }}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Kembali ke Beranda
+              </button>
+            </div>
+
+            <div
+              className="rounded-2xl overflow-hidden shadow-xl"
+              style={{
+                backgroundColor: colors.card,
+                border: `1px solid ${colors.border}`
+              }}
+            >
+              <div className="p-8 sm:p-12">
+                <ArticleDetail articleId={selectedArticle} showRelated={false} />
+              </div>
+            </div>
+          </div>
         </div>
-
-        <HomeHeader />
-
-        <section className="space-y-4 sm:space-y-6">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-            <h2
-              className="text-2xl sm:text-3xl font-bold"
-              style={{
-                color: colors.cardText,
-                fontFamily: 'var(--font-header-modern)',
-                fontSize: 'clamp(26px, 5vw, 32px)',
-                lineHeight: '1.2',
-                fontWeight: '700',
-                letterSpacing: '-0.01em'
-              }}
-            >
-              Aktivitas Terkini
-            </h2>
-            <a
-              href="/artikel"
-              className="text-sm hover:underline transition-all duration-200 font-sharp-bold self-start sm:self-auto hover:gap-1 flex items-center gap-1"
-              style={{
-                color: colors.accent,
-                fontSize: 'clamp(13px, 3vw, 14px)'
-              }}
-            >
-              Lebih Lengkap
-              <span className="transition-transform duration-200 hover:translate-x-0.5">→</span>
-            </a>
+      ) : (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6 sm:space-y-8 mt-5">
+          <div>
+            <UniversalNavGrid
+              items={navItems}
+              variant="default"
+              customClass="mb-8"
+            />
           </div>
 
-          {/* Show loading indicator only for this section if still loading */}
-          {articlesLoading && !hasBackendArticles ? (
-            <div className="flex justify-center items-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: colors.accent }}></div>
-              <span className="ml-3 text-sm" style={{ color: colors.detail }}>
-                Memuat aktivitas...
-              </span>
+          <HomeHeader />
+
+          <section className="space-y-4 sm:space-y-6">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+              <h2
+                className="text-2xl sm:text-3xl font-bold"
+                style={{
+                  color: colors.cardText,
+                  fontFamily: 'var(--font-header-modern)',
+                  fontSize: 'clamp(26px, 5vw, 32px)',
+                  lineHeight: '1.2',
+                  fontWeight: '700',
+                  letterSpacing: '-0.01em'
+                }}
+              >
+                Aktivitas Terkini
+              </h2>
+              <a
+                href="/kegiatan"
+                className="text-sm hover:underline transition-all duration-200 font-sharp-bold self-start sm:self-auto hover:gap-1 flex items-center gap-1"
+                style={{
+                  color: colors.accent,
+                  fontSize: 'clamp(13px, 3vw, 14px)'
+                }}
+              >
+                Lebih Lengkap
+                <span className="transition-transform duration-200 hover:translate-x-0.5">→</span>
+              </a>
             </div>
-          ) : (
-            <ActivityCarousel
-              articles={hasBackendArticles ?
-                featuredArticles?.map((article: any) => ({
+
+            {/* Show loading indicator only for this section if still loading */}
+            {articlesLoading && !hasBackendArticles ? (
+              <div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: colors.accent }}></div>
+                <span className="ml-3 text-sm" style={{ color: colors.detail }}>
+                  Memuat aktivitas...
+                </span>
+              </div>
+            ) : hasBackendArticles && featuredArticles && featuredArticles.length > 0 ? (
+              <ActivityCarousel
+                articles={featuredArticles.map((article: any) => ({
                   ...article,
                   author: article.author?.name || article.author || 'Admin'
-                })) :
-                articles
-              }
-              autoplay={true}
-              autoplayInterval={10000}
-            />
-          )}
-        </section>
-
-        <section className="space-y-4 sm:space-y-6 mt-8 sm:mt-12">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-6 sm:mb-8">
-            <h2
-              className="text-2xl sm:text-3xl font-bold"
-              style={{
-                color: colors.cardText,
-                fontFamily: 'var(--font-header-modern)',
-                fontSize: 'clamp(26px, 5vw, 32px)',
-                lineHeight: '1.2',
-                fontWeight: '700',
-                letterSpacing: '-0.01em'
-              }}
-            >
-              Bantuan Keagamaan Kami
-            </h2>
-            <a
-              href="/donasi"
-              className="text-sm hover:underline transition-all duration-200 font-sharp-bold self-start sm:self-auto hover:gap-1 flex items-center gap-1"
-              style={{
-                color: colors.accent,
-                fontSize: 'clamp(13px, 3vw, 14px)'
-              }}
-            >
-              Lihat Semua Program
-              <span className="transition-transform duration-200 hover:translate-x-0.5">→</span>
-            </a>
-          </div>
-
-          {donationsLoading && !hasBackendDonations ? (
-            <div className="flex justify-center items-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: colors.accent }}></div>
-              <span className="ml-3 text-sm" style={{ color: colors.detail }}>
-                Memuat program donasi...
-              </span>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {donationCards.map((card: any, index: number) => (
+                }))}
+                autoplay={true}
+                autoplayInterval={10000}
+                onArticleClick={(articleId: string) => setSelectedArticle(articleId)}
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center py-16 space-y-4">
                 <div
-                  key={card.id}
-                  className="group"
+                  className="text-6xl mb-4"
+                  style={{ color: colors.detail }}
                 >
-                  <div
-                    className="rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 h-full border"
-                    style={{
-                      backgroundColor: colors.card,
-                      border: `1px solid ${colors.border}20`,
-                      transform: 'translateY(0)',
-                    }}
-                  >
-                    <div className="relative h-48 sm:h-52 overflow-hidden">
-                      <img
-                        src={card.image}
-                        alt={card.title}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                    </div>
-
-                    <div className="p-4 sm:p-5">
-                      <h3
-                        className="font-bold text-lg mb-3 line-clamp-2 leading-tight"
-                        style={{
-                          color: colors.cardText,
-                          fontFamily: 'var(--font-header-modern)',
-                          fontSize: 'clamp(16px, 3vw, 18px)'
-                        }}
-                      >
-                        {card.title}
-                      </h3>
-
-                      <p
-                        className="text-sm line-clamp-3 mb-4 leading-relaxed"
-                        style={{
-                          color: colors.detail,
-                          fontFamily: 'var(--font-sharp-light)',
-                          fontSize: 'clamp(13px, 2.5vw, 14px)'
-                        }}
-                      >
-                        {card.description}
-                      </p>
-
-                      <button
-                        onClick={() => setShowDonationModal(card)}
-                        className="w-full py-3 px-4 rounded-lg font-semibold transition-all duration-200 hover:transform hover:scale-[1.02] active:scale-[0.98] touch-manipulation group/btn"
-                        style={{
-                          backgroundColor: colors.accent,
-                          color: colors.card,
-                          border: `1px solid ${colors.accent}`,
-                          fontFamily: 'var(--font-sharp-bold)',
-                          fontSize: 'clamp(14px, 3vw, 15px)'
-                        }}
-                      >
-                        <span className="flex items-center justify-center gap-2">
-                          Donasi Sekarang
-                          <span className="transition-transform duration-200 group-hover/btn:translate-x-1">💝</span>
-                        </span>
-                      </button>
-                    </div>
-                  </div>
+                  📚
                 </div>
-              ))}
-            </div>
-          )}
-        </section>
-
-        <section className="space-y-4 sm:space-y-6 mt-8 sm:mt-12">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-6 sm:mb-8">
-            <h2
-              className="text-2xl sm:text-3xl font-bold"
-              style={{
-                color: colors.cardText,
-                fontFamily: 'var(--font-header-modern)',
-                fontSize: 'clamp(26px, 5vw, 32px)',
-                lineHeight: '1.2',
-                fontWeight: '700',
-                letterSpacing: '-0.01em'
-              }}
-            >
-              Berita Utama
-            </h2>
-            <a
-              href="/berita"
-              className="text-sm hover:underline transition-all duration-200 font-sharp-bold self-start sm:self-auto hover:gap-1 flex items-center gap-1"
-              style={{
-                color: colors.accent,
-                fontSize: 'clamp(13px, 3vw, 14px)'
-              }}
-            >
-              Lihat Semua Berita
-              <span className="transition-transform duration-200 hover:translate-x-0.5">→</span>
-            </a>
-          </div>
-
-          {newsLoading && !hasBackendNews ? (
-            <div className="flex justify-center items-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: colors.accent }}></div>
-              <span className="ml-3 text-sm" style={{ color: colors.detail }}>
-                Memuat berita...
-              </span>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {(hasBackendNews ? upcomingCards : newsCards).map((news: any, idx: number) => (
-                <motion.div
-                  key={news.title + idx}
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{
-                    duration: 0.5,
-                    delay: idx * 0.1,
-                    ease: 'easeOut'
+                <h3
+                  className="text-xl font-semibold"
+                  style={{
+                    color: colors.cardText,
+                    fontFamily: 'var(--font-header-modern)'
                   }}
-                  className="group"
                 >
-                  <div
-                    className="rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 h-full border"
-                    style={{
-                      backgroundColor: colors.card,
-                      border: `1px solid ${colors.border}20`,
-                      transform: 'translateY(0)',
-                    }}
-                  >
-                    <div className="relative h-48 sm:h-52 overflow-hidden">
-                      <img
-                        src={news.image}
-                        alt={news.title}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  Belum Ada Aktivitas
+                </h3>
+                <p
+                  className="text-sm text-center max-w-md"
+                  style={{
+                    color: colors.detail,
+                    fontFamily: 'var(--font-sharp-light)'
+                  }}
+                >
+                  Aktivitas terbaru akan ditampilkan di sini. Silakan kembali lagi nanti.
+                </p>
+              </div>
+            )}
+          </section>
 
-                      {news.detail && (
-                        <div
-                          className="absolute top-3 right-3 px-2 py-1 rounded-lg text-xs font-medium backdrop-blur-md"
+          <section className="space-y-4 sm:space-y-6 mt-8 sm:mt-12">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-6 sm:mb-8">
+              <h2
+                className="text-2xl sm:text-3xl font-bold"
+                style={{
+                  color: colors.cardText,
+                  fontFamily: 'var(--font-header-modern)',
+                  fontSize: 'clamp(26px, 5vw, 32px)',
+                  lineHeight: '1.2',
+                  fontWeight: '700',
+                  letterSpacing: '-0.01em'
+                }}
+              >
+                Bantuan Keagamaan Kami
+              </h2>
+              <a
+                href="/donasi"
+                className="text-sm hover:underline transition-all duration-200 font-sharp-bold self-start sm:self-auto hover:gap-1 flex items-center gap-1"
+                style={{
+                  color: colors.accent,
+                  fontSize: 'clamp(13px, 3vw, 14px)'
+                }}
+              >
+                Lihat Semua Program
+                <span className="transition-transform duration-200 hover:translate-x-0.5">→</span>
+              </a>
+            </div>
+
+            {donationsLoading && !hasBackendDonations ? (
+              <div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: colors.accent }}></div>
+                <span className="ml-3 text-sm" style={{ color: colors.detail }}>
+                  Memuat program donasi...
+                </span>
+              </div>
+            ) : hasBackendDonations && donationCards.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                {donationCards.map((card: any, index: number) => (
+                  <div
+                    key={card.id}
+                    className="group"
+                  >
+                    <div
+                      className="rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 h-full border"
+                      style={{
+                        backgroundColor: colors.card,
+                        border: `1px solid ${colors.border}20`,
+                        transform: 'translateY(0)',
+                      }}
+                    >
+                      <div className="relative h-48 sm:h-52 overflow-hidden">
+                        <img
+                          src={card.image}
+                          alt={card.title}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      </div>
+
+                      <div className="p-4 sm:p-5">
+                        <h3
+                          className="font-bold text-lg mb-3 line-clamp-2 leading-tight"
                           style={{
-                            backgroundColor: `${colors.accent}90`,
-                            color: colors.card,
-                            fontFamily: 'var(--font-sharp-bold)',
-                            fontSize: 'clamp(10px, 2.5vw, 11px)'
+                            color: colors.cardText,
+                            fontFamily: 'var(--font-header-modern)',
+                            fontSize: 'clamp(16px, 3vw, 18px)'
                           }}
                         >
-                          {news.detail}
-                        </div>
-                      )}
-                    </div>
+                          {card.title}
+                        </h3>
 
-                    <div className="p-4 sm:p-5">
-                      <h3
-                        className="font-bold text-lg mb-3 line-clamp-2 leading-tight"
-                        style={{
-                          color: colors.cardText,
-                          fontFamily: 'var(--font-header-modern)',
-                          fontSize: 'clamp(16px, 3vw, 18px)'
-                        }}
-                      >
-                        {news.title}
-                      </h3>
+                        <p
+                          className="text-sm line-clamp-3 mb-4 leading-relaxed"
+                          style={{
+                            color: colors.detail,
+                            fontFamily: 'var(--font-sharp-light)',
+                            fontSize: 'clamp(13px, 2.5vw, 14px)'
+                          }}
+                        >
+                          {card.description}
+                        </p>
 
-                      <p
-                        className="text-sm line-clamp-3 mb-4 leading-relaxed"
-                        style={{
-                          color: colors.detail,
-                          fontFamily: 'var(--font-sharp-light)',
-                          fontSize: 'clamp(13px, 2.5vw, 14px)'
-                        }}
-                      >
-                        {news.description}
-                      </p>
-
-                      <button
-                        onClick={() => setSelectedNews(news)}
-                        className="w-full py-3 px-4 rounded-lg font-semibold transition-all duration-200 hover:transform hover:scale-[1.02] active:scale-[0.98] touch-manipulation group/btn border-2 border-transparent hover:border-current"
-                        style={{
-                          backgroundColor: 'transparent',
-                          color: colors.accent,
-                          border: `2px solid ${colors.accent}`,
-                          fontFamily: 'var(--font-sharp-bold)',
-                          fontSize: 'clamp(14px, 3vw, 15px)'
-                        }}
-                      >
-                        <span className="flex items-center justify-center gap-2">
-                          Baca Selengkapnya
-                          <span className="transition-transform duration-200 group-hover/btn:translate-x-1">📖</span>
-                        </span>
-                      </button>
+                        <button
+                          onClick={() => setShowDonationModal(card)}
+                          className="w-full py-3 px-4 rounded-lg font-semibold transition-all duration-200 hover:transform hover:scale-[1.02] active:scale-[0.98] touch-manipulation group/btn"
+                          style={{
+                            backgroundColor: colors.accent,
+                            color: colors.card,
+                            border: `1px solid ${colors.accent}`,
+                            fontFamily: 'var(--font-sharp-bold)',
+                            fontSize: 'clamp(14px, 3vw, 15px)'
+                          }}
+                        >
+                          <span className="flex items-center justify-center gap-2">
+                            Donasi Sekarang
+                            <span className="transition-transform duration-200 group-hover/btn:translate-x-1">💝</span>
+                          </span>
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </motion.div>
-              ))}
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-16 space-y-4">
+                <div
+                  className="text-6xl mb-4"
+                  style={{ color: colors.detail }}
+                >
+                  💝
+                </div>
+                <h3
+                  className="text-xl font-semibold"
+                  style={{
+                    color: colors.cardText,
+                    fontFamily: 'var(--font-header-modern)'
+                  }}
+                >
+                  Belum Ada Program Donasi
+                </h3>
+                <p
+                  className="text-sm text-center max-w-md"
+                  style={{
+                    color: colors.detail,
+                    fontFamily: 'var(--font-sharp-light)'
+                  }}
+                >
+                  Program donasi akan ditampilkan di sini ketika tersedia. Silakan kembali lagi nanti.
+                </p>
+              </div>
+            )}
+          </section>
+
+          <section className="space-y-4 sm:space-y-6 mt-8 sm:mt-12">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-6 sm:mb-8">
+              <h2
+                className="text-2xl sm:text-3xl font-bold"
+                style={{
+                  color: colors.cardText,
+                  fontFamily: 'var(--font-header-modern)',
+                  fontSize: 'clamp(26px, 5vw, 32px)',
+                  lineHeight: '1.2',
+                  fontWeight: '700',
+                  letterSpacing: '-0.01em'
+                }}
+              >
+                Berita Utama
+              </h2>
+              <a
+                href="/berita"
+                className="text-sm hover:underline transition-all duration-200 font-sharp-bold self-start sm:self-auto hover:gap-1 flex items-center gap-1"
+                style={{
+                  color: colors.accent,
+                  fontSize: 'clamp(13px, 3vw, 14px)'
+                }}
+              >
+                Lihat Semua Berita
+                <span className="transition-transform duration-200 hover:translate-x-0.5">→</span>
+              </a>
             </div>
-          )}
-        </section>
-      </div>
+
+            {newsLoading && !hasBackendNews ? (
+              <div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: colors.accent }}></div>
+                <span className="ml-3 text-sm" style={{ color: colors.detail }}>
+                  Memuat berita...
+                </span>
+              </div>
+            ) : hasBackendNews && upcomingCards.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                {upcomingCards.map((news: any, idx: number) => (
+                  <motion.div
+                    key={news.title + idx}
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{
+                      duration: 0.5,
+                      delay: idx * 0.1,
+                      ease: 'easeOut'
+                    }}
+                    className="group"
+                  >
+                    <div
+                      className="rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 h-full border"
+                      style={{
+                        backgroundColor: colors.card,
+                        border: `1px solid ${colors.border}20`,
+                        transform: 'translateY(0)',
+                      }}
+                    >
+                      <div className="relative h-48 sm:h-52 overflow-hidden">
+                        <img
+                          src={news.image}
+                          alt={news.title}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                        {news.detail && (
+                          <div
+                            className="absolute top-3 right-3 px-2 py-1 rounded-lg text-xs font-medium backdrop-blur-md"
+                            style={{
+                              backgroundColor: `${colors.accent}90`,
+                              color: colors.card,
+                              fontFamily: 'var(--font-sharp-bold)',
+                              fontSize: 'clamp(10px, 2.5vw, 11px)'
+                            }}
+                          >
+                            {news.detail}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="p-4 sm:p-5">
+                        <h3
+                          className="font-bold text-lg mb-3 line-clamp-2 leading-tight"
+                          style={{
+                            color: colors.cardText,
+                            fontFamily: 'var(--font-header-modern)',
+                            fontSize: 'clamp(16px, 3vw, 18px)'
+                          }}
+                        >
+                          {news.title}
+                        </h3>
+
+                        <p
+                          className="text-sm line-clamp-3 mb-4 leading-relaxed"
+                          style={{
+                            color: colors.detail,
+                            fontFamily: 'var(--font-sharp-light)',
+                            fontSize: 'clamp(13px, 2.5vw, 14px)'
+                          }}
+                        >
+                          {news.description}
+                        </p>
+
+                        <button
+                          onClick={() => setSelectedNews(news)}
+                          className="w-full py-3 px-4 rounded-lg font-semibold transition-all duration-200 hover:transform hover:scale-[1.02] active:scale-[0.98] touch-manipulation group/btn border-2 border-transparent hover:border-current"
+                          style={{
+                            backgroundColor: 'transparent',
+                            color: colors.accent,
+                            border: `2px solid ${colors.accent}`,
+                            fontFamily: 'var(--font-sharp-bold)',
+                            fontSize: 'clamp(14px, 3vw, 15px)'
+                          }}
+                        >
+                          <span className="flex items-center justify-center gap-2">
+                            Baca Selengkapnya
+                            <span className="transition-transform duration-200 group-hover/btn:translate-x-1">📖</span>
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-16 space-y-4">
+                <div
+                  className="text-6xl mb-4"
+                  style={{ color: colors.detail }}
+                >
+                  📰
+                </div>
+                <h3
+                  className="text-xl font-semibold"
+                  style={{
+                    color: colors.cardText,
+                    fontFamily: 'var(--font-header-modern)'
+                  }}
+                >
+                  Belum Ada Berita
+                </h3>
+                <p
+                  className="text-sm text-center max-w-md"
+                  style={{
+                    color: colors.detail,
+                    fontFamily: 'var(--font-sharp-light)'
+                  }}
+                >
+                  Berita terbaru akan ditampilkan di sini. Silakan kembali lagi nanti.
+                </p>
+              </div>
+            )}
+          </section>
+        </div>
+      )}
 
       <AnimatePresence>
         {showScrollToTop && (

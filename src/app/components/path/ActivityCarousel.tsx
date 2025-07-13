@@ -21,12 +21,14 @@ interface ActivityCarouselProps {
   articles?: Article[]
   autoplay?: boolean
   autoplayInterval?: number
+  onArticleClick?: (articleId: string) => void
 }
 
 export default function ActivityCarousel({
   articles = [],
   autoplay = true,
-  autoplayInterval = 10000 // 10 seconds
+  autoplayInterval = 10000, // 10 seconds
+  onArticleClick
 }: ActivityCarouselProps) {
   const { colors } = useTheme()
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -297,6 +299,7 @@ export default function ActivityCarousel({
 
                     {/* Read more button */}
                     <button
+                      onClick={() => onArticleClick?.(article.id)}
                       className="flex items-center gap-2 group transition-all duration-200 hover:gap-3 font-sharp-bold"
                       style={{
                         color: colors.accent,
@@ -421,6 +424,7 @@ export default function ActivityCarousel({
 
                     {/* Read more button */}
                     <button
+                      onClick={() => onArticleClick?.(article.id)}
                       className="flex items-center gap-2 group transition-all duration-200 hover:gap-3 font-sharp-bold"
                       style={{
                         color: colors.accent,
