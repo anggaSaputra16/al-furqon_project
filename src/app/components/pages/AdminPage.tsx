@@ -15,12 +15,12 @@ export default function AdminPage() {
     const { isAuthenticated, user, isLoading } = useAdminAuthentication()
     const [mounted, setMounted] = useState(false)
 
-    // Ensure we're mounted before rendering
+
     useEffect(() => {
         setMounted(true)
     }, [])
 
-    // Don't render anything until mounted (avoid SSR issues)
+
     if (!mounted) {
         return (
             <div className="min-h-screen flex items-center justify-center">
@@ -32,7 +32,7 @@ export default function AdminPage() {
         )
     }
 
-    // Show loading if authentication is in progress
+
     if (isLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
@@ -44,7 +44,7 @@ export default function AdminPage() {
         )
     }
 
-    // Show admin home if authenticated, otherwise show login
+
     if (isAuthenticated && user) {
         return <AdminHomePage adminName={user.name} />
     }

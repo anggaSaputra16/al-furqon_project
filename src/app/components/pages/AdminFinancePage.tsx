@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-    FaArrowLeft, FaPlus, FaSearch, FaEdit, FaTrash, FaEye,
+    FaArrowLeft, FaPlus, FaSearch, FaEdit, FaTrash,
     FaMoneyBillWave, FaArrowUp, FaArrowDown, FaCalendarAlt,
-    FaFilter, FaDownload, FaPrint, FaFileInvoiceDollar
+    FaDownload, FaFileInvoiceDollar
 } from 'react-icons/fa'
 import { useTheme } from '@/context/themeContext'
 
@@ -114,7 +114,7 @@ export default function AdminFinancePage({ onBack }: AdminFinancePage) {
         reference: ''
     })
 
-    // Calculate totals
+
     const totalIncome = transactions
         .filter(t => t.type === 'income')
         .reduce((sum, t) => sum + t.amount, 0)
@@ -125,7 +125,7 @@ export default function AdminFinancePage({ onBack }: AdminFinancePage) {
 
     const netBalance = totalIncome - totalExpense
 
-    // Filter transactions
+
     const filteredTransactions = transactions.filter(transaction => {
         const matchesSearch =
             transaction.description.toLowerCase().includes(searchQuery.toLowerCase()) ||

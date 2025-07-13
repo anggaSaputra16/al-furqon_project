@@ -46,7 +46,7 @@ export default function AdminSettingsPage({ onBack }: AdminSettingsPageProps) {
     const [activeTab, setActiveTab] = useState<'general' | 'security' | 'notifications' | 'appearance'>('general')
     const [isLoading, setIsLoading] = useState(false)
 
-    // Initialize theme from localStorage or default
+
     useEffect(() => {
         const savedTheme = localStorage.getItem('admin_theme') as 'light' | 'dark' | 'blue'
         if (savedTheme) {
@@ -54,11 +54,11 @@ export default function AdminSettingsPage({ onBack }: AdminSettingsPageProps) {
         }
     }, [])
 
-    // Save theme to localStorage when changed
+
     const handleThemeChange = (theme: 'light' | 'dark' | 'blue') => {
         setCurrentTheme(theme)
         localStorage.setItem('admin_theme', theme)
-        // You can add additional logic here to update global theme if needed
+
     }
 
     const [siteSettings, setSiteSettings] = useState<SiteSettings>({
@@ -71,7 +71,7 @@ export default function AdminSettingsPage({ onBack }: AdminSettingsPageProps) {
     })
 
     const [securitySettings, setSecuritySettings] = useState<SecuritySettings>({
-        sessionTimeout: 60, // minutes
+        sessionTimeout: 60,
         passwordMinLength: 8,
         requireStrongPassword: true,
         twoFactorAuth: false,
@@ -96,10 +96,10 @@ export default function AdminSettingsPage({ onBack }: AdminSettingsPageProps) {
     const handleSaveSettings = async () => {
         setIsLoading(true)
 
-        // Simulate API call
+
         await new Promise(resolve => setTimeout(resolve, 1000))
 
-        // In real app, this would save to database
+
         console.log('Settings saved:', {
             siteSettings,
             securitySettings,
@@ -112,7 +112,7 @@ export default function AdminSettingsPage({ onBack }: AdminSettingsPageProps) {
     }
 
     const handleImageUpload = (type: 'logo' | 'favicon') => {
-        // Simulate file upload
+
         alert(`Upload ${type} akan diimplementasikan dengan file picker`)
     }
 

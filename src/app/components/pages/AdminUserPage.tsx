@@ -1,11 +1,19 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-    FaArrowLeft, FaPlus, FaSearch, FaEdit, FaTrash, FaEye, FaEyeSlash,
-    FaUser, FaUserShield, FaUserCog, FaCrown, FaKey, FaEnvelope,
-    FaCalendarAlt, FaCheck, FaTimes, FaSave, FaUserPlus
+    FaArrowLeft,
+    FaSearch,
+    FaEdit,
+    FaTrash,
+    FaUser,
+    FaUserShield,
+    FaUserCog,
+    FaCrown,
+    FaCalendarAlt,
+    FaTimes,
+    FaUserPlus
 } from 'react-icons/fa'
 import { useTheme } from '@/context/themeContext'
 

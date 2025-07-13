@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import {
-    FaArrowLeft, FaCalendarAlt, FaChartPie, FaChartLine, FaChartBar,
-    FaDownload, FaPrint, FaEye, FaFilter, FaMoneyBillWave,
+    FaArrowLeft, FaChartPie, FaChartLine, FaChartBar,
+    FaDownload, FaPrint, FaMoneyBillWave,
     FaArrowUp, FaArrowDown, FaArrowCircleUp, FaArrowCircleDown,
-    FaFileInvoiceDollar, FaPercentage
+    FaFileInvoiceDollar
 } from 'react-icons/fa'
 import { useTheme } from '@/context/themeContext'
 
@@ -50,7 +50,7 @@ export default function AdminFinancialReportPage({ onBack }: AdminFinancialRepor
     const [selectedYear, setSelectedYear] = useState<number>(2024)
     const [selectedMonth, setSelectedMonth] = useState<number>(7)
 
-    // Sample data - in real app, this would come from API
+
     const [reportData, setReportData] = useState<FinancialReportData>({
         period: 'Juli 2024',
         totalIncome: 18250000,

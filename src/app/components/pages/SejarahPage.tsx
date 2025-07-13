@@ -23,7 +23,6 @@ export default function SejarahPage() {
     fetchMenus()
   }, [fetchMenus])
 
-  // Handle scroll to show scroll-to-top button
   useEffect(() => {
     const handleScroll = () => {
       const scrollY = window.scrollY
@@ -38,7 +37,6 @@ export default function SejarahPage() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  // Scroll to top function
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,

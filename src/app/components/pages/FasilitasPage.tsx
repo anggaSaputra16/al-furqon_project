@@ -31,7 +31,7 @@ export default function FasilitasPage() {
     fetchArticles()
   }, [fetchMenus, fetchArticles])
 
-  // Handle scroll to show scroll-to-top button
+
   useEffect(() => {
     const handleScroll = () => {
       const scrollY = window.scrollY
@@ -46,7 +46,7 @@ export default function FasilitasPage() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  // Scroll to top function
+
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
@@ -230,7 +230,7 @@ export default function FasilitasPage() {
                   image={facility.image}
                   features={facility.features}
                   index={index}
-                  isReversed={index % 2 === 1} // Alternating layout: even=left, odd=right
+                  isReversed={index % 2 === 1}
                 />
               ))}
             </div>

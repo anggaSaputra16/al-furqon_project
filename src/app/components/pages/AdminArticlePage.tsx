@@ -21,7 +21,7 @@ export default function AdminArticlePage({ onBack }: AdminArticlePageProps) {
     const { colors } = useTheme()
     const ui = useAdminUI()
 
-    // Use individual store selectors to avoid infinite loops
+
     const articles = useArticleSelectors()
     const pagination = usePagination()
     const selectedArticle = useSelectedArticle()
@@ -31,19 +31,19 @@ export default function AdminArticlePage({ onBack }: AdminArticlePageProps) {
     const filters = useArticleStore(state => state.filters)
     const currentView = useArticleStore(state => state.currentView)
 
-    // Use store actions directly
+
     const setSelectedArticle = useArticleStore(state => state.setSelectedArticle)
     const setCurrentView = useArticleStore(state => state.setCurrentView)
     const setFilters = useArticleStore(state => state.setFilters)
     const clearError = useArticleStore(state => state.clearError)
 
-    // Create stable action functions to avoid re-renders
+
     const handleFilterChange = (newFilters: any) => {
         const currentState = useArticleStore.getState()
         currentState.setFilters(newFilters)
     }
 
-    // Manual refresh function
+
     const handleRefresh = async () => {
         const currentState = useArticleStore.getState()
 
@@ -59,7 +59,7 @@ export default function AdminArticlePage({ onBack }: AdminArticlePageProps) {
                 currentState.markDataAsFresh()
                 console.log('✅ Articles refreshed successfully')
 
-                // Show success notification
+
                 ui.addNotification({
                     id: Date.now().toString(),
                     type: 'success',
@@ -74,7 +74,7 @@ export default function AdminArticlePage({ onBack }: AdminArticlePageProps) {
             console.error('Error refreshing articles:', error)
             currentState.setError('Gagal memuat ulang artikel')
 
-            // Show error notification
+
             ui.addNotification({
                 id: Date.now().toString(),
                 type: 'error',
@@ -89,7 +89,7 @@ export default function AdminArticlePage({ onBack }: AdminArticlePageProps) {
         }
     }
 
-    // Create stable functions for article operations
+
     const deleteArticle = async (articleId: string): Promise<boolean> => {
         try {
             const response = await articleRepository.deleteArticle(articleId)
@@ -97,7 +97,7 @@ export default function AdminArticlePage({ onBack }: AdminArticlePageProps) {
                 const currentState = useArticleStore.getState()
                 currentState.removeArticle(articleId)
 
-                // Refresh the list to ensure consistency
+
                 try {
                     const refreshResponse = await articleRepository.getArticles({
                         page: 1,
@@ -134,7 +134,7 @@ export default function AdminArticlePage({ onBack }: AdminArticlePageProps) {
             if (response?.data) {
                 currentState.updateArticle(response.data)
 
-                // Refresh the list to ensure consistency
+
                 try {
                     const refreshResponse = await articleRepository.getArticles({
                         page: 1,
@@ -157,7 +157,7 @@ export default function AdminArticlePage({ onBack }: AdminArticlePageProps) {
         }
     }
 
-    // Form state for create/edit
+
     const [formData, setFormData] = useState<Partial<AdminArticle>>({
         title: '',
         description: '',
@@ -170,19 +170,19 @@ export default function AdminArticlePage({ onBack }: AdminArticlePageProps) {
         allowComments: true
     })
 
-    // Local UI state
+
     const [tagInput, setTagInput] = useState('')
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [saveError, setSaveError] = useState<string | null>(null)
 
-    // Computed values
+
     const isEditing = currentView === 'edit' && !!selectedArticle
     const editingArticle = selectedArticle
 
-    // Clear save error
+
     const clearSaveError = () => setSaveError(null)
 
-    // Form handlers
+
     const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData(prev => ({ ...prev, title: e.target.value }))
     }
@@ -250,7 +250,7 @@ export default function AdminArticlePage({ onBack }: AdminArticlePageProps) {
             setIsSubmitting(true)
             setSaveError(null)
 
-            // Validate required fields for published articles
+
             if (status === 'published') {
                 if (!formData.title?.trim()) {
                     throw new Error('Judul artikel harus diisi')
@@ -278,19 +278,19 @@ export default function AdminArticlePage({ onBack }: AdminArticlePageProps) {
                 response = await articleRepository.createArticle(articleData)
             }
 
-            // Update the store with the new/updated article
+
             const currentState = useArticleStore.getState()
             if (response?.data) {
                 if (isEditing) {
-                    // Update existing article in store
+
                     currentState.updateArticle(response.data)
                 } else {
-                    // Add new article to store
+
                     currentState.addArticle(response.data)
                 }
             }
 
-            // Refresh articles list from backend to ensure consistency
+
             try {
                 const refreshResponse = await articleRepository.getArticles({
                     page: 1,
@@ -302,10 +302,10 @@ export default function AdminArticlePage({ onBack }: AdminArticlePageProps) {
                 }
             } catch (refreshError) {
                 console.warn('Failed to refresh articles list:', refreshError)
-                // Don't throw error - the save operation was successful
+
             }
 
-            // Show success notification
+
             ui.addNotification({
                 id: Date.now().toString(),
                 type: 'success',
@@ -318,7 +318,7 @@ export default function AdminArticlePage({ onBack }: AdminArticlePageProps) {
                 duration: 3000
             })
 
-            // Success - go back to list
+
             handleBackToList()
         } catch (error) {
             setSaveError(error instanceof Error ? error.message : 'Terjadi kesalahan')
@@ -327,7 +327,7 @@ export default function AdminArticlePage({ onBack }: AdminArticlePageProps) {
         }
     }
 
-    // Initialize form data when editing - use stable dependency
+
     useEffect(() => {
         if (currentView === 'edit' && selectedArticle?.id) {
             setFormData(selectedArticle)
@@ -343,9 +343,9 @@ export default function AdminArticlePage({ onBack }: AdminArticlePageProps) {
                 featured: false
             })
         }
-    }, [currentView, selectedArticle?.id]) // Only depend on view and article ID, not the full object
+    }, [currentView, selectedArticle?.id])
 
-    // Filter articles based on current filters
+
     const filteredArticles = articles.filter(article => {
         const matchesSearch = !filters.search ||
             article.title.toLowerCase().includes(filters.search.toLowerCase()) ||
@@ -379,7 +379,7 @@ export default function AdminArticlePage({ onBack }: AdminArticlePageProps) {
         if (confirm('Apakah Anda yakin ingin menghapus artikel ini?')) {
             const success = await deleteArticle(articleId)
             if (success) {
-                // Show success notification
+
                 ui.addNotification({
                     id: Date.now().toString(),
                     type: 'success',
@@ -390,7 +390,7 @@ export default function AdminArticlePage({ onBack }: AdminArticlePageProps) {
                     duration: 3000
                 })
             } else {
-                // Show error notification
+
                 ui.addNotification({
                     id: Date.now().toString(),
                     type: 'error',
@@ -407,7 +407,7 @@ export default function AdminArticlePage({ onBack }: AdminArticlePageProps) {
     const handleToggleFeatured = async (articleId: string) => {
         const success = await toggleFeatured(articleId)
         if (success) {
-            // Show success notification
+
             ui.addNotification({
                 id: Date.now().toString(),
                 type: 'success',
@@ -418,7 +418,7 @@ export default function AdminArticlePage({ onBack }: AdminArticlePageProps) {
                 duration: 2000
             })
         } else {
-            // Show error notification
+
             ui.addNotification({
                 id: Date.now().toString(),
                 type: 'error',
@@ -469,20 +469,20 @@ export default function AdminArticlePage({ onBack }: AdminArticlePageProps) {
         }
     }
 
-    // Clear error when component unmounts - use stable reference
+
     useEffect(() => {
         return () => {
             const currentState = useArticleStore.getState()
             currentState.clearError()
         }
-    }, []) // Empty deps - only run on mount/unmount
+    }, [])
 
-    // Load articles on component mount if needed
+
     useEffect(() => {
         const loadArticlesOnMount = async () => {
             const currentState = useArticleStore.getState()
 
-            // Only load if we don't have fresh data
+
             if (!currentState.isDataFresh() || currentState.articles.length === 0) {
                 try {
                     currentState.setLoading(true)
@@ -505,9 +505,9 @@ export default function AdminArticlePage({ onBack }: AdminArticlePageProps) {
         }
 
         loadArticlesOnMount()
-    }, []) // Empty deps - only run once on mount
+    }, [])
 
-    // List View
+
     if (currentView === 'list') {
         return (
             <div
@@ -847,7 +847,7 @@ export default function AdminArticlePage({ onBack }: AdminArticlePageProps) {
         )
     }
 
-    // Create/Edit Form View
+
     return (
         <div
             className="min-h-screen"

@@ -5,7 +5,7 @@ import UniversalNavGrid, { NavItem } from '../path/UniversalNavGrid'
 import { FaRoute, FaChevronUp } from 'react-icons/fa'
 import { AnimatePresence, motion } from 'framer-motion'
 import Footer from '../path/Footer'
-import CardLayout, { CardData } from '../../layouts/CardLayout'
+import { CardData } from '../../layouts/CardLayout'
 import MasjidHeader from '../path/MasjidHeader'
 import { useMenuStore } from '../../stores/useMenuStore'
 import { iconMap } from '../../utils/iconMapper'
@@ -22,7 +22,6 @@ import {
   useFeaturedArticles,
   useActiveDonations,
   useLatestNews,
-  useHomeStats,
   useDonationSubmission
 } from '../../hooks/useHomePageApi'
 
@@ -33,27 +32,19 @@ export default function HomePage() {
   const { menus, fetchMenus } = useMenuStore()
   const { articles, fetchArticles } = useArticleStore()
 
-  // New API hooks for backend data
-  const { data: homePageData, loading: homeLoading, error: homeError, refetch: refetchHome } = useHomePageData()
+  const { error: homeError, refetch: refetchHome } = useHomePageData()
   const { articles: featuredArticles, loading: articlesLoading, error: articlesError } = useFeaturedArticles()
   const { donations: donationPrograms, loading: donationsLoading } = useActiveDonations()
   const { news: latestNews, loading: newsLoading } = useLatestNews()
   const { submitDonation, submitting: donationSubmitting } = useDonationSubmission()
 
-  // Smart fallback logic - use backend data if available, otherwise static data
   const hasBackendArticles = featuredArticles && featuredArticles.length > 0
   const hasBackendDonations = donationPrograms && donationPrograms.length > 0
   const hasBackendNews = latestNews && latestNews.length > 0
 
-  // Fix: Use fallback data only when loading is complete and no backend data is available
-  const useFallbackData = !articlesLoading && !donationsLoading && !newsLoading &&
-    !hasBackendArticles && !hasBackendDonations && !hasBackendNews
-
-  // Fix: Determine if we should show loading state
   const isInitialLoading = (articlesLoading || donationsLoading || newsLoading) &&
     !hasBackendArticles && !hasBackendDonations && !hasBackendNews
 
-  // Optimized: useMemo for derived data
   const activityCards = useMemo(() => (
     hasBackendArticles ? featuredArticles?.map((article: any) => ({
       id: article.id,
@@ -82,7 +73,6 @@ export default function HomePage() {
 
   const donationCards = useMemo(() => {
     try {
-      // Fix: Check for backend donations first
       if (hasBackendDonations) {
         return donationPrograms?.map((donation: any) => {
           return {
@@ -105,16 +95,13 @@ export default function HomePage() {
           }
         }) || []
       } else {
-        // Use static data when no backend data
         return donationCardsStatic.map(card => ({
           ...card,
           size: card.size as 'large' | 'small',
-          // Ensure donors structure exists for fallback data
           donors: { total: Math.floor(Math.random() * 50) + 20, recent: [] }
         }))
       }
     } catch (error) {
-      // Fallback to static data if there's any error
       return donationCardsStatic.map(card => ({
         ...card,
         size: card.size as 'large' | 'small',
@@ -125,10 +112,8 @@ export default function HomePage() {
 
   const upcomingCards = useMemo(() => {
     try {
-      // Fix: Check for backend news first
       if (hasBackendNews) {
         return latestNews?.map((news: any) => {
-          // Ensure safe access to nested properties
           const authorName = news.author?.name || news.author || 'Admin Al-Furqon'
 
           return {
@@ -147,24 +132,18 @@ export default function HomePage() {
           }
         }) || []
       } else {
-        // Use static data when no backend data
         return upcomingCardsStatic.map(card => ({ ...card, size: card.size as 'large' | 'small' }))
       }
     } catch (error) {
-      // Fallback to static data if there's any error
       return upcomingCardsStatic.map(card => ({ ...card, size: card.size as 'large' | 'small' }))
     }
   }, [hasBackendNews, latestNews])
 
-  // Only fetchMenus/fetchArticles once on mount
   useEffect(() => {
     fetchMenus()
     fetchArticles()
   }, [])
 
-
-  
-  // Handle scroll to show scroll-to-top button only
   useEffect(() => {
     const handleScroll = () => {
       const scrollY = window.scrollY
@@ -177,7 +156,6 @@ export default function HomePage() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  // Scroll to top function
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
@@ -185,7 +163,6 @@ export default function HomePage() {
     })
   }
 
-  // Donation modal functions
   const handleQuickAmount = (amount: number) => {
     setDonationAmount(amount.toString())
   }
@@ -213,7 +190,6 @@ export default function HomePage() {
       if (result.success) {
         alert(`Terima kasih ${donorName} atas donasi Rp ${parseInt(donationAmount).toLocaleString('id-ID')}. ${result.data?.paymentUrl ? 'Silakan lanjutkan ke pembayaran.' : 'Donasi Anda akan segera diproses.'}`)
 
-        // Redirect to payment if available
         if (result.data?.paymentUrl) {
           window.open(result.data.paymentUrl, '_blank')
         }
@@ -236,12 +212,6 @@ export default function HomePage() {
     }
   })
 
-  // Legacy state variables for reorder functionality (will be removed when API fully integrated)
-  const [cards, setCards] = useState<CardData[]>(
-    activityCardsStatic.map(card => ({ ...card, size: card.size as 'large' | 'small' }))
-  )
-
-  // Modal and form state
   const [showDonationModal, setShowDonationModal] = useState<CardData | null>(null)
   const [donationAmount, setDonationAmount] = useState<string>('')
   const [donorName, setDonorName] = useState<string>('')
@@ -253,21 +223,9 @@ export default function HomePage() {
     detail?: string;
   } | null>(null)
 
-  const handleReorder = (from: number, to: number) => {
-    // Legacy function - will be removed when API fully integrated
-    const newCards = [...cards]
-    const [moved] = newCards.splice(from, 1)
-    newCards.splice(to, 0, moved)
-    setCards(newCards)
-  }
-
-  // Fix: Determine if we have any data to show (backend or static)
   const hasAnyData = hasBackendArticles || hasBackendDonations || hasBackendNews ||
     activityCards.length > 0 || donationCards.length > 0 || upcomingCards.length > 0
 
-  // ...existing code...
-
-  // Loading component
   const LoadingSkeleton = () => (
     <div className="animate-pulse space-y-6">
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
@@ -284,7 +242,6 @@ export default function HomePage() {
     </div>
   )
 
-  // Error component with retry
   const ErrorState = ({ error, onRetry }: { error: string; onRetry: () => void }) => (
     <div className="text-center py-12 space-y-4">
       <div className="text-red-500 text-lg font-semibold">
@@ -302,7 +259,6 @@ export default function HomePage() {
     </div>
   )
 
-  // Fix: Show loading state only when initially loading and no data available
   if (isInitialLoading && !hasAnyData) {
     return (
       <main style={{ background: colors.background, color: colors.cardText }} className="transition-colors duration-500">
@@ -314,7 +270,6 @@ export default function HomePage() {
     )
   }
 
-  // Fix: Show error state only if all requests failed and no fallback data
   if ((homeError || articlesError) && !hasAnyData) {
     return (
       <main style={{ background: colors.background, color: colors.cardText }} className="transition-colors duration-500">
@@ -330,7 +285,6 @@ export default function HomePage() {
     <main style={{ background: colors.background, color: colors.cardText }} className="transition-colors duration-500">
       <MasjidHeader />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6 sm:space-y-8 mt-5">
-        {/* Navigation Grid - Always visible in default mode for both desktop and mobile */}
         <div>
           <UniversalNavGrid
             items={navItems}
@@ -339,10 +293,8 @@ export default function HomePage() {
           />
         </div>
 
-        {/* Home Header Section */}
         <HomeHeader />
 
-        {/* Aktivitas Terkini Section */}
         <section className="space-y-4 sm:space-y-6">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
             <h2
@@ -394,7 +346,6 @@ export default function HomePage() {
           )}
         </section>
 
-        {/* Bantuan Keagamaan Section */}
         <section className="space-y-4 sm:space-y-6 mt-8 sm:mt-12">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-6 sm:mb-8">
             <h2
@@ -423,7 +374,6 @@ export default function HomePage() {
             </a>
           </div>
 
-          {/* Show loading indicator only for this section if still loading */}
           {donationsLoading && !hasBackendDonations ? (
             <div className="flex justify-center items-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: colors.accent }}></div>
@@ -446,7 +396,6 @@ export default function HomePage() {
                       transform: 'translateY(0)',
                     }}
                   >
-                    {/* Image */}
                     <div className="relative h-48 sm:h-52 overflow-hidden">
                       <img
                         src={card.image}
@@ -456,9 +405,7 @@ export default function HomePage() {
                       <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     </div>
 
-                    {/* Content */}
                     <div className="p-4 sm:p-5">
-                      {/* Title */}
                       <h3
                         className="font-bold text-lg mb-3 line-clamp-2 leading-tight"
                         style={{
@@ -470,7 +417,6 @@ export default function HomePage() {
                         {card.title}
                       </h3>
 
-                      {/* Description */}
                       <p
                         className="text-sm line-clamp-3 mb-4 leading-relaxed"
                         style={{
@@ -482,7 +428,6 @@ export default function HomePage() {
                         {card.description}
                       </p>
 
-                      {/* CTA Button */}
                       <button
                         onClick={() => setShowDonationModal(card)}
                         className="w-full py-3 px-4 rounded-lg font-semibold transition-all duration-200 hover:transform hover:scale-[1.02] active:scale-[0.98] touch-manipulation group/btn"
@@ -507,7 +452,6 @@ export default function HomePage() {
           )}
         </section>
 
-        {/* Berita Utama Section */}
         <section className="space-y-4 sm:space-y-6 mt-8 sm:mt-12">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-6 sm:mb-8">
             <h2
@@ -536,7 +480,6 @@ export default function HomePage() {
             </a>
           </div>
 
-          {/* Show loading indicator only for this section if still loading */}
           {newsLoading && !hasBackendNews ? (
             <div className="flex justify-center items-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: colors.accent }}></div>
@@ -566,7 +509,6 @@ export default function HomePage() {
                       transform: 'translateY(0)',
                     }}
                   >
-                    {/* Image */}
                     <div className="relative h-48 sm:h-52 overflow-hidden">
                       <img
                         src={news.image}
@@ -575,7 +517,6 @@ export default function HomePage() {
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-                      {/* Date Badge */}
                       {news.detail && (
                         <div
                           className="absolute top-3 right-3 px-2 py-1 rounded-lg text-xs font-medium backdrop-blur-md"
@@ -591,9 +532,7 @@ export default function HomePage() {
                       )}
                     </div>
 
-                    {/* Content */}
                     <div className="p-4 sm:p-5">
-                      {/* Title */}
                       <h3
                         className="font-bold text-lg mb-3 line-clamp-2 leading-tight"
                         style={{
@@ -605,7 +544,6 @@ export default function HomePage() {
                         {news.title}
                       </h3>
 
-                      {/* Description */}
                       <p
                         className="text-sm line-clamp-3 mb-4 leading-relaxed"
                         style={{
@@ -617,7 +555,6 @@ export default function HomePage() {
                         {news.description}
                       </p>
 
-                      {/* CTA Button */}
                       <button
                         onClick={() => setSelectedNews(news)}
                         className="w-full py-3 px-4 rounded-lg font-semibold transition-all duration-200 hover:transform hover:scale-[1.02] active:scale-[0.98] touch-manipulation group/btn border-2 border-transparent hover:border-current"
@@ -643,7 +580,6 @@ export default function HomePage() {
         </section>
       </div>
 
-      {/* Scroll to Top Button - Enhanced for both desktop and mobile */}
       <AnimatePresence>
         {showScrollToTop && (
           <motion.button
@@ -682,7 +618,6 @@ export default function HomePage() {
       <ActivityModal data={modalData} onClose={() => setModalData(null)} />
       <Footer />
 
-      {/* Modal Donasi - Enhanced UI */}
       <UniversalModal
         open={!!showDonationModal}
         onClose={handleCloseDonationModal}
@@ -691,7 +626,6 @@ export default function HomePage() {
         maxWidth="max-w-lg"
       >
         <div className="space-y-4">
-          {/* Progress Indicator */}
           {showDonationModal?.target && (
             <div className="p-4 rounded-lg" style={{ backgroundColor: `${colors.accent}08`, border: `1px solid ${colors.accent}15` }}>
               <div className="flex justify-between items-center mb-2">
@@ -717,7 +651,6 @@ export default function HomePage() {
                 </span>
               </div>
 
-              {/* Progress Bar */}
               <div
                 className="w-full h-2 rounded-full overflow-hidden"
                 style={{ backgroundColor: `${colors.accent}20` }}
@@ -756,7 +689,6 @@ export default function HomePage() {
             </div>
           )}
 
-          {/* Program Details */}
           <div className="p-4 rounded-lg" style={{ backgroundColor: `${colors.accent}10`, border: `1px solid ${colors.accent}20` }}>
             <div className="flex items-start gap-3">
               <div
@@ -789,7 +721,6 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Donation Form */}
           <form className="space-y-4">
             <div>
               <label
@@ -852,7 +783,6 @@ export default function HomePage() {
                 />
               </div>
 
-              {/* Quick Amount Buttons */}
               <div className="grid grid-cols-3 gap-2 mt-3">
                 {[50000, 100000, 250000].map((amount) => (
                   <button
@@ -918,7 +848,6 @@ export default function HomePage() {
         </div>
       </UniversalModal>
 
-      {/* Modal Berita - Mobile Optimized */}
       <UniversalModal
         open={!!selectedNews}
         onClose={() => setSelectedNews(null)}

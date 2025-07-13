@@ -1,11 +1,18 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import {
-    FaArrowLeft, FaChartBar, FaDownload, FaCalendarAlt, FaEye,
-    FaUsers, FaFileAlt, FaDonate, FaArrowUp, FaArrowDown,
-    FaFilter, FaPrint, FaShare
+    FaArrowLeft,
+    FaChartBar,
+    FaDownload,
+    FaEye,
+    FaUsers,
+    FaFileAlt,
+    FaDonate,
+    FaArrowUp,
+    FaArrowDown,
+    FaPrint
 } from 'react-icons/fa'
 import { useTheme } from '@/context/themeContext'
 
@@ -116,7 +123,7 @@ export default function AdminReportPage({ onBack }: AdminReportPageProps) {
     }
 
     const handleExportReport = () => {
-        // Simulate report export
+
         alert('Laporan sedang diunduh...')
     }
 

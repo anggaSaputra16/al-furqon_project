@@ -17,7 +17,6 @@ import UniversalNavGrid, { NavItem } from '../path/UniversalNavGrid'
 
 export default function KegiatanPage() {
   const { colors } = useTheme()
-  // Use the new API hook instead of useArticleStore - get all articles (no limit)
   const { articles: apiArticles, loading: articlesLoading, error: articlesError } = useFeaturedArticles(100)
   const { menus, fetchMenus } = useMenuStore()
   const searchParams = useSearchParams()
@@ -35,7 +34,6 @@ export default function KegiatanPage() {
     fetchMenus()
   }, [fetchMenus])
 
-  // Handle URL filter parameter
   useEffect(() => {
     const filterParam = searchParams.get('filter')
     if (filterParam) {
@@ -44,7 +42,6 @@ export default function KegiatanPage() {
     }
   }, [searchParams])
 
-  // Handle scroll to show scroll-to-top button
   useEffect(() => {
     const handleScroll = () => {
       const scrollY = window.scrollY
@@ -59,7 +56,6 @@ export default function KegiatanPage() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  // Transform API articles to match the expected format for this component
   const articles = useMemo(() => {
     return apiArticles.map(article => ({
       id: article.id,
@@ -81,20 +77,16 @@ export default function KegiatanPage() {
     }))
   }, [apiArticles])
 
-  // Get unique categories from articles
   const categories = useMemo(() => {
     return ['Kegiatan', 'Berita', 'Sumbangan', 'Fasilitas', 'Profil']
   }, [])
 
-  // Filtered articles based on search and filters
   const filteredArticles = useMemo(() => {
     return articles.filter(article => {
-      // Search filter
       const matchesSearch = searchQuery === '' ||
         article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (article.description && article.description.toLowerCase().includes(searchQuery.toLowerCase()))
 
-      // Category filter
       const matchesCategory = selectedCategory === '' ||
         selectedCategory === article.category
 
@@ -102,18 +94,15 @@ export default function KegiatanPage() {
     })
   }, [articles, searchQuery, selectedCategory])
 
-  // Pagination calculations
   const totalPages = Math.ceil(filteredArticles.length / ARTICLES_PER_PAGE)
   const startIndex = (currentPage - 1) * ARTICLES_PER_PAGE
   const endIndex = startIndex + ARTICLES_PER_PAGE
   const paginatedArticles = filteredArticles.slice(startIndex, endIndex)
 
-  // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1)
   }, [searchQuery, selectedCategory])
 
-  // Scroll to top function
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
@@ -138,7 +127,6 @@ export default function KegiatanPage() {
 
   const hasActiveFilters = searchQuery !== '' || selectedCategory !== ''
 
-  // Loading and Error States
   if (articlesLoading) {
     return (
       <main
@@ -201,7 +189,6 @@ export default function KegiatanPage() {
       <MasjidHeader />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6 sm:space-y-8 mt-5">
-        {/* Navigation Grid */}
         <div>
           <UniversalNavGrid
             items={navItems}
@@ -210,7 +197,6 @@ export default function KegiatanPage() {
           />
         </div>
 
-        {/* Page Header */}
         <div className="text-center space-y-6 py-8 sm:py-12">
           <div className="space-y-4">
             <h1
@@ -239,9 +225,7 @@ export default function KegiatanPage() {
             </p>
           </div>
 
-          {/* Search and Filter Bar */}
           <div className="flex flex-col sm:flex-row gap-4 max-w-2xl mx-auto mt-8">
-            {/* Search Input */}
             <div className="relative flex-1">
               <FaSearch
                 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
@@ -263,7 +247,6 @@ export default function KegiatanPage() {
               />
             </div>
 
-            {/* Category Filter Select */}
             <div className="relative">
               <select
                 value={selectedCategory}
@@ -292,7 +275,6 @@ export default function KegiatanPage() {
             </div>
           </div>
 
-          {/* Active Filters Display */}
           {hasActiveFilters && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
@@ -342,7 +324,6 @@ export default function KegiatanPage() {
             </motion.div>
           )}
 
-          {/* Results Count */}
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
             <div
               className="text-sm font-medium"
@@ -380,7 +361,6 @@ export default function KegiatanPage() {
           </div>
         </div>
 
-        {/* Articles Grid */}
         <section className="space-y-8 sm:space-y-12">
           {selectedArticle ? (
             <div className="max-w-6xl mx-auto">
@@ -417,7 +397,6 @@ export default function KegiatanPage() {
             </div>
           ) : filteredArticles.length > 0 ? (
             <div className="space-y-8">
-              {/* Grid Header */}
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                 <h2
                   className="text-2xl sm:text-3xl font-bold"
@@ -450,7 +429,6 @@ export default function KegiatanPage() {
                 </div>
               </div>
 
-              {/* Articles Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8">
                 {paginatedArticles.map((article, index) => (
                   <motion.div
@@ -468,7 +446,6 @@ export default function KegiatanPage() {
                         border: `1px solid ${colors.border}`
                       }}
                     >
-                      {/* Article Image */}
                       <div className="relative overflow-hidden h-48 sm:h-52 flex-shrink-0">
                         <div
                           className="w-full h-full bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
@@ -476,7 +453,6 @@ export default function KegiatanPage() {
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-                        {/* Category Badge */}
                         <div
                           className="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold shadow-lg"
                           style={{
@@ -488,7 +464,6 @@ export default function KegiatanPage() {
                           {article.category}
                         </div>
 
-                        {/* Published indicator for API articles */}
                         {article.date && (
                           <div
                             className="absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-bold shadow-lg"
@@ -502,7 +477,6 @@ export default function KegiatanPage() {
                           </div>
                         )}
 
-                        {/* Hover overlay with read more text */}
                         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                           <div
                             className="px-4 py-2 rounded-full text-sm font-bold shadow-xl"
@@ -517,7 +491,6 @@ export default function KegiatanPage() {
                         </div>
                       </div>
 
-                      {/* Article Content */}
                       <div className="p-5 flex flex-col flex-1">
                         <div className="flex-1 space-y-3">
                           <h3
@@ -593,7 +566,6 @@ export default function KegiatanPage() {
                 ))}
               </div>
 
-              {/* Pagination */}
               {totalPages > 1 && (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
@@ -601,7 +573,6 @@ export default function KegiatanPage() {
                   className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-12 pt-8 border-t"
                   style={{ borderColor: colors.border }}
                 >
-                  {/* Page Info */}
                   <div
                     className="text-sm"
                     style={{
@@ -612,9 +583,7 @@ export default function KegiatanPage() {
                     Halaman {currentPage} dari {totalPages} - Menampilkan {startIndex + 1} hingga {Math.min(endIndex, filteredArticles.length)} dari {filteredArticles.length} artikel
                   </div>
 
-                  {/* Pagination Controls */}
                   <div className="flex items-center gap-2">
-                    {/* Previous Button */}
                     <button
                       onClick={() => {
                         setCurrentPage(prev => Math.max(prev - 1, 1))
@@ -635,20 +604,17 @@ export default function KegiatanPage() {
                       Sebelumnya
                     </button>
 
-                    {/* Page Numbers */}
                     <div className="flex items-center gap-1">
                       {Array.from({ length: totalPages }, (_, index) => {
                         const pageNumber = index + 1
                         const isCurrentPage = pageNumber === currentPage
 
-                        // Show first page, last page, current page, and pages around current page
                         const shouldShow =
                           pageNumber === 1 ||
                           pageNumber === totalPages ||
                           Math.abs(pageNumber - currentPage) <= 1
 
                         if (!shouldShow) {
-                          // Show ellipsis for gaps
                           if (pageNumber === 2 && currentPage > 4) {
                             return (
                               <span
@@ -696,7 +662,6 @@ export default function KegiatanPage() {
                       })}
                     </div>
 
-                    {/* Next Button */}
                     <button
                       onClick={() => {
                         setCurrentPage(prev => Math.min(prev + 1, totalPages))
@@ -779,7 +744,6 @@ export default function KegiatanPage() {
         </section>
       </div>
 
-      {/* Scroll to Top Button */}
       <AnimatePresence>
         {showScrollToTop && (
           <motion.button

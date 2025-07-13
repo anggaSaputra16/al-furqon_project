@@ -3,10 +3,20 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
-    FaHome, FaNewspaper, FaDonate, FaImages, FaUsers, FaCog,
-    FaChartBar, FaFileAlt, FaCalendarAlt, FaSignOutAlt,
-    FaEye, FaEdit, FaTrash, FaPlus, FaBell, FaSearch,
-    FaMoneyBillWave, FaFileInvoiceDollar, FaChevronDown, FaChevronRight, FaSync
+    FaHome,
+    FaDonate,
+    FaImages,
+    FaUsers,
+    FaCog,
+    FaChartBar,
+    FaFileAlt,
+    FaSignOutAlt,
+    FaBell,
+    FaMoneyBillWave,
+    FaFileInvoiceDollar,
+    FaChevronDown,
+    FaChevronRight,
+    FaSync
 } from 'react-icons/fa'
 import { useTheme } from '@/context/themeContext'
 import { useAdminAuthentication } from '../../hooks/useAdmin'
@@ -55,7 +65,7 @@ interface MenuItem {
 }
 
 export default function AdminHomePage({ adminName = 'Administrator' }: AdminHomePageProps) {
-    // ALL HOOKS MUST BE CALLED FIRST - BEFORE ANY CONDITIONAL LOGIC
+
     const { colors } = useTheme()
     const { logout } = useAdminAuthentication()
     const { stats: dashboardStats, formattedStats, isLoading: isStatsLoading, refreshStats } = useDashboardStats()
@@ -64,7 +74,7 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
     const [isReportsDropdownOpen, setIsReportsDropdownOpen] = useState(false)
     const [isNotificationDropdownOpen, setIsNotificationDropdownOpen] = useState(false)
 
-    // Use backend data directly - no more static fallbacks
+
     const stats = {
         totalArticles: dashboardStats?.totalArticles ?? 0,
         totalDonations: dashboardStats?.totalDonations ?? 0,
@@ -77,15 +87,15 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
         totalBalance: dashboardStats?.totalBalance ?? 0
     }
 
-    // Recent activities from backend, empty array if no data
+
     const recentActivities = dashboardStats?.recentActivities || []
 
-    // Ensure component is mounted before rendering
+
     useEffect(() => {
         setMounted(true)
     }, [])
 
-    // NOW we can do conditional rendering AFTER all hooks are called
+
     if (!mounted) {
         return (
             <div className="min-h-screen flex items-center justify-center">
@@ -186,7 +196,7 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
         }
     }
 
-    // Show specific admin page based on currentPage
+
     if (currentPage === 'articles') {
         return <AdminArticlePage onBack={() => setCurrentPage('dashboard')} />
     }
@@ -219,7 +229,7 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
         return <AdminSettingsPage onBack={() => setCurrentPage('dashboard')} />
     }
 
-    // Dashboard view
+
     return (
         <div
             className="min-h-screen"
@@ -416,7 +426,7 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
                             {menuItems.map((item, index) => {
                                 const Icon = item.icon
 
-                                // Handle dropdown menu items
+
                                 if (item.hasDropdown && item.subItems) {
                                     return (
                                         <div key={item.title}>
@@ -479,7 +489,7 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
                                     )
                                 }
 
-                                // Handle regular menu items
+
                                 return (
                                     <motion.button
                                         key={item.title}

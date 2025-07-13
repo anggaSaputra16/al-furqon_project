@@ -1,18 +1,15 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import {
     FaPlus,
     FaEdit,
     FaTrash,
     FaSearch,
-    FaEye,
-    FaImage,
     FaSave,
     FaTimes,
     FaMoneyBillWave,
-    FaCalendarAlt
 } from 'react-icons/fa'
 import { useTheme } from '@/context/themeContext'
 
@@ -43,7 +40,7 @@ export default function AdminDonationPage({ onBack }: AdminDonationPageProps) {
     const [editingDonation, setEditingDonation] = useState<DonationItem | null>(null)
     const [isLoading, setIsLoading] = useState(false)
 
-    // Mock data untuk demo
+
     useEffect(() => {
         const mockDonations: DonationItem[] = [
             {
@@ -128,14 +125,14 @@ export default function AdminDonationPage({ onBack }: AdminDonationPageProps) {
 
     const handleSaveDonation = (donationData: Partial<DonationItem>) => {
         if (editingDonation) {
-            // Update existing donation
+
             setDonations(prev => prev.map(d =>
                 d.id === editingDonation.id
                     ? { ...d, ...donationData, updatedAt: new Date().toISOString().split('T')[0] }
                     : d
             ))
         } else {
-            // Add new donation
+
             const newDonation: DonationItem = {
                 id: Date.now().toString(),
                 title: donationData.title || '',
@@ -478,7 +475,7 @@ export default function AdminDonationPage({ onBack }: AdminDonationPageProps) {
     )
 }
 
-// Modal Component
+
 interface DonationModalProps {
     isOpen: boolean
     onClose: () => void

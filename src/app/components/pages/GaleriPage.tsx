@@ -18,7 +18,7 @@ import Footer from '@/app/components/path/Footer'
 import UniversalNavGrid, { NavItem } from '@/app/components/path/UniversalNavGrid'
 
 export default function GaleriPage() {
-  // Use API hook to get articles and extract images
+
   const { articles: apiArticles, loading: articlesLoading, error: articlesError } = useFeaturedArticles(100)
   const { search, setSearch } = useSearchStore()
   const { menus, fetchMenus } = useMenuStore()
@@ -32,13 +32,13 @@ export default function GaleriPage() {
 
   const IMAGES_PER_PAGE = 50
 
-  // Transform articles to gallery images format
+
   const images = useMemo(() => {
     if (!apiArticles || apiArticles.length === 0) {
       return []
     }
 
-    // Extract images from articles
+
     return apiArticles.map((article, index) => ({
       id: article.id,
       src: article.image,
@@ -56,7 +56,7 @@ export default function GaleriPage() {
     }))
   }, [apiArticles])
 
-  // Filter images based on search
+
   const filteredImages = useMemo(() => {
     if (!searchQuery && !search) return images
 
@@ -72,18 +72,18 @@ export default function GaleriPage() {
     })
   }, [images, searchQuery, search])
 
-  // Pagination calculations
+
   const totalPages = Math.ceil(filteredImages.length / IMAGES_PER_PAGE)
   const startIndex = (currentPage - 1) * IMAGES_PER_PAGE
   const endIndex = startIndex + IMAGES_PER_PAGE
   const paginatedImages = filteredImages.slice(startIndex, endIndex)
 
-  // Reset to first page when search changes
+
   useEffect(() => {
     setCurrentPage(1)
   }, [searchQuery, search])
 
-  // Handle URL filter parameter
+
   useEffect(() => {
     const filterParam = searchParams.get('filter')
     if (filterParam) {
@@ -93,7 +93,7 @@ export default function GaleriPage() {
     }
   }, [searchParams, setSearch])
 
-  // Handle scroll to show scroll-to-top button
+
   useEffect(() => {
     const handleScroll = () => {
       const scrollY = window.scrollY
@@ -108,7 +108,7 @@ export default function GaleriPage() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  // Scroll to top function
+
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
@@ -128,7 +128,7 @@ export default function GaleriPage() {
     }
   })
 
-  // Handle search input change
+
   const handleSearchChange = (value: string) => {
     setSearchQuery(value)
     setSearch(value)
@@ -141,7 +141,7 @@ export default function GaleriPage() {
     setFilterFromURL(false)
   }
 
-  // Loading State
+
   if (articlesLoading) {
     return (
       <main
@@ -162,7 +162,7 @@ export default function GaleriPage() {
     )
   }
 
-  // Error State
+
   if (articlesError && images.length === 0) {
     return (
       <main
@@ -415,14 +415,14 @@ export default function GaleriPage() {
                         const pageNumber = index + 1
                         const isCurrentPage = pageNumber === currentPage
 
-                        // Show first page, last page, current page, and pages around current page
+
                         const shouldShow =
                           pageNumber === 1 ||
                           pageNumber === totalPages ||
                           Math.abs(pageNumber - currentPage) <= 1
 
                         if (!shouldShow) {
-                          // Show ellipsis for gaps
+
                           if (pageNumber === 2 && currentPage > 4) {
                             return (
                               <span
