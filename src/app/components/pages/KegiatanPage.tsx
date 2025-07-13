@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { FaSearch, FaRoute, FaChevronUp } from 'react-icons/fa'
 
 import { useMenuStore } from '../../stores/useMenuStore'
+import { useArticleStore } from '../../stores/adminArticleStore' // Import admin store for categories
 import { useTheme } from '@/context/themeContext'
 import { iconMap } from '@/app/utils/iconMapper'
 import { useFeaturedArticles } from '../../hooks/useHomePageApi'
@@ -19,6 +20,7 @@ export default function KegiatanPage() {
   const { colors } = useTheme()
   const { articles: apiArticles, loading: articlesLoading, error: articlesError } = useFeaturedArticles(100)
   const { menus, fetchMenus } = useMenuStore()
+  const categories = useArticleStore(state => state.categories) // Use dynamic categories from admin store
   const searchParams = useSearchParams()
 
   const [searchQuery, setSearchQuery] = useState('')
@@ -57,29 +59,52 @@ export default function KegiatanPage() {
   }, [])
 
   const articles = useMemo(() => {
-    return apiArticles.map(article => ({
-      id: article.id,
-      title: article.title,
-      description: article.description,
-      detail: article.content,
-      content: article.content,
-      image: article.image,
-      category: article.category === 'kegiatan' ? 'Kegiatan' :
-        article.category === 'berita' ? 'Berita' :
-          article.category === 'sumbangan' ? 'Sumbangan' :
-            article.category === 'fasilitas' ? 'Fasilitas' : 'Profil',
-      date: article.publishedAt ? new Date(article.publishedAt).toLocaleDateString('id-ID', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      }) : undefined,
-      tag: article.tags?.[0] || article.category
-    }))
+    return apiArticles.map(article => {
+      // Map backend categories to admin store categories
+      const getCategoryName = (backendCategory: string) => {
+        const categoryMap: { [key: string]: string } = {
+          'kegiatan': 'Kegiatan',
+          'berita': 'Berita',
+          'pengumuman': 'Pengumuman',
+          'kajian': 'Kajian',
+          'program': 'Program',
+          'sumbangan': 'Program', // Map sumbangan to Program
+          'fasilitas': 'Kegiatan', // Map fasilitas to Kegiatan
+          'profil': 'Pengumuman' // Map profil to Pengumuman
+        }
+        return categoryMap[backendCategory.toLowerCase()] || 'Kegiatan'
+      }
+
+      return {
+        id: article.id,
+        title: article.title,
+        description: article.description,
+        detail: article.content,
+        content: article.content,
+        image: article.image,
+        category: getCategoryName(article.category),
+        date: article.publishedAt ? new Date(article.publishedAt).toLocaleDateString('id-ID', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        }) : undefined,
+        tag: article.tags?.[0] || article.category
+      }
+    })
   }, [apiArticles])
 
-  const categories = useMemo(() => {
-    return ['Kegiatan', 'Berita', 'Sumbangan', 'Fasilitas', 'Profil']
-  }, [])
+  // Map admin categories to display categories for better UX
+  const displayCategories = useMemo(() => {
+    const categoryMapping: { [key: string]: string } = {
+      'Kajian': 'Kajian',
+      'Pengumuman': 'Pengumuman',
+      'Kegiatan': 'Kegiatan',
+      'Berita': 'Berita',
+      'Program': 'Program'
+    }
+
+    return categories.map(cat => categoryMapping[cat] || cat)
+  }, [categories])
 
   const filteredArticles = useMemo(() => {
     return articles.filter(article => {
@@ -261,7 +286,7 @@ export default function KegiatanPage() {
                 }}
               >
                 <option value="">Semua Kategori</option>
-                {categories.map((category) => (
+                {displayCategories.map((category) => (
                   <option key={category} value={category}>
                     {category}
                   </option>

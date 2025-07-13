@@ -2,7 +2,9 @@
 
 import Image from 'next/image'
 import clsx from 'clsx'
+import { useState, useEffect } from 'react'
 import { useArticleStore } from '../../stores/useArticleStore'
+import { useFeaturedArticles } from '../../hooks/useHomePageApi'
 import RelatedArticles from './RelatedArticles'
 import { useTheme } from '@/context/themeContext'
 
@@ -12,24 +14,64 @@ interface Props {
 }
 
 export default function ArticleDetail({ articleId, showRelated = true }: Props) {
-  const { articles } = useArticleStore()
+  const { articles: storeArticles, fetchArticles } = useArticleStore()
+  const { articles: featuredArticles, loading: featuredLoading } = useFeaturedArticles()
   const { colors } = useTheme()
+  const [imageError, setImageError] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
-  const article = articles.find((a) => a.id === articleId)
+  // Combine both data sources - prioritize featured articles (homepage data)
+  const allArticles = featuredArticles.length > 0 ? featuredArticles : storeArticles
 
-  if (!article) return <p style={{ color: colors.cardText }}>Artikel tidak ditemukan.</p>
+  // Ensure articles are loaded
+  useEffect(() => {
+    const loadArticles = async () => {
+      if (featuredArticles.length === 0 && storeArticles.length === 0) {
+        await fetchArticles()
+      }
+      setIsLoading(false)
+    }
+    loadArticles()
+  }, [featuredArticles.length, storeArticles.length, fetchArticles])
 
-  const {
-    title,
-    content,
-    category,
-    image,
-    tag,
-    imageSize = 'medium',
-    imagePosition = 'right',
-    date,
-    id,
-  } = article
+  // Show loading state
+  if (isLoading || featuredLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 space-y-4">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: colors.accent }}></div>
+        <p className="text-lg" style={{ color: colors.cardText }}>
+          Memuat artikel...
+        </p>
+      </div>
+    )
+  }
+
+  const article = allArticles.find((a: any) => a.id === articleId)
+
+  if (!article) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 space-y-4">
+        <div className="text-6xl mb-4" style={{ color: colors.detail }}>📝</div>
+        <p className="text-lg" style={{ color: colors.cardText }}>
+          Artikel tidak ditemukan.
+        </p>
+        <p className="text-sm" style={{ color: colors.detail }}>
+          ID: {articleId}
+        </p>
+      </div>
+    )
+  }
+
+  // Handle different data structures between featuredArticles and storeArticles
+  const safeTitle = article.title
+  const safeContent = (article as any).content || (article as any).description || ''
+  const safeImage = article.image || '/images/al-furqon.png'
+  const safeDate = (article as any).date || (article as any).publishedAt
+  const safeTag = (article as any).tag || (article as any).category
+  const safeCategory = article.category
+  const safeId = article.id
+  const imageSize = (article as any).imageSize || 'medium'
+  const imagePosition = (article as any).imagePosition || 'right'
 
   const imageClasses = clsx('relative rounded-xl overflow-hidden shadow-lg', {
     'aspect-square': imageSize === 'large',
@@ -39,11 +81,33 @@ export default function ArticleDetail({ articleId, showRelated = true }: Props) 
 
   const isImageLeft = imagePosition === 'left'
 
+  // Function to render content paragraphs safely
+  const renderContent = () => {
+    if (!safeContent) {
+      return (
+        <p style={{ color: colors.detail }}>
+          Konten artikel tidak tersedia.
+        </p>
+      )
+    }
+
+    return safeContent.split('\n').map((paragraph: string, index: number) => {
+      const trimmedParagraph = paragraph.trim()
+      if (!trimmedParagraph) return null
+
+      return (
+        <p key={index} className="mb-4">
+          {trimmedParagraph}
+        </p>
+      )
+    }).filter(Boolean)
+  }
+
   return (
     <article className="w-full space-y-6 md:space-y-8">
       {/* Header Section */}
       <header className="space-y-3">
-        {tag && (
+        {safeTag && (
           <span
             className="inline-block text-xs sm:text-sm font-semibold uppercase tracking-wider px-3 py-1 rounded-full"
             style={{
@@ -52,7 +116,7 @@ export default function ArticleDetail({ articleId, showRelated = true }: Props) 
               fontFamily: 'var(--font-sharp-bold)',
             }}
           >
-            {tag}
+            {safeTag}
           </span>
         )}
         <h1
@@ -64,9 +128,9 @@ export default function ArticleDetail({ articleId, showRelated = true }: Props) 
             letterSpacing: '-0.02em'
           }}
         >
-          {title}
+          {safeTitle}
         </h1>
-        {date && (
+        {safeDate && (
           <div className="flex items-center gap-2 text-sm">
             <svg className="w-4 h-4" style={{ color: colors.subheading }} fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
@@ -77,7 +141,7 @@ export default function ArticleDetail({ articleId, showRelated = true }: Props) 
                 fontFamily: 'var(--font-sharp-light)',
               }}
             >
-              {date}
+              {new Date(safeDate).toLocaleDateString('id-ID')}
             </span>
           </div>
         )}
@@ -88,7 +152,23 @@ export default function ArticleDetail({ articleId, showRelated = true }: Props) 
         {/* Mobile: Stack vertically */}
         <div className="block lg:hidden space-y-6">
           <div className={imageClasses}>
-            <Image src={image} alt={title} fill className="object-cover" />
+            {!imageError ? (
+              <Image
+                src={safeImage}
+                alt={safeTitle}
+                fill
+                className="object-cover"
+                onError={() => setImageError(true)}
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              />
+            ) : (
+              <div
+                className="w-full h-full flex items-center justify-center"
+                style={{ backgroundColor: colors.border }}
+              >
+                <span style={{ color: colors.detail }}>Gambar tidak tersedia</span>
+              </div>
+            )}
           </div>
           <div
             className="space-y-4 text-justify leading-relaxed"
@@ -99,13 +179,7 @@ export default function ArticleDetail({ articleId, showRelated = true }: Props) 
               lineHeight: '1.7'
             }}
           >
-            {(content || '').split('\n').map((paragraph, index) => (
-              paragraph.trim() && (
-                <p key={index} className="mb-4">
-                  {paragraph}
-                </p>
-              )
-            ))}
+            {renderContent()}
           </div>
         </div>
 
@@ -113,7 +187,23 @@ export default function ArticleDetail({ articleId, showRelated = true }: Props) 
         <div className="hidden lg:grid lg:grid-cols-2 lg:gap-8 lg:items-start">
           {isImageLeft && (
             <div className={imageClasses}>
-              <Image src={image} alt={title} fill className="object-cover" />
+              {!imageError ? (
+                <Image
+                  src={safeImage}
+                  alt={safeTitle}
+                  fill
+                  className="object-cover"
+                  onError={() => setImageError(true)}
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                />
+              ) : (
+                <div
+                  className="w-full h-full flex items-center justify-center"
+                  style={{ backgroundColor: colors.border }}
+                >
+                  <span style={{ color: colors.detail }}>Gambar tidak tersedia</span>
+                </div>
+              )}
             </div>
           )}
           <div
@@ -125,25 +215,35 @@ export default function ArticleDetail({ articleId, showRelated = true }: Props) 
               lineHeight: '1.7'
             }}
           >
-            {(content || '').split('\n').map((paragraph, index) => (
-              paragraph.trim() && (
-                <p key={index} className="mb-4">
-                  {paragraph}
-                </p>
-              )
-            ))}
+            {renderContent()}
           </div>
           {!isImageLeft && (
             <div className={imageClasses}>
-              <Image src={image} alt={title} fill className="object-cover" />
+              {!imageError ? (
+                <Image
+                  src={safeImage}
+                  alt={safeTitle}
+                  fill
+                  className="object-cover"
+                  onError={() => setImageError(true)}
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                />
+              ) : (
+                <div
+                  className="w-full h-full flex items-center justify-center"
+                  style={{ backgroundColor: colors.border }}
+                >
+                  <span style={{ color: colors.detail }}>Gambar tidak tersedia</span>
+                </div>
+              )}
             </div>
           )}
         </div>
       </div>
 
-      {showRelated && category && (
+      {showRelated && safeCategory && (
         <div className="mt-8 pt-8 border-t" style={{ borderColor: colors.border }}>
-          <RelatedArticles category={category} excludeId={id} />
+          <RelatedArticles category={safeCategory} excludeId={safeId} />
         </div>
       )}
     </article>
