@@ -78,11 +78,17 @@ class AdminRepository {
 
       clearTimeout(timeoutId)
 
+      const data = await response.json()
+      
       if (!response.ok) {
-        // Handle specific HTTP errors
-        if (response.status === 401) {
-          throw new Error('Unauthorized - Please login again')
-        } else if (response.status === 404) {
+        // For authentication endpoints, return the response data even if not ok
+        // This allows us to get the proper error message from the server
+        if (response.status === 401 && endpoint.includes('/auth/')) {
+          return data // Return the actual response with error details
+        }
+        
+        // Handle other HTTP errors by throwing
+        if (response.status === 404) {
           throw new Error('Endpoint not found')
         } else if (response.status >= 500) {
           throw new Error('Server error - Please try again later')
@@ -91,7 +97,6 @@ class AdminRepository {
         }
       }
 
-      const data = await response.json()
       return data
     } catch (error) {
       clearTimeout(timeoutId)

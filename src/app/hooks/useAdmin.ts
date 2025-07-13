@@ -51,11 +51,35 @@ export const useAdminAuthentication = () => {
         })
         return { success: true }
       } else {
+        // Determine error type and message based on response
+        const errorMessage = result.message || 'Username atau password salah'
+        let errorTitle = 'Login Gagal'
+        let errorDetail = errorMessage
+        let errorType: 'error' | 'warning' = 'error'
+
+        // Check for authentication errors (401, invalid credentials)
+        if ((result as any).error === 401 || 
+            errorMessage.toLowerCase().includes('invalid') ||
+            errorMessage.toLowerCase().includes('unauthorized') ||
+            errorMessage.toLowerCase().includes('password') ||
+            errorMessage.toLowerCase().includes('username') ||
+            errorMessage.toLowerCase().includes('credentials')) {
+          errorType = 'error'
+          errorTitle = 'Kredensial Tidak Valid'
+          errorDetail = 'Username atau password yang Anda masukkan salah. Silakan periksa kembali.'
+        } else if (errorMessage.toLowerCase().includes('network') ||
+                  errorMessage.toLowerCase().includes('connection') ||
+                  errorMessage.toLowerCase().includes('fetch failed')) {
+          errorType = 'warning'
+          errorTitle = 'Masalah Koneksi'
+          errorDetail = 'Tidak dapat terhubung ke server. Periksa koneksi internet Anda.'
+        }
+
         ui.addNotification({
           id: Date.now().toString(),
-          type: 'error',
-          title: 'Login Gagal',
-          message: result.message || 'Username atau password salah',
+          type: errorType,
+          title: errorTitle,
+          message: errorDetail,
           timestamp: new Date().toISOString(),
           autoClose: true,
           duration: 5000

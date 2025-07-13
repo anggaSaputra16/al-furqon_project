@@ -1,10 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { motion } from 'framer-motion'
-import { FaEye, FaEyeSlash, FaUser, FaLock, FaShieldAlt } from 'react-icons/fa'
+import { motion, AnimatePresence } from 'framer-motion'
+import { FaEye, FaEyeSlash, FaUser, FaLock, FaShieldAlt, FaTimes, FaExclamationTriangle, FaCheck } from 'react-icons/fa'
 import { useTheme } from '@/context/themeContext'
 import { useAdminAuthentication } from '../../hooks/useAdmin'
+import { useAdminUI } from '../../stores/adminStore'
 
 interface LoginCredentials {
     username: string
@@ -15,6 +16,7 @@ interface LoginCredentials {
 export default function AdminLoginPage() {
     const { colors } = useTheme()
     const { login, isLoading } = useAdminAuthentication()
+    const ui = useAdminUI()
     const [credentials, setCredentials] = useState<LoginCredentials>({
         username: '',
         password: '',
@@ -22,24 +24,68 @@ export default function AdminLoginPage() {
     })
     const [showPassword, setShowPassword] = useState(false)
     const [error, setError] = useState('')
+    const [showErrorPopup, setShowErrorPopup] = useState(false)
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setError('')
+        setShowErrorPopup(false)
 
         try {
             const result = await login(credentials)
+            console.log('🔍 Login result:', result) // Debug log
+
             if (!result.success) {
-                setError(result.message || 'Username atau password salah')
+                const errorMessage = result.message || 'Username atau password salah'
+                console.log('❌ Login failed, errorMessage:', errorMessage) // Debug log
+
+                setError(errorMessage)
+                setShowErrorPopup(true)
+
+                // Note: useAdminAuthentication hook handles the global notification
+                // We only handle the local error state here
             }
-        } catch (error) {
-            setError('Terjadi kesalahan saat login')
+        } catch (error: any) {
+            const errorMessage = 'Terjadi kesalahan saat login'
+            setError(errorMessage)
+            setShowErrorPopup(true)
+
+            // Handle different types of catch errors (actual network/fetch failures)
+            let errorTitle = 'Login Gagal'
+            let errorDetail = errorMessage
+
+            if (error?.message?.includes('fetch failed') ||
+                error?.message?.includes('Network Error') ||
+                error?.name === 'TypeError' ||
+                !navigator.onLine) {
+                errorTitle = 'Masalah Koneksi'
+                errorDetail = 'Tidak dapat terhubung ke server. Periksa koneksi internet Anda.'
+            } else if (error?.message?.includes('Unauthorized') ||
+                error?.message?.includes('401')) {
+                errorTitle = 'Kredensial Tidak Valid'
+                errorDetail = 'Username atau password yang Anda masukkan salah. Silakan periksa kembali.'
+            } else if (error?.message) {
+                errorDetail = error.message
+            }
+
+            ui.addNotification({
+                id: Date.now().toString(),
+                type: errorTitle.includes('Koneksi') ? 'warning' : 'error',
+                title: errorTitle,
+                message: errorDetail,
+                timestamp: new Date().toISOString(),
+                autoClose: true,
+                duration: 5000
+            })
         }
     }
 
     const handleInputChange = (field: keyof LoginCredentials, value: string | boolean) => {
         setCredentials(prev => ({ ...prev, [field]: value }))
-        if (error) setError('')
+        if (error) {
+            setError('')
+            setShowErrorPopup(false)
+        }
     }
 
     return (
@@ -108,8 +154,17 @@ export default function AdminLoginPage() {
                                     color: '#dc2626'
                                 }}
                             >
-                                <div className="flex items-center">
-                                    <span className="text-sm font-medium">{error}</span>
+                                <div className="flex items-center space-x-2">
+                                    <FaExclamationTriangle size={16} />
+                                    <span className="text-sm font-medium">
+                                        {error.includes('invalid') || error.includes('Invalid') ||
+                                            error.includes('Unauthorized') || error.includes('password') || error.includes('username')
+                                            ? 'Username atau password yang Anda masukkan salah'
+                                            : error.includes('Network') || error.includes('connection')
+                                                ? 'Masalah koneksi jaringan'
+                                                : error
+                                        }
+                                    </span>
                                 </div>
                             </motion.div>
                         )}
@@ -285,7 +340,197 @@ export default function AdminLoginPage() {
                         Demo: admin / admin123
                     </p>
                 </motion.div>
+
+                {/* Error Popup Notification */}
+                <AnimatePresence>
+                    {showErrorPopup && error && (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: -20 }}
+                            transition={{ duration: 0.3, ease: "easeOut" }}
+                            className="fixed top-6 right-6 z-50 max-w-sm w-full"
+                        >
+                            <div
+                                className="rounded-xl shadow-2xl border-l-4 p-4 backdrop-blur-sm"
+                                style={{
+                                    backgroundColor: colors.card + 'F5',
+                                    borderLeftColor: '#ef4444',
+                                    border: '1px solid rgba(239, 68, 68, 0.2)'
+                                }}
+                            >
+                                <div className="flex items-start space-x-3">
+                                    <div
+                                        className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center"
+                                        style={{
+                                            backgroundColor: '#ef444420'
+                                        }}
+                                    >
+                                        <FaExclamationTriangle
+                                            size={16}
+                                            style={{ color: '#ef4444' }}
+                                        />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div
+                                            className="text-sm font-semibold mb-1"
+                                            style={{ color: colors.cardText }}
+                                        >
+                                            Login Gagal
+                                        </div>
+                                        <div
+                                            className="text-xs"
+                                            style={{ color: colors.detail }}
+                                        >
+                                            {error.includes('invalid') || error.includes('Invalid') ||
+                                                error.includes('Unauthorized') || error.includes('password') || error.includes('username')
+                                                ? 'Username atau password yang Anda masukkan salah. Silakan periksa kembali.'
+                                                : error
+                                            }
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => {
+                                            setShowErrorPopup(false)
+                                            setError('')
+                                        }}
+                                        className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 hover:bg-gray-100"
+                                        style={{ color: colors.detail }}
+                                    >
+                                        <FaTimes size={12} />
+                                    </button>
+                                </div>
+
+                                {/* Auto-close progress bar */}
+                                <motion.div
+                                    initial={{ width: "100%" }}
+                                    animate={{ width: "0%" }}
+                                    transition={{ duration: 5, ease: "linear" }}
+                                    className="mt-3 h-1 rounded-full"
+                                    style={{ backgroundColor: '#ef444440' }}
+                                    onAnimationComplete={() => {
+                                        setShowErrorPopup(false)
+                                        setError('')
+                                    }}
+                                />
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* Global Notifications from Store */}
+                <GlobalNotifications />
             </div>
+        </div>
+    )
+}
+
+// Global Notifications Component
+function GlobalNotifications() {
+    const { colors } = useTheme()
+    const ui = useAdminUI()
+    const notifications = ui.notifications || []
+
+    const getNotificationIcon = (type: string) => {
+        switch (type) {
+            case 'error': return FaExclamationTriangle
+            case 'warning': return FaExclamationTriangle
+            case 'success': return FaCheck
+            case 'info':
+            default: return FaShieldAlt
+        }
+    }
+
+    const getNotificationColor = (type: string) => {
+        switch (type) {
+            case 'error': return '#ef4444'
+            case 'warning': return '#f59e0b'
+            case 'success': return '#10b981'
+            case 'info':
+            default: return '#3b82f6'
+        }
+    }
+
+    return (
+        <div className="fixed top-6 right-6 z-50 space-y-3">
+            <AnimatePresence>
+                {notifications.map((notification) => {
+                    const Icon = getNotificationIcon(notification.type)
+                    const color = getNotificationColor(notification.type)
+
+                    return (
+                        <motion.div
+                            key={notification.id}
+                            initial={{ opacity: 0, scale: 0.9, x: 100 }}
+                            animate={{ opacity: 1, scale: 1, x: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, x: 100 }}
+                            transition={{ duration: 0.3, ease: "easeOut" }}
+                            className="max-w-sm w-full"
+                        >
+                            <div
+                                className="rounded-xl shadow-2xl border-l-4 p-4 backdrop-blur-sm"
+                                style={{
+                                    backgroundColor: colors.card + 'F5',
+                                    borderLeftColor: color,
+                                    border: `1px solid ${color}20`
+                                }}
+                            >
+                                <div className="flex items-start space-x-3">
+                                    <div
+                                        className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center"
+                                        style={{
+                                            backgroundColor: color + '20'
+                                        }}
+                                    >
+                                        <Icon
+                                            size={16}
+                                            style={{ color }}
+                                        />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div
+                                            className="text-sm font-semibold mb-1"
+                                            style={{ color: colors.cardText }}
+                                        >
+                                            {notification.title}
+                                        </div>
+                                        <div
+                                            className="text-xs leading-relaxed"
+                                            style={{ color: colors.detail }}
+                                        >
+                                            {notification.message}
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => ui.removeNotification(notification.id)}
+                                        className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 hover:bg-gray-100"
+                                        style={{ color: colors.detail }}
+                                    >
+                                        <FaTimes size={12} />
+                                    </button>
+                                </div>
+
+                                {/* Auto-close progress bar */}
+                                {notification.autoClose && (
+                                    <motion.div
+                                        initial={{ width: "100%" }}
+                                        animate={{ width: "0%" }}
+                                        transition={{
+                                            duration: (notification.duration || 5000) / 1000,
+                                            ease: "linear"
+                                        }}
+                                        className="mt-3 h-1 rounded-full"
+                                        style={{ backgroundColor: color + '40' }}
+                                        onAnimationComplete={() => {
+                                            ui.removeNotification(notification.id)
+                                        }}
+                                    />
+                                )}
+                            </div>
+                        </motion.div>
+                    )
+                })}
+            </AnimatePresence>
         </div>
     )
 }
