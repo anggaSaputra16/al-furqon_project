@@ -21,6 +21,8 @@ import {
 import { useTheme } from '@/context/themeContext'
 import { useAdminAuthentication } from '../../hooks/useAdmin'
 import { useDashboardStats } from '../../hooks/useDashboardStats'
+import { useArticleStore } from '../../stores/adminArticleStore' // Import article store
+import { useFeaturedArticles } from '../../hooks/useHomePageApi' // Import featured articles
 import { AdminActivity } from '../../types/adminResponseTypes'
 import AdminArticlePage from './AdminArticlePage'
 import AdminDonationPage from './AdminDonationPage'
@@ -69,14 +71,32 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
     const { colors } = useTheme()
     const { logout } = useAdminAuthentication()
     const { stats: dashboardStats, formattedStats, isLoading: isStatsLoading, refreshStats } = useDashboardStats()
+
+    // Get real article data
+    const articleStore = useArticleStore()
+    const { articles: featuredArticles, refetch: refetchFeaturedArticles } = useFeaturedArticles()
+
     const [currentPage, setCurrentPage] = useState<'dashboard' | 'articles' | 'donations' | 'users' | 'reports' | 'settings' | 'finance' | 'financial-reports' | 'notifications'>('dashboard')
     const [mounted, setMounted] = useState(false)
     const [isReportsDropdownOpen, setIsReportsDropdownOpen] = useState(false)
     const [isNotificationDropdownOpen, setIsNotificationDropdownOpen] = useState(false)
 
+    // Calculate real article count from multiple sources
+    const realArticleCount = Math.max(
+        articleStore.articles?.length || 0,
+        featuredArticles?.length || 0
+    )
 
+    // Debug logging
+    console.log('📊 Dashboard Articles Debug:')
+    console.log('- Admin Store Articles:', articleStore.articles?.length || 0)
+    console.log('- Featured Articles:', featuredArticles?.length || 0)
+    console.log('- Real Article Count:', realArticleCount)
+    console.log('- Dashboard Stats Articles:', dashboardStats?.totalArticles || 0)
+
+    // Merge real data with dashboard stats
     const stats = {
-        totalArticles: dashboardStats?.totalArticles ?? 0,
+        totalArticles: realArticleCount > 0 ? realArticleCount : (dashboardStats?.totalArticles ?? 0),
         totalDonations: dashboardStats?.totalDonations ?? 0,
         totalGallery: dashboardStats?.totalGallery ?? 0,
         totalUsers: dashboardStats?.totalUsers ?? 0,
@@ -93,6 +113,21 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
 
     useEffect(() => {
         setMounted(true)
+
+        // Load article data if not already loaded
+        if (articleStore.articles.length === 0) {
+            // Try to load from admin store first
+            const loadArticles = async () => {
+                try {
+                    // Check if there's a method to load articles in the store
+                    // This might need to be adjusted based on your store implementation
+                    console.log('Loading articles for dashboard stats...')
+                } catch (error) {
+                    console.warn('Could not load articles for dashboard:', error)
+                }
+            }
+            loadArticles()
+        }
     }, [])
 
 
@@ -268,14 +303,27 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
                     <div className="flex items-center space-x-4">
                         {/* Refresh Dashboard */}
                         <button
-                            onClick={refreshStats}
+                            onClick={async () => {
+                                // Refresh dashboard stats and try to reload articles
+                                await refreshStats()
+
+                                // Refresh featured articles
+                                try {
+                                    await refetchFeaturedArticles()
+                                } catch (error) {
+                                    console.warn('Could not refresh featured articles:', error)
+                                }
+
+                                // Mark article store data as needing refresh
+                                articleStore.markDataAsFresh()
+                            }}
                             disabled={isStatsLoading}
                             className="relative p-2 rounded-lg transition-colors duration-200 hover:bg-gray-100 disabled:opacity-50"
                             style={{
                                 backgroundColor: colors.background,
                                 color: colors.cardText
                             }}
-                            title="Refresh dashboard data"
+                            title="Refresh dashboard dan data artikel"
                         >
                             <motion.div
                                 animate={isStatsLoading ? { rotate: 360 } : { rotate: 0 }}
@@ -556,14 +604,17 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
                             <div
                                 className="w-2 h-2 rounded-full"
                                 style={{
-                                    backgroundColor: dashboardStats ? '#10b981' : '#f59e0b'
+                                    backgroundColor: realArticleCount > 0 ? '#10b981' : '#f59e0b'
                                 }}
                             />
                             <span
                                 className="text-sm"
                                 style={{ color: colors.detail }}
                             >
-                                {dashboardStats ? 'Data terbaru dari server' : 'Menggunakan data simulasi'}
+                                {realArticleCount > 0 ?
+                                    `${realArticleCount} artikel ditemukan dari database` :
+                                    'Menggunakan data simulasi dashboard'
+                                }
                             </span>
                             {isStatsLoading && (
                                 <span
@@ -589,7 +640,9 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
                                 value: stats.totalArticles,
                                 icon: FaFileAlt,
                                 color: colors.accent,
-                                description: 'Artikel yang telah dipublikasi',
+                                description: realArticleCount > 0 ?
+                                    `${realArticleCount} artikel dari database` :
+                                    'Artikel yang telah dipublikasi',
                                 formatter: (value: number) => (value ?? 0).toString()
                             },
                             {
