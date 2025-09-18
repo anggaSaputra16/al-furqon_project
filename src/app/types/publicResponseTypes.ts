@@ -1,6 +1,6 @@
-// Public Website Response Types (Non-Admin)
 
-// Base Response Types
+
+
 export interface PublicApiResponse<T = any> {
   success: boolean
   message: string
@@ -21,7 +21,7 @@ export interface PublicPaginatedResponse<T> {
   }
 }
 
-// Article Response Types
+
 export interface Article {
   id: string
   title: string
@@ -69,7 +69,7 @@ export interface ArticleCategoriesResponse {
   categories: ArticleCategory[]
 }
 
-// Donation Response Types
+
 export interface Donation {
   id: string
   title: string
@@ -132,7 +132,7 @@ export interface CreateDonationTransactionResponse {
   virtualAccount?: string
 }
 
-// Gallery Response Types
+
 export interface GalleryItem {
   id: string
   title: string
@@ -167,7 +167,7 @@ export interface GalleryCategoriesResponse {
   categories: GalleryCategory[]
 }
 
-// Contact Response Types
+
 export interface ContactInfo {
   address: string
   phone: string
@@ -199,7 +199,7 @@ export interface SendContactMessageResponse {
   autoReply?: string
 }
 
-// Prayer Times Response Types
+
 export interface PrayerTime {
   fajr: string
   sunrise: string
@@ -237,7 +237,7 @@ export interface NextPrayerResponse {
   }
 }
 
-// Islamic Calendar Response Types
+
 export interface IslamicDate {
   hijriDay: number
   hijriMonth: string
@@ -262,7 +262,7 @@ export interface IslamicCalendarResponse {
   }[]
 }
 
-// Events Response Types
+
 export interface Event {
   id: string
   title: string
@@ -306,7 +306,7 @@ export interface RegisterEventResponse {
   instructions?: string
 }
 
-// Newsletter Response Types
+
 export interface SubscribeNewsletterResponse {
   subscriptionId: string
   status: 'confirmed' | 'pending'
@@ -323,7 +323,7 @@ export interface NewsletterPreferencesResponse {
   preferences: NewsletterPreference[]
 }
 
-// Search Response Types
+
 export interface SearchResult {
   id: string
   title: string
@@ -344,7 +344,7 @@ export interface GlobalSearchResponse extends PublicPaginatedResponse<SearchResu
   }
 }
 
-// Facility Response Types
+
 export interface Facility {
   id: string
   name: string
@@ -386,7 +386,7 @@ export interface BookFacilityResponse {
   }
 }
 
-// Feedback Response Types
+
 export interface SubmitFeedbackResponse {
   feedbackId: string
   status: 'submitted' | 'pending_review'
@@ -406,7 +406,7 @@ export interface FeedbackStats {
   }[]
 }
 
-// Announcement Response Types
+
 export interface Announcement {
   id: string
   title: string
@@ -422,7 +422,7 @@ export interface Announcement {
 
 export interface AnnouncementListResponse extends PublicPaginatedResponse<Announcement> {}
 
-// Zakat Calculator Response Types
+
 export interface ZakatCalculationResult {
   type: string
   amount: number
@@ -446,10 +446,10 @@ export interface ZakatCalculationResult {
   }
 }
 
-// Qibla Direction Response Types
+
 export interface QiblaDirectionResponse {
-  direction: number // degrees from north
-  distance: number // kilometers to Kaaba
+  direction: number
+  distance: number
   location: {
     latitude: number
     longitude: number
@@ -462,7 +462,7 @@ export interface QiblaDirectionResponse {
   }
 }
 
-// Website Stats Response Types (Public)
+
 export interface PublicWebsiteStats {
   totalArticles: number
   totalDonations: number
@@ -482,7 +482,7 @@ export interface PublicWebsiteStats {
   }[]
 }
 
-// Donation Report Response Types (Public)
+
 export interface PublicDonationReport {
   totalCollected: number
   totalDistributed: number

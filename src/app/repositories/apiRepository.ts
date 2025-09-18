@@ -33,25 +33,25 @@ import {
   IApiRepository
 } from './interfaces'
 
-// ===== Backend Availability Check =====
+
 class BackendChecker {
   private static isAvailable: boolean | null = null
   private static lastCheck: number = 0
-  private static readonly CHECK_INTERVAL = 30000 // 30 seconds
+  private static readonly CHECK_INTERVAL = 30000
 
   static async checkAvailability(): Promise<boolean> {
     const now = Date.now()
     
-    // Return cached result if it's fresh
+
     if (this.isAvailable !== null && (now - this.lastCheck) < this.CHECK_INTERVAL) {
       return this.isAvailable
     }
 
     try {
       const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 3000) // 3 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 3000)
       
-      // Check external backend health
+
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/health`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
@@ -77,14 +77,14 @@ class BackendChecker {
   }
 }
 
-// ===== HTTP Client Configuration =====
+
 class HttpClient {
   private baseUrl: string
   private defaultHeaders: Record<string, string>
   private timeout: number
 
   constructor(baseUrl: string = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') {
-    // Use external backend API
+
     this.baseUrl = baseUrl.endsWith('/api/v1') ? baseUrl : `${baseUrl}/api/v1`
     this.timeout = parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '15000')
     this.defaultHeaders = {
@@ -104,7 +104,7 @@ class HttpClient {
     endpoint: string, 
     options: RequestInit = {}
   ): Promise<T> {
-    // Check backend availability first for non-health endpoints
+
     if (!endpoint.includes('/health')) {
       const isBackendAvailable = await BackendChecker.checkAvailability()
       if (!isBackendAvailable) {
@@ -148,9 +148,9 @@ class HttpClient {
   private logError(endpoint: string, error: any) {
     console.error(`[API] Error ${endpoint}`, error)
     
-    // Send to monitoring service in production
+
     if (process.env.NEXT_PUBLIC_APP_ENV === 'production') {
-      // TODO: Send to Sentry, LogRocket, etc.
+
     }
   }
 
@@ -187,7 +187,7 @@ class HttpClient {
   }
 }
 
-// ===== Repository Implementations =====
+
 
 export class ArticleRepository implements IArticleRepository {
   constructor(private httpClient: HttpClient) {}
@@ -205,7 +205,7 @@ export class ArticleRepository implements IArticleRepository {
   }
 
   async getFeaturedArticles(limit = 6): Promise<ApiResponse<ArticleResponse[]>> {
-    // Use general articles endpoint since API response shows articles endpoint works
+
     return this.httpClient.get('/articles', { limit, featured: true })
   }
 
@@ -346,7 +346,7 @@ export class FeedbackRepository implements IFeedbackRepository {
   }
 }
 
-// ===== Main API Repository =====
+
 export class ApiRepository implements IApiRepository {
   private httpClient: HttpClient
 
@@ -371,5 +371,5 @@ export class ApiRepository implements IApiRepository {
   }
 }
 
-// ===== Singleton Instance =====
+
 export const apiRepository = new ApiRepository()

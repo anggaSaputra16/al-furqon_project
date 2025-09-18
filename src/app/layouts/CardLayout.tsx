@@ -111,7 +111,6 @@ export default function CardLayout({ cards, onReorder, onShowDetail }: Props) {
                 key={card.id}
                 className={clsx(
                   'break-inside-avoid',
-                  // hanya tinggi lebih besar
                   card.size === 'large' ? 'row-span-2' : 'row-span-1'
                 )}
               >

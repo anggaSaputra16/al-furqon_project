@@ -4,8 +4,8 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaEye, FaEyeSlash, FaUser, FaLock, FaShieldAlt, FaTimes, FaExclamationTriangle, FaCheck } from 'react-icons/fa'
 import { useTheme } from '@/context/themeContext'
-import { useAdminAuthentication } from '../../hooks/useAdmin'
-import { useAdminUI } from '../../stores/adminStore'
+import { useAdminAuthentication } from '../../../hooks/useAdmin'
+import { useAdminUI } from '../../../stores/adminStore'
 
 interface LoginCredentials {
     username: string
@@ -33,24 +33,19 @@ export default function AdminLoginPage() {
 
         try {
             const result = await login(credentials)
-            console.log('🔍 Login result:', result) // Debug log
 
             if (!result.success) {
                 const errorMessage = result.message || 'Username atau password salah'
-                console.log('❌ Login failed, errorMessage:', errorMessage) // Debug log
 
                 setError(errorMessage)
                 setShowErrorPopup(true)
-
-                // Note: useAdminAuthentication hook handles the global notification
-                // We only handle the local error state here
             }
         } catch (error: any) {
             const errorMessage = 'Terjadi kesalahan saat login'
             setError(errorMessage)
             setShowErrorPopup(true)
 
-            // Handle different types of catch errors (actual network/fetch failures)
+
             let errorTitle = 'Login Gagal'
             let errorDetail = errorMessage
 
@@ -94,7 +89,6 @@ export default function AdminLoginPage() {
             style={{ backgroundColor: colors.background }}
         >
             <div className="w-full max-w-md">
-                {/* Header */}
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -130,7 +124,6 @@ export default function AdminLoginPage() {
                     </p>
                 </motion.div>
 
-                {/* Login Form */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -142,7 +135,6 @@ export default function AdminLoginPage() {
                     }}
                 >
                     <form onSubmit={handleSubmit} className="space-y-6">
-                        {/* Error Message */}
                         {error && (
                             <motion.div
                                 initial={{ opacity: 0, scale: 0.95 }}
@@ -169,7 +161,6 @@ export default function AdminLoginPage() {
                             </motion.div>
                         )}
 
-                        {/* Username Field */}
                         <div>
                             <label
                                 className="block text-sm font-semibold mb-2"
@@ -207,7 +198,6 @@ export default function AdminLoginPage() {
                             </div>
                         </div>
 
-                        {/* Password Field */}
                         <div>
                             <label
                                 className="block text-sm font-semibold mb-2"
@@ -262,7 +252,6 @@ export default function AdminLoginPage() {
                             </div>
                         </div>
 
-                        {/* Remember Me */}
                         <div className="flex items-center">
                             <input
                                 id="remember-me"
@@ -286,7 +275,6 @@ export default function AdminLoginPage() {
                             </label>
                         </div>
 
-                        {/* Login Button */}
                         <button
                             type="submit"
                             disabled={isLoading || !credentials.username || !credentials.password}
@@ -309,7 +297,6 @@ export default function AdminLoginPage() {
                         </button>
                     </form>
 
-                    {/* Footer */}
                     <div className="mt-6 pt-6 border-t" style={{ borderColor: colors.border }}>
                         <p
                             className="text-center text-xs"
@@ -323,7 +310,6 @@ export default function AdminLoginPage() {
                     </div>
                 </motion.div>
 
-                {/* Development Notice */}
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -341,7 +327,6 @@ export default function AdminLoginPage() {
                     </p>
                 </motion.div>
 
-                {/* Error Popup Notification */}
                 <AnimatePresence>
                     {showErrorPopup && error && (
                         <motion.div
@@ -401,7 +386,6 @@ export default function AdminLoginPage() {
                                     </button>
                                 </div>
 
-                                {/* Auto-close progress bar */}
                                 <motion.div
                                     initial={{ width: "100%" }}
                                     animate={{ width: "0%" }}
@@ -425,7 +409,6 @@ export default function AdminLoginPage() {
     )
 }
 
-// Global Notifications Component
 function GlobalNotifications() {
     const { colors } = useTheme()
     const ui = useAdminUI()

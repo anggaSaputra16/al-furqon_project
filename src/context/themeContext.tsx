@@ -5,31 +5,31 @@ import ClientOnly from '@/app/components/ClientOnly'
 
 export type Theme = 'light' | 'dark' | 'dusk'
 
-// 🎨 Warna tema light
+
 const lightTheme = {
-  background: '#f9f6f2', // warm white
-  foreground: '#2d2d2d', // soft dark gray
-  card: '#ffffff', // pure white for cards
-  cardText: '#7c5c3b', // brown for text (lihat gambar)
-  accent: '#e29547', // warm orange accent
-  footer: '#7c5c3b', // darker brown for better contrast
-  border: '#e7e1d7', // border beige
-  secondary: '#b89c7d', // gold/brown secondary
-  muted: '#f3ede7', // background section
+  background: '#f9f6f2',
+  foreground: '#2d2d2d',
+  card: '#ffffff',
+  cardText: '#7c5c3b',
+  accent: '#e29547',
+  footer: '#7c5c3b',
+  border: '#e7e1d7',
+  secondary: '#b89c7d',
+  muted: '#f3ede7',
   shadow: '0 8px 32px 0 rgba(60, 40, 20, 0.08)',
-  link: '#e29547', // accent for link
-  heading: '#7c5c3b', // heading color
-  subheading: '#b89c7d', // subheading color
-  detail: '#6d5c4a', // detail text
+  link: '#e29547',
+  heading: '#7c5c3b',
+  subheading: '#b89c7d',
+  detail: '#6d5c4a',
 }
 
 const darkTheme = {
-  background: '#181c24', // dark blue-black
-  foreground: '#f1f5f9', // light
+  background: '#181c24',
+  foreground: '#f1f5f9',
   card: '#232336',
   cardText: '#f1f5f9',
   accent: '#7f9cf5',
-  footer: '#0d1117', // darker than background for contrast
+  footer: '#0d1117',
   border: '#232336',
   secondary: '#7f9cf5',
   muted: '#181c24',
@@ -40,17 +40,17 @@ const darkTheme = {
   detail: '#cbd5e1',
 }
 
-// 🌇 Warna tema dusk (senja)
+
 const duskTheme = {
-  background: '#1a0e07',        // gelap seperti langit senja
-  foreground: '#ffe7b3',        // terang kekuningan
-  card: '#3e2210',              // coklat kemerahan gelap
-  cardText: '#ffbe6a',          // oranye keemasan terang
-  accent: '#ff9900',            // oranye sunset hangat
-  footer: '#0f0704',            // much darker brown for contrast
-  border: '#a86c2c',            // coklat emas
-  secondary: '#e6a86a',         // pastel oranye
-  muted: '#2a1407',             // latar redup
+  background: '#1a0e07',
+  foreground: '#ffe7b3',
+  card: '#3e2210',
+  cardText: '#ffbe6a',
+  accent: '#ff9900',
+  footer: '#0f0704',
+  border: '#a86c2c',
+  secondary: '#e6a86a',
+  muted: '#2a1407',
   shadow: '0 8px 32px 0 rgba(255, 153, 0, 0.15)',
   link: '#ffb84d',
   heading: '#ffd08a',
@@ -68,12 +68,12 @@ interface ThemeContextProps {
 
 const ThemeContext = createContext<ThemeContextProps | undefined>(undefined)
 
-// Function to get theme based on time
+
 const getTimeBasedTheme = (): Theme => {
   const hour = new Date().getHours()
-  if (hour >= 5 && hour < 12) return 'light'    // 05:00-11:59 = pagi (light)
-  if (hour >= 12 && hour < 18) return 'dusk'    // 12:00-17:59 = sore (dusk)
-  return 'dark'                                  // 18:00-04:59 = malam (dark)
+  if (hour >= 5 && hour < 12) return 'light'
+  if (hour >= 12 && hour < 18) return 'dusk'
+  return 'dark'
 }
 
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
@@ -82,11 +82,11 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAutoMode, setIsAutoModeState] = useState(true)
   const [isInitialized, setIsInitialized] = useState(false)
 
-  // Initialize theme on client side
+
   useEffect(() => {
     const storedTheme = localStorage.getItem('theme') as Theme | null
     const storedAutoMode = localStorage.getItem('autoMode')
-    const autoMode = storedAutoMode !== 'false' // default to true if not set
+    const autoMode = storedAutoMode !== 'false'
 
     setIsAutoModeState(autoMode)
 
@@ -97,25 +97,25 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
       initialTheme = storedTheme || getTimeBasedTheme()
     }
 
-    setThemeAndColors(initialTheme, false) // don't save to localStorage on init
+    setThemeAndColors(initialTheme, false)
     setIsInitialized(true)
   }, [])
 
-  // Auto-update theme based on time (only in auto mode)
+
   useEffect(() => {
     if (!isAutoMode || !isInitialized) return
 
     const updateTheme = () => {
       const newTheme = getTimeBasedTheme()
       if (newTheme !== theme) {
-        setThemeAndColors(newTheme, false) // don't save to localStorage for auto updates
+        setThemeAndColors(newTheme, false)
       }
     }
 
-    // Update immediately
+
     updateTheme()
 
-    // Set interval to check every minute
+
     const interval = setInterval(updateTheme, 60000)
     return () => clearInterval(interval)
   }, [isAutoMode, theme, isInitialized])
@@ -144,7 +144,7 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
     localStorage.setItem('autoMode', auto.toString())
 
     if (auto) {
-      // Switch to time-based theme
+
       const timeBasedTheme = getTimeBasedTheme()
       setThemeAndColors(timeBasedTheme, false)
     }
@@ -152,7 +152,7 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
 
   const toggleTheme = () => {
     if (isAutoMode) {
-      // First toggle turns off auto mode and sets to next theme
+
       setAutoMode(false)
     }
 

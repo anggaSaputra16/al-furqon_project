@@ -10,13 +10,13 @@ import {
 } from '../types/adminResponseTypes'
 
 interface AdminAuthState {
-  // Auth State
+  
   isAuthenticated: boolean
   user: AdminUser | null
   token: string | null
   isLoading: boolean
   
-  // Auth Actions
+
   setAuth: (user: AdminUser, token: string) => void
   clearAuth: () => void
   setLoading: (loading: boolean) => void
@@ -24,13 +24,13 @@ interface AdminAuthState {
 }
 
 interface AdminDashboardState {
-  // Dashboard State
+
   stats: AdminDashboardStats | null
   recentActivities: AdminActivity[]
   isStatsLoading: boolean
   lastStatsUpdate: string | null
   
-  // Dashboard Actions
+
   setStats: (stats: AdminDashboardStats) => void
   setStatsLoading: (loading: boolean) => void
   addActivity: (activity: AdminActivity) => void
@@ -38,12 +38,12 @@ interface AdminDashboardState {
 }
 
 interface AdminSettingsState {
-  // Settings State
+
   settings: AdminSettingsResponse | null
   isSettingsLoading: boolean
   hasUnsavedChanges: boolean
   
-  // Settings Actions
+
   setSettings: (settings: AdminSettingsResponse) => void
   setSettingsLoading: (loading: boolean) => void
   setUnsavedChanges: (hasChanges: boolean) => void
@@ -52,7 +52,7 @@ interface AdminSettingsState {
 }
 
 interface AdminUIState {
-  // UI State
+
   sidebarCollapsed: boolean
   activeTheme: 'light' | 'dark' | 'blue'
   notifications: AdminNotification[]
@@ -60,7 +60,7 @@ interface AdminUIState {
     [key: string]: boolean
   }
   
-  // UI Actions
+
   toggleSidebar: () => void
   setSidebarCollapsed: (collapsed: boolean) => void
   setTheme: (theme: 'light' | 'dark' | 'blue') => void
@@ -82,7 +82,7 @@ interface AdminNotification {
 }
 
 interface DashboardStatsState {
-  // Dashboard Stats State
+
   stats: DashboardStatsResponse | null
   charts: DashboardChartsData | null
   realtimeActivity: {
@@ -92,12 +92,12 @@ interface DashboardStatsState {
     recentActions: any[]
   } | null
   
-  // Loading States
+
   isStatsLoading: boolean
   isChartsLoading: boolean
   isActivityLoading: boolean
   
-  // Cache Management
+
   lastStatsUpdate: string | null
   lastChartsUpdate: string | null
   statsDateRange: {
@@ -105,7 +105,7 @@ interface DashboardStatsState {
     endDate: string
   } | null
   
-  // Actions
+
   setStats: (stats: DashboardStatsResponse) => void
   setCharts: (charts: DashboardChartsData) => void
   setRealtimeActivity: (activity: any) => void
@@ -118,17 +118,17 @@ interface DashboardStatsState {
   clearDashboardStats: () => void
 }
 
-// Auth Store
+
 export const useAdminAuthStore = create<AdminAuthState>()(
   persist(
     (set, get) => ({
-      // Initial State
+
       isAuthenticated: false,
       user: null,
       token: null,
       isLoading: false,
 
-      // Actions
+
       setAuth: (user, token) =>
         set({
           isAuthenticated: true,
@@ -158,20 +158,20 @@ export const useAdminAuthStore = create<AdminAuthState>()(
         user: state.user,
         token: state.token,
       }),
-      skipHydration: true, // Skip hydration to avoid SSR issues
+      skipHydration: true,
     }
   )
 )
 
-// Dashboard Store
+
 export const useAdminDashboardStore = create<AdminDashboardState>((set, get) => ({
-  // Initial State
+
   stats: null,
   recentActivities: [],
   isStatsLoading: false,
   lastStatsUpdate: null,
 
-  // Actions
+
   setStats: (stats) =>
     set({
       stats,
@@ -184,7 +184,7 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set, get) => 
 
   addActivity: (activity) =>
     set((state) => ({
-      recentActivities: [activity, ...state.recentActivities.slice(0, 9)], // Keep last 10
+      recentActivities: [activity, ...state.recentActivities.slice(0, 9)],
     })),
 
   clearDashboard: () =>
@@ -196,16 +196,16 @@ export const useAdminDashboardStore = create<AdminDashboardState>((set, get) => 
     }),
 }))
 
-// Settings Store
+
 export const useAdminSettingsStore = create<AdminSettingsState>()(
   persist(
     (set, get) => ({
-      // Initial State
+
       settings: null,
       isSettingsLoading: false,
       hasUnsavedChanges: false,
 
-      // Actions
+
       setSettings: (settings) =>
         set({
           settings,
@@ -226,13 +226,13 @@ export const useAdminSettingsStore = create<AdminSettingsState>()(
           const newSettings = { ...state.settings }
           let current: any = newSettings
 
-          // Navigate to the parent of the target property
+
           for (let i = 0; i < pathArray.length - 1; i++) {
             current[pathArray[i]] = { ...current[pathArray[i]] }
             current = current[pathArray[i]]
           }
 
-          // Set the value
+
           current[pathArray[pathArray.length - 1]] = value
 
           return {
@@ -257,17 +257,17 @@ export const useAdminSettingsStore = create<AdminSettingsState>()(
   )
 )
 
-// UI Store
+
 export const useAdminUIStore = create<AdminUIState>()(
   persist(
     (set, get) => ({
-      // Initial State
+
       sidebarCollapsed: false,
       activeTheme: 'light',
       notifications: [],
       modals: {},
 
-      // Actions
+
       toggleSidebar: () =>
         set((state) => ({
           sidebarCollapsed: !state.sidebarCollapsed,
@@ -312,9 +312,9 @@ export const useAdminUIStore = create<AdminUIState>()(
   )
 )
 
-// Dashboard Stats Store
+
 export const useDashboardStatsStore = create<DashboardStatsState>((set, get) => ({
-  // State
+
   stats: null,
   charts: null,
   realtimeActivity: null,
@@ -325,7 +325,7 @@ export const useDashboardStatsStore = create<DashboardStatsState>((set, get) => 
   lastChartsUpdate: null,
   statsDateRange: null,
 
-  // Actions
+
   setStats: (stats) => set({
     stats,
     lastStatsUpdate: new Date().toISOString()
@@ -378,7 +378,7 @@ export const useDashboardStatsStore = create<DashboardStatsState>((set, get) => 
   })
 }))
 
-// Selector Hooks for better performance
+
 export const useAdminUser = () => useAdminAuthStore((state) => state.user)
 export const useAdminToken = () => useAdminAuthStore((state) => state.token)
 export const useIsAdminAuthenticated = () => useAdminAuthStore((state) => state.isAuthenticated)
@@ -407,7 +407,7 @@ export const useLastStatsUpdate = () => useDashboardStatsStore((state) => state.
 export const useLastChartsUpdate = () => useDashboardStatsStore((state) => state.lastChartsUpdate)
 export const useStatsDateRange = () => useDashboardStatsStore((state) => state.statsDateRange)
 
-// Combined hooks for common use cases
+
 export const useAdminAuth = () => {
   const auth = useAdminAuthStore()
   return {
@@ -457,7 +457,7 @@ export const useAdminUI = () => {
 export const useDashboardStatsComplete = () => {
   const store = useDashboardStatsStore()
   return {
-    // State
+
     stats: store.stats,
     charts: store.charts,
     realtimeActivity: store.realtimeActivity,
@@ -468,7 +468,7 @@ export const useDashboardStatsComplete = () => {
     lastChartsUpdate: store.lastChartsUpdate,
     statsDateRange: store.statsDateRange,
 
-    // Actions
+
     setStats: store.setStats,
     setCharts: store.setCharts,
     setRealtimeActivity: store.setRealtimeActivity,

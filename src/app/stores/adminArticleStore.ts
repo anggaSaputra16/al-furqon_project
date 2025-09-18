@@ -11,7 +11,7 @@ interface ArticleFilters {
 }
 
 interface ArticleState {
-    // Data
+    
     articles: AdminArticle[]
     pagination: {
         page: number
@@ -23,54 +23,54 @@ interface ArticleState {
     } | null
     selectedArticle: AdminArticle | null
     
-    // UI State
+
     isLoading: boolean
     isCreating: boolean
     isUpdating: boolean
     isDeleting: boolean
     error: string | null
     
-    // Filters & Search
+
     filters: ArticleFilters
     
-    // View State
+
     currentView: 'list' | 'create' | 'edit'
     
-    // Categories & Tags
+
     categories: string[]
     popularTags: string[]
     
-    // Last Update
+
     lastFetch: number | null
 }
 
 interface ArticleActions {
-    // Data Actions
+
     setArticles: (data: PaginatedResponse<AdminArticle>) => void
     addArticle: (article: AdminArticle) => void
     updateArticle: (article: AdminArticle) => void
     removeArticle: (id: string) => void
     setSelectedArticle: (article: AdminArticle | null) => void
     
-    // Loading States
+
     setLoading: (loading: boolean) => void
     setCreating: (creating: boolean) => void
     setUpdating: (updating: boolean) => void
     setDeleting: (deleting: boolean) => void
     setError: (error: string | null) => void
     
-    // Filters
+
     setFilters: (filters: Partial<ArticleFilters>) => void
     resetFilters: () => void
     
-    // View State
+
     setCurrentView: (view: 'list' | 'create' | 'edit') => void
     
-    // Categories & Tags
+
     setCategories: (categories: string[]) => void
     setPopularTags: (tags: string[]) => void
     
-    // Utility
+
     clearError: () => void
     reset: () => void
     markDataAsFresh: () => void
@@ -88,36 +88,36 @@ const initialFilters: ArticleFilters = {
 }
 
 const initialState: ArticleState = {
-    // Data
+
     articles: [],
     pagination: null,
     selectedArticle: null,
     
-    // UI State
+
     isLoading: false,
     isCreating: false,
     isUpdating: false,
     isDeleting: false,
     error: null,
     
-    // Filters & Search
+
     filters: initialFilters,
     
-    // View State
+
     currentView: 'list',
     
-    // Categories & Tags
+
     categories: ['Kajian', 'Pengumuman', 'Kegiatan', 'Berita', 'Program'],
     popularTags: [],
     
-    // Last Update
+
     lastFetch: null
 }
 
 export const useArticleStore = create<ArticleStore>((set, get) => ({
     ...initialState,
     
-    // Data Actions
+
     setArticles: (data: PaginatedResponse<AdminArticle>) =>
         set({
             articles: data.data,
@@ -154,14 +154,14 @@ export const useArticleStore = create<ArticleStore>((set, get) => ({
     setSelectedArticle: (article: AdminArticle | null) =>
         set({ selectedArticle: article }),
     
-    // Loading States
+
     setLoading: (loading: boolean) => set({ isLoading: loading }),
     setCreating: (creating: boolean) => set({ isCreating: creating }),
     setUpdating: (updating: boolean) => set({ isUpdating: updating }),
     setDeleting: (deleting: boolean) => set({ isDeleting: deleting }),
     setError: (error: string | null) => set({ error }),
     
-    // Filters
+
     setFilters: (newFilters: Partial<ArticleFilters>) =>
         set((state) => ({
             filters: { ...state.filters, ...newFilters }
@@ -169,15 +169,15 @@ export const useArticleStore = create<ArticleStore>((set, get) => ({
     
     resetFilters: () => set({ filters: initialFilters }),
     
-    // View State
+
     setCurrentView: (view: 'list' | 'create' | 'edit') =>
         set({ currentView: view }),
     
-    // Categories & Tags
+
     setCategories: (categories: string[]) => set({ categories }),
     setPopularTags: (popularTags: string[]) => set({ popularTags }),
     
-    // Utility
+
     clearError: () => set({ error: null }),
     
     reset: () => set(initialState),
@@ -193,7 +193,7 @@ export const useArticleStore = create<ArticleStore>((set, get) => ({
     }
 }))
 
-// Selector hooks for better performance
+
 export const useArticles = () => useArticleStore(state => state.articles)
 export const usePagination = () => useArticleStore(state => state.pagination)
 export const useSelectedArticle = () => useArticleStore(state => state.selectedArticle)
@@ -204,7 +204,7 @@ export const useCurrentView = () => useArticleStore(state => state.currentView)
 export const useCategories = () => useArticleStore(state => state.categories)
 export const usePopularTags = () => useArticleStore(state => state.popularTags)
 
-// Combined selectors
+
 export const useArticleOperations = () => useArticleStore(state => ({
     isCreating: state.isCreating,
     isUpdating: state.isUpdating,

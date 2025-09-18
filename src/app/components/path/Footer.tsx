@@ -6,7 +6,6 @@ import { useTheme } from '@/context/themeContext'
 const Footer: React.FC = () => {
   const { colors, theme } = useTheme()
 
-  // Dynamic text color based on theme for better contrast
   const footerTextColor = theme === 'light' ? '#f9f6f2' : colors.cardText
 
   return (
@@ -19,7 +18,6 @@ const Footer: React.FC = () => {
         boxShadow: '0 -4px 20px rgba(0,0,0,0.05)'
       }}
     >
-      {/* Subtle background pattern */}
       <div
         className="absolute inset-0 opacity-5"
         style={{
@@ -30,7 +28,6 @@ const Footer: React.FC = () => {
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Informasi Masjid */}
           <div>
             <h3
               className="text-lg font-bold mb-4"
@@ -56,7 +53,6 @@ const Footer: React.FC = () => {
             </div>
           </div>
 
-          {/* Kontak */}
           <div>
             <h3
               className="text-lg font-bold mb-4"
@@ -80,7 +76,6 @@ const Footer: React.FC = () => {
             </div>
           </div>
 
-          {/* Powered By */}
           <div className="md:text-right">
             <a
               href="https://www.nuiiapp.com"
@@ -97,7 +92,6 @@ const Footer: React.FC = () => {
           </div>
         </div>
 
-        {/* Copyright/Bottom section */}
         <div
           className="mt-8 pt-6 border-t text-center text-xs"
           style={{

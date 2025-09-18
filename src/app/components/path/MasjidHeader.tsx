@@ -19,7 +19,6 @@ export default function MasjidHeader() {
   const [isScrolled, setIsScrolled] = useState<boolean>(false)
   const [isMobile, setIsMobile] = useState<boolean>(false)
 
-  // Pilih banner sesuai theme
   const banners = theme === 'dark' ? [banner1] : theme === 'dusk' ? [banner3] : [banner2]
 
   const [jadwalSholat, setJadwalSholat] = useState([
@@ -30,7 +29,6 @@ export default function MasjidHeader() {
     { name: 'Isha', time: '19:08' },
   ])
 
-  // Generate jadwalSholatRange dinamis berdasarkan data API
   const jadwalSholatRange = jadwalSholat.map((item, index) => {
     const nextIndex = (index + 1) % jadwalSholat.length
     const endTime = jadwalSholat[nextIndex].time
@@ -59,14 +57,12 @@ export default function MasjidHeader() {
     }
     return jadwalSholatRange[0]
   }
-  // Function untuk mendapatkan sholat selanjutnya
   function getNextSholat() {
     const currentIndex = jadwalSholat.findIndex(j => j.name === currentSholat.name)
     const nextIndex = (currentIndex + 1) % jadwalSholat.length
     return jadwalSholat[nextIndex]
   }
 
-  // Function untuk format hari dan tanggal
   function getDateInfo() {
     const now = new Date()
     const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']
@@ -83,7 +79,6 @@ export default function MasjidHeader() {
     }
   }
 
-  // Get current sholat berdasarkan jadwalSholatRange yang dinamis
   const currentSholat = getCurrentSholat()
 
   useEffect(() => {
@@ -99,28 +94,25 @@ export default function MasjidHeader() {
     return () => clearInterval(interval)
   }, [])
 
-  // Animasi transisi nama masjid
   useEffect(() => {
     const interval = setInterval(() => {
       setShowArabicName(prev => !prev)
-    }, 4000) // Ganti setiap 4 detik
+    }, 4000)
 
     return () => clearInterval(interval)
   }, [])
 
-  // Scroll detection
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY
       setScrollY(currentScrollY)
-      setIsScrolled(currentScrollY > 100) // Hide theme toggle after 100px scroll
+      setIsScrolled(currentScrollY > 100)
     }
 
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768)
     }
 
-    // Initial check
     handleResize()
 
     window.addEventListener('scroll', handleScroll, { passive: true })
@@ -133,13 +125,11 @@ export default function MasjidHeader() {
   }, [])
 
   useEffect(() => {
-    // Bekasi kota id: 1221 (KOTA BEKASI)
     const kotaId = '1221'
     const today = new Date()
     const tanggal = today.toISOString().slice(0, 10)
     fetchJadwalSholat(kotaId, tanggal)
       .then((jadwal) => {
-        // Update jadwal sholat dengan data dari API
         setJadwalSholat([
           { name: 'Fajr', time: jadwal.subuh },
           { name: 'Dhuhr', time: jadwal.dzuhur },
@@ -150,11 +140,9 @@ export default function MasjidHeader() {
       })
       .catch((error) => {
         console.warn('Gagal mengambil jadwal sholat dari API, menggunakan fallback:', error)
-        // fallback sudah ada di initial state
       })
   }, [])
 
-  // --- Auto theme by waktu sholat ---
   useEffect(() => {
     if (!jadwalSholat.length) return;
     const now = new Date();
@@ -173,26 +161,24 @@ export default function MasjidHeader() {
     const ishaM = getMinutes(isha);
     let nextTheme = 'light';
     if (nowMinutes >= ashrM && nowMinutes < ishaM) {
-      nextTheme = 'dusk'; // Senja
+      nextTheme = 'dusk';
     } else if (nowMinutes >= ishaM || nowMinutes < fajrM) {
-      nextTheme = 'dark'; // Malam
+      nextTheme = 'dark';
     } else if (nowMinutes >= fajrM && nowMinutes < ashrM) {
-      nextTheme = 'light'; // Siang
+      nextTheme = 'light';
     }
     if (theme !== nextTheme) {
-      toggleTheme(); // toggleTheme sudah cycle, jadi akan sync
+      toggleTheme();
     }
     // eslint-disable-next-line
   }, [jadwalSholat]);
 
-  // Ganti handleSwitchBanner agar tidak error jika hanya 1 banner
   const handleSwitchBanner = () => {
     if (banners.length > 1) {
       setBannerIndex((prev) => (prev + 1) % banners.length)
     }
   }
 
-  // Pilih icon sesuai waktu sholat selanjutnya
   const nextSholat = getNextSholat()
   const dateInfo = getDateInfo()
 

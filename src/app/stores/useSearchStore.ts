@@ -1,4 +1,4 @@
-// src/app/stores/useSearchStore.ts
+
 import { create } from 'zustand'
 
 interface SearchStore {

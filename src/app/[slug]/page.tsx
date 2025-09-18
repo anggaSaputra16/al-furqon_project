@@ -6,6 +6,7 @@ import FasilitasPage from '../components/pages/FasilitasPage'
 import KegiatanPage from '../components/pages/KegiatanPage'
 import SejarahPage from '../components/pages/SejarahPage'
 import GaleriPage from '../components/pages/GaleriPage'
+import GrahaSubagdjaPage from '../components/pages/graha-subagdja/page'
 import { notFound } from 'next/navigation'
 
 export default function DynamicMenuPage() {
@@ -21,8 +22,10 @@ export default function DynamicMenuPage() {
         return <SejarahPage />
       case 'galeri':
         return <GaleriPage />
+      case 'graha-subagdja':
+        return <GrahaSubagdjaPage />
       default:
-        notFound() // optional: tampilkan 404 jika slug tak dikenal
+        notFound()
     }
   }
 

@@ -1,4 +1,4 @@
-// store/useCardStore.ts
+
 import { create } from 'zustand'
 
 type CardSize = 'small' | 'large'
@@ -32,7 +32,7 @@ export const useCardStore = create<State>((set) => ({
       image: '/images/orange.jpg',
       size: 'small',
     },
-    // tambah card lain di sini
+    
   ],
   reorderCards: (from, to) =>
     set((state) => {

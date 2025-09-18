@@ -14,7 +14,7 @@ interface FacilityRowProps {
     image: string
     features: string[]
     index: number
-    isReversed?: boolean // untuk mengatur posisi kiri-kanan
+    isReversed?: boolean
 }
 
 interface ModalState {
@@ -39,7 +39,7 @@ export default function FacilityRow({
     const { colors } = useTheme()
     const router = useRouter()
 
-    // Consolidated modal state
+
     const [modals, setModals] = useState<ModalState>({
         tataTertib: false,
         prasarana: false,
@@ -51,12 +51,12 @@ export default function FacilityRow({
         humasTi: false
     })
 
-    // Memoized modal handlers
+
     const toggleModal = useCallback((modalType: keyof ModalState) => {
         setModals(prev => ({ ...prev, [modalType]: !prev[modalType] }))
     }, [])
 
-    // Memoized navigation handlers
+
     const handleNavigateToKegiatan = useCallback(() => {
         router.push(`/kegiatan?filter=${encodeURIComponent(title)}`)
     }, [router, title])
@@ -65,7 +65,7 @@ export default function FacilityRow({
         router.push(`/galeri?filter=${encodeURIComponent(title)}`)
     }, [router, title])
 
-    // Memoized facility type check
+
     const facilityType = useMemo(() => {
         if (title === 'Taman Pendidikan Qur\'an') return 'tpq'
         if (title === 'Kesekretariatan DKM') return 'dkm'
@@ -74,7 +74,7 @@ export default function FacilityRow({
         return 'normal'
     }, [title, isReversed])
 
-    // Memoized link styles
+
     const linkStyle = useMemo(() => ({
         color: colors.accent,
         fontFamily: '"Inter", "Segoe UI", "Arial", sans-serif',
@@ -83,14 +83,14 @@ export default function FacilityRow({
         letterSpacing: '0.01em'
     }), [colors.accent])
 
-    // Memoized separator style
+
     const separatorStyle = useMemo(() => ({
         color: colors.border,
         fontWeight: 'bold',
         fontSize: '1.2rem'
     }), [colors.border])
 
-    // Action link component
+
     const ActionLink = ({ onClick, children }: { onClick: () => void; children: React.ReactNode }) => (
         <button
             onClick={onClick}
@@ -101,8 +101,8 @@ export default function FacilityRow({
         </button>
     )
 
-    // Separator component
-    const Separator = () => <span style={separatorStyle}>•</span>    // Render action links based on facility type
+
+    const Separator = () => <span style={separatorStyle}>•</span>
     const renderActionLinks = (justifyClass: string = 'justify-start') => {
         const commonClass = `flex flex-wrap gap-4 pt-4 ${justifyClass}`
 
@@ -134,7 +134,7 @@ export default function FacilityRow({
                 )
 
             case 'parking':
-                // No action links for parking facility
+
                 return null
 
             case 'reversed':
@@ -154,7 +154,7 @@ export default function FacilityRow({
                     </div>
                 )
 
-            default: // normal
+            default:
                 return (
                     <div className={commonClass}>
                         <ActionLink onClick={() => toggleModal('tataTertib')}>
@@ -169,7 +169,7 @@ export default function FacilityRow({
         }
     }
 
-    // Render navigation links
+
     const renderNavigationLinks = (justifyClass: string = 'justify-start') => (
         <div className={`flex gap-4 pt-2 sm:pt-3 ${justifyClass}`}>
             <ActionLink onClick={handleNavigateToKegiatan}>
@@ -270,10 +270,10 @@ export default function FacilityRow({
                             {/* Desktop Navigation Links positioned below image - Conditional based on isReversed */}
                             <div className="w-full max-w-lg">
                                 {!isReversed ? (
-                                    // Normal row: Links align to right (below image)
+
                                     renderNavigationLinks('justify-end')
                                 ) : (
-                                    // Reversed row: Links align to left (below image, but image is on left)
+
                                     renderNavigationLinks('justify-start')
                                 )}
                             </div>

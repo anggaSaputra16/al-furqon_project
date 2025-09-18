@@ -1,20 +1,18 @@
 import React, { useEffect } from 'react';
 import { useTheme } from '@/context/themeContext';
 
-// UniversalModalProps sudah cukup universal, hanya tambahkan maxWidth opsional
 interface UniversalModalProps {
   open: boolean;
   onClose: () => void;
   title?: string;
   description?: string;
   children?: React.ReactNode;
-  maxWidth?: string; // opsional
+  maxWidth?: string;
 }
 
 const UniversalModal: React.FC<UniversalModalProps> = ({ open, onClose, title, description, children, maxWidth = 'max-w-md' }) => {
   const { colors } = useTheme();
 
-  // Handle ESC key press
   useEffect(() => {
     const handleEscapeKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -24,7 +22,6 @@ const UniversalModal: React.FC<UniversalModalProps> = ({ open, onClose, title, d
 
     if (open) {
       document.addEventListener('keydown', handleEscapeKey);
-      // Prevent body scroll when modal is open
       document.body.style.overflow = 'hidden';
     }
 
@@ -39,14 +36,13 @@ const UniversalModal: React.FC<UniversalModalProps> = ({ open, onClose, title, d
     <div
       className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center transition-colors duration-200 p-4"
       style={{ backgroundColor: colors.background + 'CC', backdropFilter: 'blur(4px)' }}
-      onClick={onClose} // Click backdrop to close
+      onClick={onClose}
     >
       <div
         className={`relative w-full ${maxWidth} rounded-2xl shadow-2xl overflow-hidden transition-all border border-white/10 max-h-[90vh] overflow-y-auto`}
         style={{ background: colors.card, color: colors.cardText }}
-        onClick={(e) => e.stopPropagation()} // Prevent closing when clicking modal content
+        onClick={(e) => e.stopPropagation()}
       >
-        {/* Tombol Close modern - Enhanced for better accessibility */}
         <button
           onClick={onClose}
           className="modal-close-button absolute top-3 right-3 z-10 p-3 rounded-full hover:bg-red-500/20 hover:rotate-90 text-2xl font-bold flex items-center justify-center shadow-xl backdrop-blur-md transition-all duration-200 hover:scale-110 active:scale-95 touch-manipulation"

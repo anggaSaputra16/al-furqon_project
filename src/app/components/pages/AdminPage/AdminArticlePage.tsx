@@ -4,14 +4,13 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
     FaPlus, FaEdit, FaTrash, FaEye, FaSearch, FaFilter,
-    FaCalendarAlt, FaUser, FaTags, FaFileAlt, FaArrowLeft,
-    FaSave, FaImage, FaTimes, FaCheck, FaStar, FaSync
+    FaFileAlt, FaArrowLeft, FaStar, FaSync
 } from 'react-icons/fa'
 import { useTheme } from '@/context/themeContext'
-import { useArticles } from '../../hooks/useArticles'
-import { useArticleStore, useArticles as useArticleSelectors, usePagination, useSelectedArticle, useArticleLoading } from '../../stores/adminArticleStore'
-import { useAdminUI } from '../../stores/adminStore'
-import { AdminArticle, articleRepository } from '../../repositories/articleRepository'
+import { useArticles } from '../../../hooks/useArticles'
+import { useArticleStore, useArticles as useArticleSelectors, usePagination, useSelectedArticle, useArticleLoading } from '../../../stores/adminArticleStore'
+import { useAdminUIStore } from '../../../stores/adminStore'
+import { AdminArticle, articleRepository } from '../../../repositories/articleRepository'
 
 interface AdminArticlePageProps {
     onBack: () => void
@@ -19,7 +18,7 @@ interface AdminArticlePageProps {
 
 export default function AdminArticlePage({ onBack }: AdminArticlePageProps) {
     const { colors } = useTheme()
-    const ui = useAdminUI()
+    const ui = useAdminUIStore()
 
 
     const articles = useArticleSelectors()

@@ -16,12 +16,8 @@ import {
 import { activityCards, donationCards, newsCards } from '../utils/staticData'
 import useBackendAvailability from './useBackendAvailability'
 
-// ===== Initialize Use Cases =====
 const homePageUseCases = new HomePageUseCases(apiRepository)
 
-// ===== Custom Hooks =====
-
-// Hook untuk mengambil data home page lengkap
 export const useHomePageData = () => {
   const [data, setData] = useState<HomePageData | null>(null)
   const [loading, setLoading] = useState(false)
@@ -31,7 +27,6 @@ export const useHomePageData = () => {
   const { isAvailable: backendAvailable, isChecking } = useBackendAvailability()
 
   const fetchData = useCallback(async () => {
-    // Wait for backend availability check to complete
     if (backendAvailable === null || isChecking) {
       return
     }
@@ -62,7 +57,6 @@ export const useHomePageData = () => {
 
   useEffect(() => {
     fetchData()
-    // Track page view only if backend is available
     if (backendAvailable) {
       homePageUseCases.trackPageView('home').catch(console.warn)
     }
@@ -76,7 +70,6 @@ export const useHomePageData = () => {
   }
 }
 
-// Hook untuk featured articles dengan backend integration
 export const useFeaturedArticles = (limit = 6) => {
   const [articles, setArticles] = useState<ArticleResponse[]>([])
   const [loading, setLoading] = useState(false)
@@ -86,7 +79,7 @@ export const useFeaturedArticles = (limit = 6) => {
   const { isAvailable: backendAvailable, isChecking } = useBackendAvailability()
 
   const fetchArticles = useCallback(async () => {
-    // Wait for backend availability check to complete
+    
     if (backendAvailable === null || isChecking) {
       return
     }
@@ -96,7 +89,7 @@ export const useFeaturedArticles = (limit = 6) => {
     
     try {
       if (!backendAvailable) {        
-        // Transform static activity cards to article format
+
         const staticArticles: ArticleResponse[] = activityCards.slice(0, limit).map((card, index) => ({
           id: card.id,
           title: card.title,
@@ -126,42 +119,40 @@ export const useFeaturedArticles = (limit = 6) => {
 
       const result = await homePageUseCases.getFeaturedArticles(limit)      
       if (result.success) {
-        // Transform backend data to match frontend expectations
-        // Handle both direct array and nested data structure
         let articleData = result.data
 
-        // Check if data is nested (like {data: [...], pagination: {...}})
         if (articleData && typeof articleData === 'object' && 'data' in articleData) {
           articleData = (articleData as any).data
         }
         
-        const transformedArticles = (articleData || []).map((article: any) => ({
-          id: article.id,
-          title: article.title,
-          slug: article.slug || article.title.toLowerCase().replace(/ /g, '-'),
-          description: article.description,
-          content: article.content,
-          image: article.image,
-          category: article.category,
-          status: article.status,
-          author: article.author || { 
-            id: article.authorId || 'admin',
-            name: article.authorName || 'Admin',
-            avatar: article.authorAvatar
-          },
-          publishedAt: article.publishedAt,
-          updatedAt: article.updatedAt,
-          views: article.views || 0,
-          likes: article.likes || 0,
-          tags: article.tags || [],
-          featured: article.featured
-        }))
+        const transformedArticles = (articleData || [])
+          .filter((article: any) => article.status === 'published')
+          .map((article: any) => ({
+            id: article.id,
+            title: article.title,
+            slug: article.slug || article.title.toLowerCase().replace(/ /g, '-'),
+            description: article.description,
+            content: article.content,
+            image: article.image,
+            category: article.category,
+            status: article.status,
+            author: article.author || { 
+              id: article.authorId || 'admin',
+              name: article.authorName || 'Admin',
+              avatar: article.authorAvatar
+            },
+            publishedAt: article.publishedAt,
+            updatedAt: article.updatedAt,
+            views: article.views || 0,
+            likes: article.likes || 0,
+            tags: article.tags || [],
+            featured: article.featured
+          }))
         
         setArticles(transformedArticles)
       } else {
-        // Check if error is due to backend unavailability
         if (result.error === 'Backend not available') {          
-          // Transform static activity cards to article format
+
           const staticArticles: ArticleResponse[] = activityCards.slice(0, limit).map((card, index) => ({
             id: card.id,
             title: card.title,
@@ -214,7 +205,7 @@ export const useFeaturedArticles = (limit = 6) => {
   }
 }
 
-// Hook untuk active donations
+
 export const useActiveDonations = (limit = 3) => {
   const [donations, setDonations] = useState<DonationResponse[]>([])
   const [loading, setLoading] = useState(false)
@@ -223,7 +214,7 @@ export const useActiveDonations = (limit = 3) => {
   const { isAvailable: backendAvailable, isChecking } = useBackendAvailability()
 
   const fetchDonations = useCallback(async () => {
-    // Wait for backend availability check to complete
+
     if (backendAvailable === null || isChecking) {
       return
     }
@@ -233,7 +224,7 @@ export const useActiveDonations = (limit = 3) => {
     
     try {
       if (!backendAvailable) {        
-        // Transform static donation cards to donation response format
+
         const staticDonations: DonationResponse[] = donationCards.slice(0, limit).map((card) => {
           const percentage = Math.round((card.collected / card.target) * 100)
           return {
@@ -248,7 +239,7 @@ export const useActiveDonations = (limit = 3) => {
             image: card.image,
             status: 'active' as const,
             startDate: new Date().toISOString(),
-            endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
+            endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
             bankAccount: {
               bankName: 'BCA',
               accountNumber: '1234567890',
@@ -271,7 +262,9 @@ export const useActiveDonations = (limit = 3) => {
       const result = await homePageUseCases.getActiveDonations(limit)
       
       if (result.success) {
-        setDonations(result.data || [])
+
+        const activeDonations = (result.data || []).filter((donation: any) => donation.status === 'active')
+        setDonations(activeDonations)
       } else {
         setError(result.error || 'Failed to load donations')
       }
@@ -294,7 +287,7 @@ export const useActiveDonations = (limit = 3) => {
   }
 }
 
-// Hook untuk latest news
+
 export const useLatestNews = (limit = 3) => {
   const [news, setNews] = useState<NewsResponse[]>([])
   const [loading, setLoading] = useState(false)
@@ -306,7 +299,8 @@ export const useLatestNews = (limit = 3) => {
     setError(null)
     
     try {
-      // Check backend availability first
+
+
       if (backendAvailable === null) {
         try {
           const controller = new AbortController()
@@ -322,7 +316,8 @@ export const useLatestNews = (limit = 3) => {
           setBackendAvailable(false)
           console.warn('⚠️ Backend not available for news, will use static data fallback')
           
-          // Transform static news cards to news response format
+
+
           const staticNews: NewsResponse[] = newsCards.slice(0, limit).map((card, index) => ({
             id: `news-${index + 1}`,
             title: card.title,
@@ -348,7 +343,8 @@ export const useLatestNews = (limit = 3) => {
       }
 
       if (!backendAvailable) {        
-        // Transform static news cards to news response format
+
+
         const staticNews: NewsResponse[] = newsCards.slice(0, limit).map((card, index) => ({
           id: `news-${index + 1}`,
           title: card.title,
@@ -375,17 +371,21 @@ export const useLatestNews = (limit = 3) => {
       const result = await homePageUseCases.getLatestNews(limit)
       
       if (result.success) {
-        // Validate and ensure author structure exists
-        const validatedNews = (result.data || []).map(news => ({
-          ...news,
-          author: news.author || { id: 'admin', name: 'Admin Al-Furqon' }
-        }))
+
+
+        const validatedNews = (result.data || [])
+          .filter((news: any) => !news.status || news.status === 'published') 
+          .map(news => ({
+            ...news,
+            author: news.author || { id: 'admin', name: 'Admin Al-Furqon' }
+          }))
         
         setNews(validatedNews)
       } else {
-        // Check if error is due to backend unavailability
+
         if (result.error === 'Backend not available') {          
-          // Transform static news cards to news response format
+
+
           const staticNews: NewsResponse[] = newsCards.slice(0, limit).map((card, index) => ({
             id: `news-${index + 1}`,
             title: card.title,
@@ -429,7 +429,8 @@ export const useLatestNews = (limit = 3) => {
   }
 }
 
-// Hook untuk navigation menus
+
+
 export const useNavigationMenus = () => {
   const [menus, setMenus] = useState<MenuResponse[]>([])
   const [loading, setLoading] = useState(false)
@@ -467,7 +468,8 @@ export const useNavigationMenus = () => {
   }
 }
 
-// Hook untuk donation submission
+
+
 export const useDonationSubmission = () => {
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -520,7 +522,8 @@ export const useDonationSubmission = () => {
   }
 }
 
-// Hook untuk newsletter subscription
+
+
 export const useNewsletterSubscription = () => {
   const [subscribing, setSubscribing] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -573,7 +576,8 @@ export const useNewsletterSubscription = () => {
   }
 }
 
-// Hook untuk contact form
+
+
 export const useContactSubmission = () => {
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -626,7 +630,8 @@ export const useContactSubmission = () => {
   }
 }
 
-// Hook untuk search
+
+
 export const useContentSearch = () => {
   const [results, setResults] = useState<{
     articles: ArticleResponse[]
@@ -675,7 +680,8 @@ export const useContentSearch = () => {
   }
 }
 
-// Hook untuk home statistics
+
+
 export const useHomeStats = () => {
   const [stats, setStats] = useState<HomeStatsResponse | null>(null)
   const [loading, setLoading] = useState(false)

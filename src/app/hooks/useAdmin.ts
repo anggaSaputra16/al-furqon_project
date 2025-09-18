@@ -7,14 +7,11 @@ import {
   UpdateAdminProfileRequest,
   GetAdminStatsRequest
 } from '../types/adminRequestTypes'
-import { AdminUser, AdminDashboardStats } from '../types/adminResponseTypes'
 
-// Authentication Hook
 export const useAdminAuthentication = () => {
   const auth = useAdminAuth()
   const ui = useAdminUI()
 
-  // Hydrate auth store on client side only if there's stored data
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const persistedAuth = localStorage.getItem('admin-auth-store')
@@ -23,14 +20,13 @@ export const useAdminAuthentication = () => {
           const parsed = JSON.parse(persistedAuth)
           if (parsed.state && parsed.state.isAuthenticated && parsed.state.user && parsed.state.token) {
             auth.setAuth(parsed.state.user, parsed.state.token)
-            // No automatic checkAuth - let user manually check if needed
           }
         } catch (error) {
           console.error('Error hydrating auth store:', error)
         }
       }
     }
-  }, []) // Remove auth dependency to prevent issues
+  }, []) 
 
   const login = useCallback(async (credentials: AdminLoginRequest) => {
     auth.setLoading(true)
@@ -51,13 +47,11 @@ export const useAdminAuthentication = () => {
         })
         return { success: true }
       } else {
-        // Determine error type and message based on response
         const errorMessage = result.message || 'Username atau password salah'
         let errorTitle = 'Login Gagal'
         let errorDetail = errorMessage
         let errorType: 'error' | 'warning' = 'error'
 
-        // Check for authentication errors (401, invalid credentials)
         if ((result as any).error === 401 || 
             errorMessage.toLowerCase().includes('invalid') ||
             errorMessage.toLowerCase().includes('unauthorized') ||
@@ -118,7 +112,6 @@ export const useAdminAuthentication = () => {
         duration: 3000
       })
     } catch (error) {
-      // Still clear auth even if API call fails
       auth.clearAuth()
     } finally {
       auth.setLoading(false)
@@ -162,13 +155,10 @@ export const useAdminAuthentication = () => {
   }, [auth, ui])
 
   const checkAuth = useCallback(async () => {
-    // Avoid running on server side
     if (typeof window === 'undefined') return false
     
-    // Don't check if we're already loading
     if (auth.isLoading) return auth.isAuthenticated
     
-    // Quick check - if no stored auth data, don't make API calls
     const hasStoredAuth = adminUseCases.isAuthenticated()
     if (!hasStoredAuth) {
       auth.clearAuth()
@@ -178,30 +168,33 @@ export const useAdminAuthentication = () => {
     auth.setLoading(true)
     
     try {
-      const isValidToken = await adminUseCases.checkTokenExpiry()
-      if (!isValidToken) {
-        auth.clearAuth()
-        ui.addNotification({
-          id: Date.now().toString(),
-          type: 'warning',
-          title: 'Sesi Berakhir',
-          message: 'Silakan login kembali',
-          timestamp: new Date().toISOString(),
-          autoClose: true,
-          duration: 5000
-        })
-        return false
-      }
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/admin/auth/me`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${auth.token}`
+        }
+      })
 
-      // If user is not in store but token is valid, get current user
-      if (!auth.user) {
-        const user = await adminUseCases.getCurrentUser()
-        if (user) {
-          auth.updateUser(user)
+      if (response.ok) {
+        const result = await response.json()
+        if (result.success && result.data) {
+          auth.updateUser(result.data)
+          return true
         }
       }
 
-      return true
+      auth.clearAuth()
+      ui.addNotification({
+        id: Date.now().toString(),
+        type: 'warning',
+        title: 'Sesi Berakhir',
+        message: 'Silakan login kembali',
+        timestamp: new Date().toISOString(),
+        autoClose: true,
+        duration: 5000
+      })
+      return false
     } catch (error) {
       console.error('Check auth error:', error)
       auth.clearAuth()
@@ -210,9 +203,6 @@ export const useAdminAuthentication = () => {
       auth.setLoading(false)
     }
   }, [auth, ui])
-
-  // Remove the automatic useEffect that calls checkAuth
-  // Let components decide when to call checkAuth
 
   return {
     isAuthenticated: auth.isAuthenticated,
@@ -226,7 +216,6 @@ export const useAdminAuthentication = () => {
   }
 }
 
-// Dashboard Hook
 export const useAdminDashboard = () => {
   const dashboard = useAdminDashboardStore()
   const ui = useAdminUI()
@@ -286,21 +275,18 @@ export const useAdminDashboard = () => {
   }, [refreshInterval])
 
   useEffect(() => {
-    // Only load stats on mount, no automatic refresh
-    // Let components decide when to load stats
-    
     return () => {
       if (refreshInterval) {
         clearInterval(refreshInterval)
       }
     }
-  }, [refreshInterval]) // Only depend on refreshInterval
+  }, [refreshInterval])
 
   useEffect(() => {
     return () => {
       stopAutoRefresh()
     }
-  }, []) // No dependency to prevent loop
+  }, []) 
 
   return {
     stats: dashboard.stats,
@@ -315,7 +301,6 @@ export const useAdminDashboard = () => {
   }
 }
 
-// Permission Hook
 export const useAdminPermissions = () => {
   const { user } = useAdminAuth()
 
@@ -373,7 +358,6 @@ export const useAdminPermissions = () => {
   }
 }
 
-// File Upload Hook
 export const useAdminFileUpload = () => {
   const ui = useAdminUI()
   const [isUploading, setIsUploading] = useState(false)
@@ -384,7 +368,6 @@ export const useAdminFileUpload = () => {
     setUploadProgress(0)
 
     try {
-      // Simulate upload progress (replace with actual progress tracking)
       const progressInterval = setInterval(() => {
         setUploadProgress(prev => {
           if (prev >= 90) {
@@ -447,7 +430,6 @@ export const useAdminFileUpload = () => {
   }
 }
 
-// Form Hook for Admin
 export const useAdminForm = <T extends Record<string, any>>(
   initialValues: T,
   validationRules?: Partial<Record<keyof T, (value: any) => string | null>>
@@ -460,7 +442,6 @@ export const useAdminForm = <T extends Record<string, any>>(
   const setValue = useCallback((field: keyof T, value: any) => {
     setValues(prev => ({ ...prev, [field]: value }))
     
-    // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: undefined }))
     }

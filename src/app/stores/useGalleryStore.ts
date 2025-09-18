@@ -5,11 +5,11 @@ export interface GalleryImage {
   src: string
   alt: string
   author: string
-  description: string // pendek
-  detail?: string     // deskripsi panjang, opsional
-  articleTitle?: string // judul artikel asli
-  articleDate?: string  // tanggal artikel yang sudah diformat
-  category?: string     // kategori artikel
+  description: string 
+  detail?: string
+  articleTitle?: string
+  articleDate?: string
+  category?: string
 }
 
 interface GalleryState {

@@ -1,4 +1,4 @@
-// utils/filterUtils.ts
+
 
 export interface FilterState {
   facility?: string
@@ -50,12 +50,9 @@ export const createFilterURL = (baseURL: string, filter: FilterState): string =>
 }
 
 export const getFacilityRelatedContent = (facilityName: string, contentType: 'kegiatan' | 'galeri') => {
-  // This function will be used to filter content based on facility
-  // For now, return some sample data, but this should integrate with your actual data source
   
   const facilityKeywords = facilityName.toLowerCase().split(' ')
   
-  // Return relevant keywords for filtering
   return {
     keywords: facilityKeywords,
     suggestedCategories: getSuggestedCategories(facilityName, contentType)

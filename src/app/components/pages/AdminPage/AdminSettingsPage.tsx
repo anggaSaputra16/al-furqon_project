@@ -3,9 +3,8 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
-    FaArrowLeft, FaCog, FaSave, FaEye, FaEyeSlash, FaUpload,
-    FaGlobe, FaEnvelope, FaPhone, FaMapMarkerAlt, FaClock,
-    FaPalette, FaLock, FaDatabase, FaBell, FaKey
+    FaArrowLeft, FaSave, FaUpload, FaGlobe,
+    FaPalette, FaLock, FaBell
 } from 'react-icons/fa'
 import { useTheme } from '@/context/themeContext'
 
@@ -96,23 +95,12 @@ export default function AdminSettingsPage({ onBack }: AdminSettingsPageProps) {
     const handleSaveSettings = async () => {
         setIsLoading(true)
 
-
         await new Promise(resolve => setTimeout(resolve, 1000))
-
-
-        console.log('Settings saved:', {
-            siteSettings,
-            securitySettings,
-            notificationSettings,
-            theme: currentTheme
-        })
-
         setIsLoading(false)
         alert('Pengaturan berhasil disimpan!')
     }
 
     const handleImageUpload = (type: 'logo' | 'favicon') => {
-
         alert(`Upload ${type} akan diimplementasikan dengan file picker`)
     }
 

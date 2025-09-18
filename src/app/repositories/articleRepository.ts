@@ -1,7 +1,7 @@
 import { ApiResponse, PaginatedResponse } from '../types/adminResponseTypes'
-// import { AuthManager } from '../utils/authManager'
 
-// Admin Article Interface for backend integration
+
+
 export interface AdminArticle {
     id: string
     title: string
@@ -60,7 +60,7 @@ class ArticleRepository {
         DUPLICATE: (id: string) => `${this.BASE_URL}/articles/${id}/duplicate`
     }
 
-    // Helper method to get auth headers
+
     private getAuthHeaders(): HeadersInit {
         const token = localStorage.getItem('admin-auth-store')
         const parsedToken = token ? JSON.parse(token) : null
@@ -76,33 +76,26 @@ class ArticleRepository {
         options: RequestInit = {}
     ): Promise<ApiResponse<T>> {
         try {
-            console.log(`🔐 Making authenticated request to: ${url}`)
-
             const headers = {
                 ...this.getAuthHeaders(),
                 ...options.headers as Record<string, string>
             }
 
-            console.log('Request headers:', Object.keys(headers))
-
             const response = await fetch(url, {
                 ...options,
                 headers,
-                signal: AbortSignal.timeout(10000) // 10 second timeout
+                signal: AbortSignal.timeout(10000)
             })
 
-            console.log('Response status:', response.status)
 
             if (!response.ok) {
                 const errorText = await response.text()
                 console.error(`HTTP error! status: ${response.status}, body:`, errorText)
-                
-                // Handle authentication errors
                 if (response.status === 401) {
                     console.error('❌ Authentication failed! Token may be invalid or expired.')
                 }
                 
-                // Try to parse error as JSON
+
                 try {
                     const parsedError = JSON.parse(errorText)
                     throw new Error(parsedError.message || `HTTP error! status: ${response.status}`)
@@ -112,7 +105,6 @@ class ArticleRepository {
             }
 
             const responseData = await response.json()
-            console.log('✅ Request successful')
 
             return responseData
         } catch (error: any) {
@@ -125,9 +117,6 @@ class ArticleRepository {
         }
     }
 
-    /**
-     * Get articles with filtering and pagination
-     */
     async getArticles(request: GetArticlesRequest = {}): Promise<ApiResponse<PaginatedResponse<AdminArticle>>> {
         try {
             const params = new URLSearchParams()
@@ -151,9 +140,6 @@ class ArticleRepository {
         }
     }
 
-    /**
-     * Get articles with fallback to mock data
-     */
     async getArticlesWithFallback(request: GetArticlesRequest = {}): Promise<PaginatedResponse<AdminArticle>> {
         try {
             const response = await this.getArticles(request)
@@ -164,7 +150,7 @@ class ArticleRepository {
         } catch (error) {
             console.warn('Using fallback mock data for articles:', error)
             
-            // Mock data fallback
+
             const mockArticles: AdminArticle[] = [
                 {
                     id: '1',
@@ -216,7 +202,7 @@ class ArticleRepository {
                 }
             ]
 
-            // Apply filters to mock data
+
             let filteredArticles = [...mockArticles]
 
             if (request.search) {
@@ -236,7 +222,7 @@ class ArticleRepository {
                 filteredArticles = filteredArticles.filter(article => article.category === request.category)
             }
 
-            // Pagination
+
             const page = request.page || 1
             const limit = request.limit || 10
             const total = filteredArticles.length
@@ -258,9 +244,6 @@ class ArticleRepository {
         }
     }
 
-    /**
-     * Get article by ID
-     */
     async getArticleById(id: string): Promise<ApiResponse<AdminArticle>> {
         try {
             return await this.makeRequest<AdminArticle>(this.ARTICLE_ENDPOINTS.GET_BY_ID(id))
@@ -270,9 +253,6 @@ class ArticleRepository {
         }
     }
 
-    /**
-     * Create new article
-     */
     async createArticle(request: CreateArticleRequest): Promise<ApiResponse<AdminArticle>> {
         try {
             return await this.makeRequest<AdminArticle>(this.ARTICLE_ENDPOINTS.CREATE, {
@@ -285,9 +265,6 @@ class ArticleRepository {
         }
     }
 
-    /**
-     * Update existing article
-     */
     async updateArticle(request: UpdateArticleRequest): Promise<ApiResponse<AdminArticle>> {
         try {
             const { id, ...updateData } = request
@@ -301,9 +278,6 @@ class ArticleRepository {
         }
     }
 
-    /**
-     * Delete article
-     */
     async deleteArticle(id: string): Promise<ApiResponse<{ deleted: boolean }>> {
         try {
             return await this.makeRequest<{ deleted: boolean }>(this.ARTICLE_ENDPOINTS.DELETE(id), {
@@ -315,9 +289,7 @@ class ArticleRepository {
         }
     }
 
-    /**
-     * Bulk delete articles
-     */
+
     async bulkDeleteArticles(ids: string[]): Promise<ApiResponse<{ deletedCount: number }>> {
         try {
             return await this.makeRequest<{ deletedCount: number }>(this.ARTICLE_ENDPOINTS.BULK_DELETE, {
@@ -330,9 +302,7 @@ class ArticleRepository {
         }
     }
 
-    /**
-     * Toggle featured status
-     */
+
     async toggleFeatured(id: string): Promise<ApiResponse<AdminArticle>> {
         try {
             return await this.makeRequest<AdminArticle>(this.ARTICLE_ENDPOINTS.TOGGLE_FEATURED(id), {
@@ -344,9 +314,6 @@ class ArticleRepository {
         }
     }
 
-    /**
-     * Duplicate article
-     */
     async duplicateArticle(id: string): Promise<ApiResponse<AdminArticle>> {
         try {
             return await this.makeRequest<AdminArticle>(this.ARTICLE_ENDPOINTS.DUPLICATE(id), {

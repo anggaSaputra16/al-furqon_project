@@ -21,12 +21,12 @@ import {
 
 import { IApiRepository } from '../repositories/interfaces'
 
-// ===== Home Page Use Cases =====
+
 
 export class HomePageUseCases {
   constructor(private apiRepository: IApiRepository) {}
 
-  // ===== Main Home Page Data =====
+
   async getHomePageData(): Promise<{
     success: boolean
     data?: HomePageData
@@ -55,7 +55,7 @@ export class HomePageUseCases {
     }
   }
 
-  // ===== Featured Articles for Homepage =====
+
   async getFeaturedArticles(limit = 6): Promise<{
     success: boolean
     data?: ArticleResponse[]
@@ -78,7 +78,7 @@ export class HomePageUseCases {
     } catch (error) {
       console.error('Failed to fetch featured articles:', error)
       
-      // Special handling for backend availability
+
       if (error instanceof Error && error.message === 'Backend not available') {
         return {
           success: false,
@@ -93,7 +93,7 @@ export class HomePageUseCases {
     }
   }
 
-  // ===== Active Donations for Homepage =====
+
   async getActiveDonations(limit = 3): Promise<{
     success: boolean
     data?: DonationResponse[]
@@ -116,7 +116,7 @@ export class HomePageUseCases {
     } catch (error) {
       console.error('Failed to fetch active donations:', error)
       
-      // Special handling for backend availability
+
       if (error instanceof Error && error.message === 'Backend not available') {
         return {
           success: false,
@@ -131,7 +131,7 @@ export class HomePageUseCases {
     }
   }
 
-  // ===== Latest News for Homepage =====
+
   async getLatestNews(limit = 3): Promise<{
     success: boolean
     data?: NewsResponse[]
@@ -154,7 +154,7 @@ export class HomePageUseCases {
     } catch (error) {
       console.error('Failed to fetch latest news:', error)
       
-      // Special handling for backend availability
+
       if (error instanceof Error && error.message === 'Backend not available') {
         return {
           success: false,
@@ -169,7 +169,7 @@ export class HomePageUseCases {
     }
   }
 
-  // ===== Navigation Menus =====
+
   async getNavigationMenus(): Promise<{
     success: boolean
     data?: MenuResponse[]
@@ -198,14 +198,14 @@ export class HomePageUseCases {
     }
   }
 
-  // ===== Donation Submission =====
+
   async submitDonation(donationData: DonationSubmissionRequest): Promise<{
     success: boolean
     data?: { transactionId: string; paymentUrl?: string }
     error?: string
   }> {
     try {
-      // Validate required fields
+
       if (!donationData.donorName.trim()) {
         return {
           success: false,
@@ -230,7 +230,7 @@ export class HomePageUseCases {
       const response = await this.apiRepository.donations.submitDonation(donationData)
       
       if (response.success) {
-        // Track donation analytics
+
         await this.trackDonationEvent(donationData.donationId, donationData.amount)
         
         return {
@@ -252,14 +252,14 @@ export class HomePageUseCases {
     }
   }
 
-  // ===== Newsletter Subscription =====
+
   async subscribeNewsletter(email: string, name?: string): Promise<{
     success: boolean
     message?: string
     error?: string
   }> {
     try {
-      // Validate email
+
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
       if (!emailRegex.test(email)) {
         return {
@@ -300,14 +300,14 @@ export class HomePageUseCases {
     }
   }
 
-  // ===== Contact Form Submission =====
+
   async submitContact(contactData: ContactRequest): Promise<{
     success: boolean
     message?: string
     error?: string
   }> {
     try {
-      // Validate required fields
+
       if (!contactData.name.trim()) {
         return {
           success: false,
@@ -359,7 +359,7 @@ export class HomePageUseCases {
     }
   }
 
-  // ===== Search Functionality =====
+
   async searchContent(query: string, type?: 'all' | 'articles' | 'donations' | 'news'): Promise<{
     success: boolean
     data?: {
@@ -406,7 +406,7 @@ export class HomePageUseCases {
     }
   }
 
-  // ===== Analytics Tracking =====
+
   async trackPageView(pageType: string = 'home'): Promise<void> {
     try {
       const analyticsData: AnalyticsRequest = {
@@ -422,7 +422,7 @@ export class HomePageUseCases {
       await this.apiRepository.analytics.trackEvent(analyticsData)
     } catch (error) {
       console.error('Failed to track page view:', error)
-      // Don't throw error for analytics
+
     }
   }
 
@@ -459,7 +459,7 @@ export class HomePageUseCases {
     }
   }
 
-  // ===== Helper Methods =====
+  
   private getSessionId(): string {
     let sessionId = sessionStorage.getItem('session_id')
     if (!sessionId) {
@@ -469,7 +469,7 @@ export class HomePageUseCases {
     return sessionId
   }
 
-  // ===== Home Stats =====
+
   async getHomeStats(): Promise<{
     success: boolean
     data?: HomeStatsResponse
