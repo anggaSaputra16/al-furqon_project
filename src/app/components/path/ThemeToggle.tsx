@@ -11,7 +11,6 @@ export default function ThemeToggle() {
   }
 
   const handleDoubleClick = () => {
-    // Double click to toggle auto mode
     setAutoMode(!isAutoMode)
   }
 

@@ -61,7 +61,6 @@ export default function SejarahPage() {
       <MasjidHeader />
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 space-y-8 sm:space-y-12 mt-5">
-        {/* Navigation Grid */}
         <div>
           <UniversalNavGrid
             items={navItems}
@@ -70,7 +69,6 @@ export default function SejarahPage() {
           />
         </div>
 
-        {/* Hero Section */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -136,7 +134,6 @@ export default function SejarahPage() {
           </motion.div>
         </motion.section>
 
-        {/* Main Article Content */}
         <article className="space-y-12 sm:space-y-16">
           {/* Section 1: Awal Mula */}
           <motion.section
@@ -207,7 +204,6 @@ export default function SejarahPage() {
             </div>
           </motion.section>
 
-          {/* Section 2: Masa Pembangunan */}
           <motion.section
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -276,7 +272,6 @@ export default function SejarahPage() {
             </div>
           </motion.section>
 
-          {/* Stats Section */}
           <motion.section
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -432,7 +427,6 @@ export default function SejarahPage() {
             </div>
           </motion.section>
 
-          {/* Section 3: Perkembangan */}
           <motion.section
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -564,7 +558,6 @@ export default function SejarahPage() {
             </div>
           </motion.section>
 
-          {/* Section 4: Peran di Masyarakat */}
           <motion.section
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -632,61 +625,9 @@ export default function SejarahPage() {
               </div>
             </div>
           </motion.section>
-
-          {/* Final Vision Section */}
-          <motion.section
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center space-y-8 py-12"
-          >
-            <div
-              className="rounded-3xl p-8 sm:p-12 space-y-6"
-              style={{
-                backgroundColor: colors.accent + '10',
-                border: `2px solid ${colors.accent}20`
-              }}
-            >
-              <h2
-                className="text-3xl sm:text-4xl font-bold"
-                style={{
-                  color: colors.heading,
-                  fontFamily: 'var(--font-header-masjid)',
-                  lineHeight: '1.2',
-                  letterSpacing: '-0.01em'
-                }}
-              >
-                Visi Masa Depan
-              </h2>
-              <p
-                className="text-lg sm:text-xl max-w-3xl mx-auto leading-relaxed"
-                style={{
-                  color: colors.detail,
-                  fontFamily: 'var(--font-body)',
-                  lineHeight: '1.7'
-                }}
-              >
-                Masjid Al-Furqon berkomitmen untuk terus menjadi mercusuar spiritualitas dan pemberdayaan masyarakat. Dengan rencana pengembangan fasilitas digital, program dakwah online, dan ekspansi kegiatan sosial, kami optimis dapat melayani umat dengan lebih baik di era modern ini.
-              </p>
-
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                className="inline-flex items-center gap-3 px-8 py-4 rounded-full font-bold text-lg"
-                style={{
-                  backgroundColor: colors.accent,
-                  color: 'white',
-                  fontFamily: 'var(--font-sharp-bold)'
-                }}
-              >
-                <FaHeart size={20} />
-                Bersama Membangun Masa Depan
-              </motion.div>
-            </div>
-          </motion.section>
         </article>
       </div>
 
-      {/* Scroll to Top Button */}
       <AnimatePresence>
         {showScrollToTop && (
           <motion.button

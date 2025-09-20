@@ -22,7 +22,7 @@ import {
   FeedbackRequest
 } from '../types/requestTypes'
 
-// ===== Repository Interfaces =====
+
 
 export interface IArticleRepository {
   getArticles(params?: ArticleRequest): Promise<ApiResponse<PaginatedResponse<ArticleResponse>>>
@@ -95,7 +95,6 @@ export interface IFeedbackRepository {
   }>>
 }
 
-// ===== Combined Repository Interface =====
 export interface IApiRepository {
   articles: IArticleRepository
   donations: IDonationRepository

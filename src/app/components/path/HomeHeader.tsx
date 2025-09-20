@@ -5,7 +5,6 @@ import { useTheme } from '@/context/themeContext'
 export default function HomeHeader() {
   const { colors } = useTheme()
 
-  // Use static content instead of depending on dynamic articles
   const title = "Masjid Besar Al-Furqon"
   const image = "/images/al-furqon.png"
   const content = `Masjid Besar Al-Furqon, Bekasi Barat bukan hanya tempat ibadah yang luas dan nyaman, tetapi juga pusat kegiatan umat yang menghadirkan berbagai fasilitas penunjang di bawah naungan Yayasan Pondok Mulya Bekasi.
@@ -16,7 +15,6 @@ Area parkir yang luas memberikan kenyamanan bagi para jamaah, sementara ruang be
 
   return (
     <section className="space-y-6 md:space-y-8 mb-8">
-      {/* Mobile: Title first, then image in center, then content */}
       <div className="block md:hidden">
         <div className="flex flex-col min-h-screen">
           <h1
@@ -33,7 +31,6 @@ Area parkir yang luas memberikan kenyamanan bagi para jamaah, sementara ruang be
             {title}
           </h1>
 
-          {/* Image di tengah dengan flex-grow untuk centering */}
           <div className="flex-grow flex items-center justify-center py-8">
             <div className="relative w-full h-60 sm:h-64 rounded-xl overflow-hidden shadow-lg max-w-md mx-auto">
               <img
@@ -58,7 +55,6 @@ Area parkir yang luas memberikan kenyamanan bagi para jamaah, sementara ruang be
         </div>
       </div>
 
-      {/* Desktop: Side by side layout */}
       <div className="hidden md:grid md:grid-cols-2 gap-8 lg:gap-12 items-center">
         <div className="space-y-4 lg:space-y-6">
           <h1

@@ -1,13 +1,13 @@
 import { useState, useEffect, useCallback } from 'react'
 
-// Singleton cache for backend availability
+
 class BackendAvailabilityManager {
   private static instance: BackendAvailabilityManager
   private isAvailable: boolean | null = null
   private lastCheck: number = 0
   private checkInProgress: boolean = false
-  private readonly CHECK_INTERVAL = 30000 // 30 seconds
-  private readonly TIMEOUT = 3000 // 3 seconds
+  private readonly CHECK_INTERVAL = 30000
+  private readonly TIMEOUT = 3000
   private listeners: Set<(available: boolean) => void> = new Set()
 
   static getInstance(): BackendAvailabilityManager {
@@ -35,12 +35,12 @@ class BackendAvailabilityManager {
   async checkAvailability(forceCheck = false): Promise<boolean> {
     const now = Date.now()
     
-    // Return cached result if it's fresh and not forcing a check
+
     if (!forceCheck && this.isAvailable !== null && (now - this.lastCheck) < this.CHECK_INTERVAL) {
       return this.isAvailable
     }
 
-    // If a check is already in progress, wait for it
+
     if (this.checkInProgress) {
       return new Promise((resolve) => {
         const checkInterval = setInterval(() => {
@@ -50,7 +50,7 @@ class BackendAvailabilityManager {
           }
         }, 100)
         
-        // Timeout after 10 seconds
+
         setTimeout(() => {
           clearInterval(checkInterval)
           resolve(false)
@@ -81,7 +81,7 @@ class BackendAvailabilityManager {
       this.isAvailable = newAvailability
       this.lastCheck = now
       
-      // Only notify if status changed or this is the first check
+
       if (statusChanged || this.lastCheck === now) {
         this.notifyListeners(newAvailability)
       }
@@ -122,7 +122,7 @@ class BackendAvailabilityManager {
   }
 }
 
-// Hook to use backend availability
+
 export const useBackendAvailability = () => {
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null)
   const [isChecking, setIsChecking] = useState(false)
@@ -147,19 +147,19 @@ export const useBackendAvailability = () => {
   }, [checkAvailability])
 
   useEffect(() => {
-    // Get cached result immediately
+
     const cached = manager.getCachedAvailability()
     if (cached !== null) {
       setIsAvailable(cached)
     }
 
-    // Subscribe to changes
+
     const unsubscribe = manager.subscribe((available) => {
       setIsAvailable(available)
       setLastChecked(Date.now())
     })
 
-    // Perform initial check if no cached result
+
     if (cached === null) {
       checkAvailability()
     }

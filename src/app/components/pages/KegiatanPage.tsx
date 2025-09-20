@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { FaSearch, FaRoute, FaChevronUp } from 'react-icons/fa'
 
 import { useMenuStore } from '../../stores/useMenuStore'
-import { useArticleStore } from '../../stores/adminArticleStore' // Import admin store for categories
+import { useArticleStore } from '../../stores/adminArticleStore'
 import { useTheme } from '@/context/themeContext'
 import { iconMap } from '@/app/utils/iconMapper'
 import { useFeaturedArticles } from '../../hooks/useHomePageApi'
@@ -20,7 +20,7 @@ export default function KegiatanPage() {
   const { colors } = useTheme()
   const { articles: apiArticles, loading: articlesLoading, error: articlesError } = useFeaturedArticles(100)
   const { menus, fetchMenus } = useMenuStore()
-  const categories = useArticleStore(state => state.categories) // Use dynamic categories from admin store
+  const categories = useArticleStore(state => state.categories)
   const searchParams = useSearchParams()
 
   const [searchQuery, setSearchQuery] = useState('')
@@ -60,7 +60,7 @@ export default function KegiatanPage() {
 
   const articles = useMemo(() => {
     return apiArticles.map(article => {
-      // Map backend categories to admin store categories
+
       const getCategoryName = (backendCategory: string) => {
         const categoryMap: { [key: string]: string } = {
           'kegiatan': 'Kegiatan',
@@ -68,9 +68,9 @@ export default function KegiatanPage() {
           'pengumuman': 'Pengumuman',
           'kajian': 'Kajian',
           'program': 'Program',
-          'sumbangan': 'Program', // Map sumbangan to Program
-          'fasilitas': 'Kegiatan', // Map fasilitas to Kegiatan
-          'profil': 'Pengumuman' // Map profil to Pengumuman
+          'sumbangan': 'Program',
+          'fasilitas': 'Kegiatan',
+          'profil': 'Pengumuman'
         }
         return categoryMap[backendCategory.toLowerCase()] || 'Kegiatan'
       }
@@ -93,7 +93,7 @@ export default function KegiatanPage() {
     })
   }, [apiArticles])
 
-  // Map admin categories to display categories for better UX
+
   const displayCategories = useMemo(() => {
     const categoryMapping: { [key: string]: string } = {
       'Kajian': 'Kajian',

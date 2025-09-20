@@ -2,7 +2,6 @@ import Image from 'next/image';
 import { useTheme } from '@/context/themeContext';
 import React, { ReactNode } from 'react';
 
-// Type UniversalCardAction didefinisikan ulang di sini agar tidak error import sirkular
 export interface UniversalCardAction {
   label: string;
   onClick: () => void;
@@ -19,9 +18,9 @@ export interface UniversalCardProps {
   actions?: UniversalCardAction[];
   children?: React.ReactNode;
   horizontal?: boolean;
-  buttonLabel?: string; // legacy support
-  onButtonClick?: () => void; // legacy support
-  variant?: 'normal' | 'modern'; // NEW: pilih tampilan card
+  buttonLabel?: string;
+  onButtonClick?: () => void;
+  variant?: 'normal' | 'modern';
 }
 
 const UniversalCard: React.FC<UniversalCardProps> = ({
@@ -36,19 +35,17 @@ const UniversalCard: React.FC<UniversalCardProps> = ({
   horizontal = false,
   buttonLabel,
   onButtonClick,
-  variant = 'normal', // default normal
+  variant = 'normal',
 }) => {
   const { colors } = useTheme();
-  // Backward compatibility: if buttonLabel is provided, push to actions
   const mergedActions =
     actions && actions.length > 0
       ? actions
       : buttonLabel && onButtonClick
-      ? [{ label: buttonLabel, onClick: onButtonClick }]
-      : [];
+        ? [{ label: buttonLabel, onClick: onButtonClick }]
+        : [];
 
   if (variant === 'modern') {
-    // MODERN: gambar sebagai background, overlay gradient hanya di bagian bawah, teks tegas dan kontras
     return (
       <div
         className="relative rounded-xl shadow-md overflow-hidden flex flex-col transition-colors border"
@@ -56,7 +53,6 @@ const UniversalCard: React.FC<UniversalCardProps> = ({
       >
         <div className="relative w-full h-72">
           <Image src={image} alt={title} fill className="object-cover" />
-          {/* Overlay gradient hanya di bagian bawah, tidak blur penuh */}
           <div
             className="absolute left-0 bottom-0 w-full pt-12 pb-6 px-8 flex flex-col justify-end"
             style={{
@@ -94,7 +90,6 @@ const UniversalCard: React.FC<UniversalCardProps> = ({
     );
   }
 
-  // NORMAL: card seperti sebelumnya
   return (
     <div
       className={`rounded-xl shadow-md overflow-hidden flex ${horizontal ? 'flex-row' : 'flex-col'} transition-colors border`}

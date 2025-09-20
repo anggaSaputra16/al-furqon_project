@@ -1,6 +1,6 @@
-// ===== API Request Types =====
 
-// Base Request Parameters
+
+
 export interface BaseParams {
   page?: number
   limit?: number
@@ -8,9 +8,9 @@ export interface BaseParams {
   order?: 'asc' | 'desc'
 }
 
-// ===== Home Page Request Types =====
 
-// Article/Activity Request Parameters
+
+
 export interface ArticleRequest extends BaseParams {
   category?: 'kegiatan' | 'berita' | 'sumbangan' | 'fasilitas' | 'profil'
   status?: 'published' | 'draft' | 'archived'
@@ -22,7 +22,7 @@ export interface ArticleRequest extends BaseParams {
   publishedBefore?: string
 }
 
-// Donation Request Parameters
+
 export interface DonationRequest extends BaseParams {
   status?: 'active' | 'completed' | 'suspended'
   minTarget?: number
@@ -31,7 +31,7 @@ export interface DonationRequest extends BaseParams {
   category?: string
 }
 
-// News Request Parameters
+
 export interface NewsRequest extends BaseParams {
   category?: string
   priority?: 'high' | 'medium' | 'low'
@@ -40,14 +40,14 @@ export interface NewsRequest extends BaseParams {
   publishedBefore?: string
 }
 
-// Menu Request Parameters
+
 export interface MenuRequest {
   includeInactive?: boolean
   parentId?: string
-  flat?: boolean // return flat array instead of nested
+  flat?: boolean
 }
 
-// ===== Donation Submission Request =====
+
 export interface DonationSubmissionRequest {
   donationId: string
   donorName: string
@@ -59,7 +59,7 @@ export interface DonationSubmissionRequest {
   paymentMethod: 'bank_transfer' | 'qris' | 'ewallet' | 'cash'
 }
 
-// ===== Newsletter Subscription Request =====
+
 export interface NewsletterRequest {
   email: string
   name?: string
@@ -70,7 +70,7 @@ export interface NewsletterRequest {
   }
 }
 
-// ===== Contact Form Request =====
+
 export interface ContactRequest {
   name: string
   email: string
@@ -80,7 +80,7 @@ export interface ContactRequest {
   type: 'general' | 'donation' | 'event' | 'complaint' | 'suggestion'
 }
 
-// ===== Search Request =====
+
 export interface SearchRequest {
   query: string
   type?: 'all' | 'articles' | 'donations' | 'news'
@@ -95,7 +95,7 @@ export interface SearchRequest {
   }
 }
 
-// ===== Analytics Request =====
+
 export interface AnalyticsRequest {
   type: 'page_view' | 'article_view' | 'donation_view' | 'download' | 'share'
   resourceId?: string
@@ -106,12 +106,12 @@ export interface AnalyticsRequest {
   }
 }
 
-// ===== Feedback Request =====
+
 export interface FeedbackRequest {
   type: 'rating' | 'comment' | 'suggestion' | 'bug_report'
   resourceType: 'article' | 'donation' | 'page' | 'feature'
   resourceId?: string
-  rating?: number // 1-5
+  rating?: number
   comment?: string
   email?: string
   isAnonymous?: boolean

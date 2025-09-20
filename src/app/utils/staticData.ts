@@ -1,4 +1,3 @@
-// utils/staticData.ts
 
 export const donationCards = [
   {

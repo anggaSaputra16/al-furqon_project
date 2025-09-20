@@ -9,9 +9,7 @@ import {
 } from '../types/adminResponseTypes'
 
 class DashboardUseCases {
-    /**
-     * Get comprehensive dashboard statistics with error handling
-     */
+
     async getDashboardStats(request?: GetDashboardStatsRequest): Promise<DashboardStatsResponse | null> {
         try {
             const response = await dashboardRepository.getDashboardStatsWithFallback(request)
@@ -22,9 +20,6 @@ class DashboardUseCases {
         }
     }
 
-    /**
-     * Get dashboard charts data
-     */
     async getDashboardCharts(request: GetDashboardChartsRequest): Promise<DashboardChartsData | null> {
         try {
             const response = await dashboardRepository.getDashboardCharts(request)
@@ -35,16 +30,12 @@ class DashboardUseCases {
         }
     }
 
-    /**
-     * Get lightweight dashboard summary for quick loading
-     */
     async getDashboardSummary(): Promise<Partial<DashboardStatsResponse> | null> {
         try {
             const response = await dashboardRepository.getDashboardSummary()
             return response.success ? response.data || null : null
         } catch (error) {
             console.error('Error in getDashboardSummary use case:', error)
-            // Return basic fallback data
             return {
                 totalArticles: 45,
                 totalDonations: 12,
@@ -58,9 +49,6 @@ class DashboardUseCases {
         }
     }
 
-    /**
-     * Get real-time activity data for live dashboard updates
-     */
     async getRealtimeActivity(): Promise<{
         onlineUsers: number
         todayViews: number
@@ -81,9 +69,6 @@ class DashboardUseCases {
         }
     }
 
-    /**
-     * Refresh dashboard cache
-     */
     async refreshDashboardCache(): Promise<boolean> {
         try {
             const response = await dashboardRepository.refreshDashboardCache()
@@ -94,9 +79,6 @@ class DashboardUseCases {
         }
     }
 
-    /**
-     * Get current month dashboard data with date range
-     */
     async getCurrentMonthStats(): Promise<DashboardStatsResponse | null> {
         const now = new Date()
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
@@ -117,9 +99,6 @@ class DashboardUseCases {
         return this.getDashboardStats(request)
     }
 
-    /**
-     * Get dashboard statistics for a specific date range
-     */
     async getStatsForDateRange(startDate: Date, endDate: Date): Promise<DashboardStatsResponse | null> {
         const request: GetDashboardStatsRequest = {
             dateRange: {
@@ -135,9 +114,6 @@ class DashboardUseCases {
         return this.getDashboardStats(request)
     }
 
-    /**
-     * Get monthly charts data for dashboard visualization
-     */
     async getMonthlyCharts(): Promise<DashboardChartsData | null> {
         const request: GetDashboardChartsRequest = {
             chartType: 'monthly',
@@ -147,11 +123,7 @@ class DashboardUseCases {
         return this.getDashboardCharts(request)
     }
 
-    /**
-     * Format dashboard stats for UI display
-     */
     formatStatsForDisplay(stats: DashboardStatsResponse | null | undefined) {
-        // Safety check for null/undefined stats
         if (!stats || typeof stats !== 'object') {
             return {
                 totalArticles: { value: 0, formatted: '0', growth: 0 },
@@ -190,7 +162,7 @@ class DashboardUseCases {
                     currency: 'IDR',
                     minimumFractionDigits: 0
                 }).format(stats.totalBalance ?? 0),
-                growth: 0 // Balance doesn't have growth metric
+                growth: 0
             },
             monthlyViews: {
                 value: stats.monthlyViews ?? 0,
@@ -205,9 +177,6 @@ class DashboardUseCases {
         }
     }
 
-    /**
-     * Check if dashboard data is fresh (less than 5 minutes old)
-     */
     isDashboardDataFresh(): boolean {
         const lastFetch = localStorage.getItem('dashboard_last_fetch')
         if (!lastFetch) return false
@@ -219,14 +188,10 @@ class DashboardUseCases {
         return (now - lastFetchTime) < fiveMinutes
     }
 
-    /**
-     * Mark dashboard data as fresh
-     */
     markDashboardDataAsFresh(): void {
         localStorage.setItem('dashboard_last_fetch', new Date().toISOString())
     }
 }
 
-// Export singleton instance
 export const dashboardUseCases = new DashboardUseCases()
 export default dashboardUseCases

@@ -29,7 +29,6 @@ export default function GalleryModal() {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isLiked, setIsLiked] = useState(false)
 
-  // Find current image index
   useEffect(() => {
     if (selectedImage && images) {
       const index = images.findIndex(img => img.id === selectedImage.id)
@@ -37,7 +36,6 @@ export default function GalleryModal() {
     }
   }, [selectedImage, images])
 
-  // Navigation functions
   const goToPrevious = useCallback(() => {
     if (images && currentIndex > 0) {
       setSelectedImage(images[currentIndex - 1])
@@ -52,7 +50,7 @@ export default function GalleryModal() {
     }
   }, [images, currentIndex, setSelectedImage])
 
-  // Keyboard navigation
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!selectedImage) return
@@ -82,7 +80,7 @@ export default function GalleryModal() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [selectedImage, setSelectedImage, goToPrevious, goToNext])
 
-  // Download function
+
   const handleDownload = async () => {
     if (!selectedImage) return
 
@@ -101,7 +99,7 @@ export default function GalleryModal() {
     }
   }
 
-  // Share function
+
   const handleShare = async () => {
     if (!selectedImage) return
 
@@ -116,7 +114,6 @@ export default function GalleryModal() {
         console.error('Share failed:', error)
       }
     } else {
-      // Fallback: copy to clipboard
       navigator.clipboard.writeText(window.location.href)
       alert('Link disalin ke clipboard!')
     }

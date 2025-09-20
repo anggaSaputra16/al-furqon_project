@@ -7,7 +7,6 @@ import {
     FaDonate,
     FaImages,
     FaUsers,
-    FaCog,
     FaChartBar,
     FaFileAlt,
     FaSignOutAlt,
@@ -16,23 +15,29 @@ import {
     FaFileInvoiceDollar,
     FaChevronDown,
     FaChevronRight,
-    FaSync
+    FaSync,
+    FaBars,
+    FaTimes,
+    FaBuilding
 } from 'react-icons/fa'
 import { useTheme } from '@/context/themeContext'
-import { useAdminAuthentication } from '../../hooks/useAdmin'
-import { useDashboardStats } from '../../hooks/useDashboardStats'
-import { useArticleStore } from '../../stores/adminArticleStore' // Import article store
-import { useFeaturedArticles } from '../../hooks/useHomePageApi' // Import featured articles
-import { AdminActivity } from '../../types/adminResponseTypes'
+import { useAdminAuthentication } from '../../../hooks/useAdmin'
+import { useDashboardStats } from '../../../hooks/useDashboardStats'
+import { useArticleStore } from '../../../stores/adminArticleStore'
+import { useFeaturedArticles } from '../../../hooks/useHomePageApi'
+import { useAdminUsers } from '../../../hooks/useAdminUsers'
+import { usePermissions } from '../../RouteGuard'
+import { getRolePermissions, ROLE_LABELS, ROLE_COLORS, UserRole } from '../../../types/roleTypes'
+import { AdminActivity } from '../../../types/adminResponseTypes'
 import AdminArticlePage from './AdminArticlePage'
 import AdminDonationPage from './AdminDonationPage'
 import AdminUserPage from './AdminUserPage'
 import AdminReportPage from './AdminReportPage'
+import ForbiddenPage from '../ForbiddenPage'
 import AdminSettingsPage from './AdminSettingsPage'
 import AdminFinancePage from './AdminFinancePage'
 import AdminFinancialReportPage from './AdminFinancialReportPage'
-import AdminNotificationPage from './AdminNotificationPage'
-
+import AdminGrahaSubagdjaPage from './AdminGrahaSubagdjaPage'
 interface AdminStats {
     totalArticles: number
     totalDonations: number
@@ -52,14 +57,14 @@ interface AdminHomePageProps {
 interface MenuSubItem {
     title: string
     icon: any
-    page: 'dashboard' | 'articles' | 'donations' | 'users' | 'reports' | 'settings' | 'finance' | 'financial-reports' | 'notifications'
+    page: 'dashboard' | 'articles' | 'donations' | 'users' | 'reports' | 'settings' | 'finance' | 'financial-reports' | 'notifications' | 'graha-subagdja'
     active: boolean
 }
 
 interface MenuItem {
     title: string
     icon: any
-    page?: 'dashboard' | 'articles' | 'donations' | 'users' | 'reports' | 'settings' | 'finance' | 'financial-reports' | 'notifications'
+    page?: 'dashboard' | 'articles' | 'donations' | 'users' | 'reports' | 'settings' | 'finance' | 'financial-reports' | 'notifications' | 'graha-subagdja'
     count?: number
     active: boolean
     hasDropdown?: boolean
@@ -69,37 +74,55 @@ interface MenuItem {
 export default function AdminHomePage({ adminName = 'Administrator' }: AdminHomePageProps) {
 
     const { colors } = useTheme()
-    const { logout } = useAdminAuthentication()
-    const { stats: dashboardStats, formattedStats, isLoading: isStatsLoading, refreshStats } = useDashboardStats()
-
-    // Get real article data
+    const { logout, user } = useAdminAuthentication()
+    const { checkPermission, getUserRole } = usePermissions()
+    const { stats: dashboardStats, isLoading: isStatsLoading, refreshStats } = useDashboardStats()
     const articleStore = useArticleStore()
     const { articles: featuredArticles, refetch: refetchFeaturedArticles } = useFeaturedArticles()
-
-    const [currentPage, setCurrentPage] = useState<'dashboard' | 'articles' | 'donations' | 'users' | 'reports' | 'settings' | 'finance' | 'financial-reports' | 'notifications'>('dashboard')
+    const { users, loading: usersLoading, pagination: userPagination } = useAdminUsers()
+    const [currentPage, setCurrentPage] = useState<'dashboard' | 'articles' | 'donations' | 'users' | 'reports' | 'settings' | 'finance' | 'financial-reports' | 'notifications' | 'graha-subagdja'>('dashboard')
     const [mounted, setMounted] = useState(false)
     const [isReportsDropdownOpen, setIsReportsDropdownOpen] = useState(false)
     const [isNotificationDropdownOpen, setIsNotificationDropdownOpen] = useState(false)
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+    const userRole = getUserRole()
+    const userRoleLabel = userRole ? ROLE_LABELS[userRole] : 'Unknown'
 
-    // Calculate real article count from multiple sources
+    let userPermissions = null
+    if (userRole) {
+        userPermissions = getRolePermissions(userRole)
+    } else if (user?.role) {
+        const fallbackRole = user.role as UserRole
+        userPermissions = getRolePermissions(fallbackRole)
+        console.warn('Using fallback role from user object:', fallbackRole)
+    }
+
+    if (!user) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
+                    <p className="text-gray-600">Memuat data pengguna...</p>
+                </div>
+            </div>
+        )
+    }
+
     const realArticleCount = Math.max(
         articleStore.articles?.length || 0,
         featuredArticles?.length || 0
     )
 
-    // Debug logging
-    console.log('📊 Dashboard Articles Debug:')
-    console.log('- Admin Store Articles:', articleStore.articles?.length || 0)
-    console.log('- Featured Articles:', featuredArticles?.length || 0)
-    console.log('- Real Article Count:', realArticleCount)
-    console.log('- Dashboard Stats Articles:', dashboardStats?.totalArticles || 0)
+    const realUserCount = Math.max(
+        users?.length || 0,
+        userPagination?.total || 0
+    )
 
-    // Merge real data with dashboard stats
     const stats = {
         totalArticles: realArticleCount > 0 ? realArticleCount : (dashboardStats?.totalArticles ?? 0),
         totalDonations: dashboardStats?.totalDonations ?? 0,
         totalGallery: dashboardStats?.totalGallery ?? 0,
-        totalUsers: dashboardStats?.totalUsers ?? 0,
+        totalUsers: realUserCount > 0 ? realUserCount : (dashboardStats?.totalUsers ?? 0),
         monthlyViews: dashboardStats?.monthlyViews ?? 0,
         activeDonations: dashboardStats?.activeDonations ?? 0,
         monthlyIncome: dashboardStats?.monthlyIncome ?? 0,
@@ -107,29 +130,31 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
         totalBalance: dashboardStats?.totalBalance ?? 0
     }
 
-
     const recentActivities = dashboardStats?.recentActivities || []
-
 
     useEffect(() => {
         setMounted(true)
 
-        // Load article data if not already loaded
         if (articleStore.articles.length === 0) {
-            // Try to load from admin store first
             const loadArticles = async () => {
                 try {
-                    // Check if there's a method to load articles in the store
-                    // This might need to be adjusted based on your store implementation
-                    console.log('Loading articles for dashboard stats...')
                 } catch (error) {
                     console.warn('Could not load articles for dashboard:', error)
                 }
             }
             loadArticles()
         }
-    }, [])
 
+        // Handle responsive behavior
+        const handleResize = () => {
+            if (window.innerWidth >= 1024) {
+                setIsMobileMenuOpen(false)
+            }
+        }
+
+        window.addEventListener('resize', handleResize)
+        return () => window.removeEventListener('resize', handleResize)
+    }, [])
 
     if (!mounted) {
         return (
@@ -142,31 +167,202 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
         )
     }
 
-    const menuItems: MenuItem[] = [
-        { title: 'Dashboard', icon: FaHome, page: 'dashboard' as const, active: currentPage === 'dashboard' },
-        { title: 'Artikel', icon: FaFileAlt, page: 'articles' as const, count: stats.totalArticles, active: currentPage === 'articles' },
-        { title: 'Donasi', icon: FaDonate, page: 'donations' as const, count: stats.activeDonations, active: currentPage === 'donations' },
-        { title: 'Keuangan', icon: FaMoneyBillWave, page: 'finance' as const, active: currentPage === 'finance' },
-        { title: 'Pengguna', icon: FaUsers, page: 'users' as const, count: stats.totalUsers, active: currentPage === 'users' },
-        {
-            title: 'Laporan',
-            icon: FaChartBar,
-            hasDropdown: true,
-            active: currentPage === 'reports' || currentPage === 'financial-reports',
-            subItems: [
-                { title: 'Laporan Keuangan', icon: FaFileInvoiceDollar, page: 'financial-reports' as const, active: currentPage === 'financial-reports' },
-                { title: 'Laporan Artikel', icon: FaFileAlt, page: 'reports' as const, active: currentPage === 'reports' }
-            ]
-        },
-        { title: 'Pengaturan', icon: FaCog, page: 'settings' as const, active: currentPage === 'settings' }
-    ]
+    const getFilteredMenuItems = (): MenuItem[] => {
+        const baseItems: MenuItem[] = []
 
-    const quickActions = [
-        { title: 'Buat Artikel Baru', icon: FaFileAlt, action: () => setCurrentPage('articles'), color: colors.accent },
-        { title: 'Tambah Donasi', icon: FaDonate, action: () => setCurrentPage('donations'), color: '#10b981' },
-        { title: 'Kelola Keuangan', icon: FaMoneyBillWave, action: () => setCurrentPage('finance'), color: '#f59e0b' },
-        { title: 'Kelola Pengguna', icon: FaUsers, action: () => setCurrentPage('users'), color: '#6366f1' }
-    ]
+        if (userPermissions?.canAccessDashboard) {
+            baseItems.push({
+                title: 'Dashboard',
+                icon: FaHome,
+                page: 'dashboard' as const,
+                active: currentPage === 'dashboard'
+            })
+        }
+
+        if (userPermissions?.canAccessArticles) {
+            baseItems.push({
+                title: 'Artikel',
+                icon: FaFileAlt,
+                page: 'articles' as const,
+                count: realArticleCount,
+                active: currentPage === 'articles'
+            })
+        }
+
+        if (userPermissions?.canAccessUsers || (user?.role === 'admin' || user?.role === 'super_admin')) {
+            baseItems.push({
+                title: 'Pengguna',
+                icon: FaUsers,
+                page: 'users' as const,
+                active: currentPage === 'users'
+            })
+        }
+
+        if (userPermissions?.canAccessDonations) {
+            baseItems.push({
+                title: 'Donasi',
+                icon: FaDonate,
+                page: 'donations' as const,
+                count: stats.activeDonations,
+                active: currentPage === 'donations'
+            })
+        }
+
+        if (userPermissions?.canAccessFinance) {
+            baseItems.push({
+                title: 'Keuangan',
+                icon: FaMoneyBillWave,
+                page: 'finance' as const,
+                active: currentPage === 'finance'
+            })
+        }
+
+        if (userPermissions?.canAccessReports) {
+            baseItems.push({
+                title: 'Laporan',
+                icon: FaChartBar,
+                hasDropdown: true,
+                active: currentPage === 'reports' || currentPage === 'financial-reports',
+                subItems: [
+                    { title: 'Laporan Keuangan', icon: FaFileInvoiceDollar, page: 'financial-reports' as const, active: currentPage === 'financial-reports' },
+                    { title: 'Laporan Artikel', icon: FaFileAlt, page: 'reports' as const, active: currentPage === 'reports' }
+                ]
+            })
+        }
+
+        if (userPermissions?.canAccessGraha || (user?.role === 'admin' || user?.role === 'super_admin')) {
+            baseItems.push({
+                title: 'Graha Subagdja',
+                icon: FaBuilding,
+                page: 'graha-subagdja' as const,
+                active: currentPage === 'graha-subagdja'
+            })
+        }
+
+        return baseItems
+    }
+
+    const menuItems = getFilteredMenuItems()
+
+
+    const getFilteredQuickActions = () => {
+        const actions = []
+
+        if (userPermissions?.canAccessArticles && userPermissions?.canCreateArticles) {
+            actions.push({ title: 'Buat Artikel Baru', icon: FaFileAlt, action: () => setCurrentPage('articles'), color: colors.accent })
+        }
+
+        if (userPermissions?.canAccessDonations) {
+            actions.push({ title: 'Tambah Donasi', icon: FaDonate, action: () => setCurrentPage('donations'), color: '#10b981' })
+        }
+
+        if (userPermissions?.canAccessFinance) {
+            actions.push({ title: 'Kelola Keuangan', icon: FaMoneyBillWave, action: () => setCurrentPage('finance'), color: '#f59e0b' })
+        }
+
+        if ((userPermissions?.canAccessUsers && userPermissions?.canCreateUsers) || (user?.role === 'admin' || user?.role === 'super_admin')) {
+            actions.push({ title: 'Kelola Pengguna', icon: FaUsers, action: () => setCurrentPage('users'), color: '#6366f1' })
+        }
+
+        if (userPermissions?.canAccessGraha || (user?.role === 'admin' || user?.role === 'super_admin')) {
+            actions.push({ title: 'Kelola Graha Subagdja', icon: FaBuilding, action: () => setCurrentPage('graha-subagdja'), color: '#8b5cf6' })
+        }
+
+        return actions
+    }
+
+    const quickActions = getFilteredQuickActions()
+    const getRoleBasedStats = () => {
+        const baseStats = []
+
+        if (userPermissions?.canAccessArticles) {
+            baseStats.push({
+                label: 'Total Artikel',
+                value: stats.totalArticles,
+                icon: FaFileAlt,
+                color: colors.accent,
+                description: realArticleCount > 0 ?
+                    `${realArticleCount} artikel dari database` :
+                    'Artikel yang telah dipublikasi',
+                formatter: (value: number) => (value ?? 0).toString()
+            })
+        }
+
+        if (userPermissions?.canAccessUsers) {
+            baseStats.push({
+                label: 'Total Pengguna',
+                value: stats.totalUsers,
+                icon: FaUsers,
+                color: '#6366f1',
+                description: realUserCount > 0 ?
+                    `${realUserCount} pengguna dari database` :
+                    'Pengguna terdaftar',
+                formatter: (value: number) => (value ?? 0).toString()
+            })
+        }
+
+        if (userPermissions?.canAccessDonations) {
+            baseStats.push({
+                label: 'Program Donasi',
+                value: stats.activeDonations,
+                icon: FaDonate,
+                color: '#10b981',
+                description: 'Program donasi aktif',
+                formatter: (value: number) => (value ?? 0).toString()
+            })
+        }
+
+
+        if (userPermissions?.canAccessFinance) {
+            baseStats.push({
+                label: 'Pemasukan Bulan Ini',
+                value: stats.monthlyIncome,
+                icon: FaMoneyBillWave,
+                color: '#10b981',
+                description: 'Total pemasukan bulan Juli',
+                formatter: (value: number) => new Intl.NumberFormat('id-ID', {
+                    style: 'currency',
+                    currency: 'IDR',
+                    minimumFractionDigits: 0
+                }).format(value ?? 0)
+            })
+
+            baseStats.push({
+                label: 'Saldo Bersih',
+                value: stats.totalBalance,
+                icon: FaFileInvoiceDollar,
+                color: '#6366f1',
+                description: 'Saldo bersih bulan ini',
+                formatter: (value: number) => new Intl.NumberFormat('id-ID', {
+                    style: 'currency',
+                    currency: 'IDR',
+                    minimumFractionDigits: 0
+                }).format(value ?? 0)
+            })
+        }
+
+        return baseStats
+    }
+
+    const roleBasedStats = getRoleBasedStats()
+
+
+    const getRoleBasedWelcomeMessage = () => {
+        switch (userRole) {
+            case 'super_admin':
+                return 'Kelola semua aspek Masjid Al-Furqon dengan akses penuh.'
+            case 'admin':
+                return 'Kelola artikel, pengguna, dan Graha Subagdja Masjid Al-Furqon.'
+            case 'editor':
+                return 'Kelola artikel, pengguna, dan Graha Subagdja Masjid Al-Furqon.'
+            case 'reviewer':
+                return 'Pantau dan review artikel yang telah dipublikasikan.'
+            case 'viewer':
+                return 'Lihat informasi artikel dan konten Masjid Al-Furqon.'
+            default:
+                return 'Kelola konten Masjid Al-Furqon dengan mudah dari dashboard ini.'
+        }
+    }
 
     const getActivityIcon = (resource: string) => {
         switch (resource.toLowerCase()) {
@@ -231,57 +427,121 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
         }
     }
 
+    const handlePageNavigation = (page: string) => {
+        switch (page) {
+            case 'articles':
+                if (!userPermissions?.canAccessArticles) {
+                    return <ForbiddenPage
+                        requiredRole="Editor, Reviewer, Viewer atau lebih tinggi"
+                        userRole={userRoleLabel}
+                        onBack={() => setCurrentPage('dashboard')}
+                    />
+                }
+                return <AdminArticlePage onBack={() => setCurrentPage('dashboard')} />
+            case 'users':
+                if (!userPermissions?.canAccessUsers) {
+                    return <ForbiddenPage
+                        requiredRole="Admin atau Super Admin"
+                        userRole={userRoleLabel}
+                        onBack={() => setCurrentPage('dashboard')}
+                    />
+                }
+                return <AdminUserPage onBack={() => setCurrentPage('dashboard')} />
+            case 'donations':
+                if (!userPermissions?.canAccessDonations) {
+                    return <ForbiddenPage
+                        requiredRole="Super Admin"
+                        userRole={userRoleLabel}
+                        onBack={() => setCurrentPage('dashboard')}
+                    />
+                }
+                return <AdminDonationPage onBack={() => setCurrentPage('dashboard')} />
+            case 'finance':
+                if (!userPermissions?.canAccessFinance) {
+                    return <ForbiddenPage
+                        requiredRole="Super Admin"
+                        userRole={userRoleLabel}
+                        onBack={() => setCurrentPage('dashboard')}
+                    />
+                }
+                return <AdminFinancePage onBack={() => setCurrentPage('dashboard')} />
+            case 'reports':
+                if (!userPermissions?.canAccessReports) {
+                    return <ForbiddenPage
+                        requiredRole="Super Admin"
+                        userRole={userRoleLabel}
+                        onBack={() => setCurrentPage('dashboard')}
+                    />
+                }
+                return <AdminReportPage onBack={() => setCurrentPage('dashboard')} />
+            case 'financial-reports':
+                if (!userPermissions?.canAccessReports) {
+                    return <ForbiddenPage
+                        requiredRole="Super Admin"
+                        userRole={userRoleLabel}
+                        onBack={() => setCurrentPage('dashboard')}
+                    />
+                }
+                return <AdminFinancialReportPage onBack={() => setCurrentPage('dashboard')} />
 
-    if (currentPage === 'articles') {
-        return <AdminArticlePage onBack={() => setCurrentPage('dashboard')} />
+            case 'settings':
+                if (!userRole || !['super_admin', 'admin'].includes(userRole)) {
+                    return <ForbiddenPage
+                        requiredRole="Admin atau Super Admin"
+                        userRole={userRoleLabel}
+                        onBack={() => setCurrentPage('dashboard')}
+                    />
+                }
+                return <AdminSettingsPage onBack={() => setCurrentPage('dashboard')} />
+            case 'graha-subagdja':
+                if (!userPermissions?.canAccessGraha) {
+                    return <ForbiddenPage
+                        requiredRole="Admin atau Super Admin"
+                        userRole={userRoleLabel}
+                        onBack={() => setCurrentPage('dashboard')}
+                    />
+                }
+                return <AdminGrahaSubagdjaPage onBack={() => setCurrentPage('dashboard')} />
+            default:
+                return null
+        }
     }
 
-    if (currentPage === 'donations') {
-        return <AdminDonationPage onBack={() => setCurrentPage('dashboard')} />
-    }
 
-    if (currentPage === 'finance') {
-        return <AdminFinancePage onBack={() => setCurrentPage('dashboard')} />
+    if (currentPage !== 'dashboard') {
+        return handlePageNavigation(currentPage)
     }
-
-    if (currentPage === 'notifications') {
-        return <AdminNotificationPage onBack={() => setCurrentPage('dashboard')} />
-    }
-
-    if (currentPage === 'financial-reports') {
-        return <AdminFinancialReportPage onBack={() => setCurrentPage('dashboard')} />
-    }
-
-    if (currentPage === 'users') {
-        return <AdminUserPage onBack={() => setCurrentPage('dashboard')} />
-    }
-
-    if (currentPage === 'reports') {
-        return <AdminReportPage onBack={() => setCurrentPage('dashboard')} />
-    }
-
-    if (currentPage === 'settings') {
-        return <AdminSettingsPage onBack={() => setCurrentPage('dashboard')} />
-    }
-
 
     return (
         <div
             className="min-h-screen"
             style={{ backgroundColor: colors.background }}
         >
-            {/* Header */}
             <header
-                className="sticky top-0 z-50 px-6 py-4 border-b backdrop-blur-md"
+                className="sticky top-0 z-[60] px-4 md:px-6 py-4 border-b backdrop-blur-md backdrop-saturate-150"
                 style={{
-                    backgroundColor: colors.card + 'CC',
-                    borderColor: colors.border + '30'
+                    backgroundColor: colors.card + 'E6',
+                    borderColor: colors.border + '40',
+                    backdropFilter: 'blur(12px) saturate(180%)'
                 }}
             >
                 <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-3 md:space-x-4">
+                        {/* Mobile Menu Button */}
+                        <button
+                            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                            className="lg:hidden p-2 rounded-lg transition-colors duration-200 hover:bg-gray-100"
+                            style={{
+                                backgroundColor: colors.background,
+                                color: colors.cardText
+                            }}
+                            title="Toggle Menu"
+                        >
+                            {isMobileMenuOpen ? <FaTimes size={18} /> : <FaBars size={18} />}
+                        </button>
+
                         <h1
-                            className="text-2xl font-bold"
+                            className="text-xl md:text-2xl font-bold"
                             style={{
                                 color: colors.cardText,
                                 fontFamily: 'var(--font-header-modern)'
@@ -290,7 +550,7 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
                             Admin Panel
                         </h1>
                         <div
-                            className="px-3 py-1 rounded-full text-xs font-medium"
+                            className="hidden sm:block px-3 py-1 rounded-full text-xs font-medium"
                             style={{
                                 backgroundColor: colors.accent + '20',
                                 color: colors.accent
@@ -300,21 +560,15 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
                         </div>
                     </div>
 
-                    <div className="flex items-center space-x-4">
-                        {/* Refresh Dashboard */}
+                    <div className="flex items-center space-x-2 md:space-x-4">
                         <button
                             onClick={async () => {
-                                // Refresh dashboard stats and try to reload articles
                                 await refreshStats()
-
-                                // Refresh featured articles
                                 try {
                                     await refetchFeaturedArticles()
                                 } catch (error) {
                                     console.warn('Could not refresh featured articles:', error)
                                 }
-
-                                // Mark article store data as needing refresh
                                 articleStore.markDataAsFresh()
                             }}
                             disabled={isStatsLoading}
@@ -333,7 +587,6 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
                             </motion.div>
                         </button>
 
-                        {/* Notifications */}
                         <div className="relative">
                             <button
                                 onClick={() => setIsNotificationDropdownOpen(!isNotificationDropdownOpen)}
@@ -352,16 +605,16 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
                                 </span>
                             </button>
 
-                            {/* Notification Dropdown */}
                             {isNotificationDropdownOpen && (
                                 <motion.div
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: 10 }}
-                                    className="absolute right-0 mt-2 w-80 rounded-xl border shadow-lg z-50"
+                                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                    className="absolute right-0 mt-2 w-80 max-w-[90vw] rounded-xl border shadow-xl z-[100]"
                                     style={{
                                         backgroundColor: colors.card,
-                                        borderColor: colors.border + '30'
+                                        borderColor: colors.border + '30',
+                                        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
                                     }}
                                 >
                                     <div className="p-4 border-b" style={{ borderColor: colors.border + '30' }}>
@@ -423,7 +676,6 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
                             )}
                         </div>
 
-                        {/* Admin Profile */}
                         <div className="flex items-center space-x-3">
                             <div className="text-right hidden sm:block">
                                 <div
@@ -447,7 +699,6 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
                             </div>
                         </div>
 
-                        {/* Logout */}
                         <button
                             onClick={logout}
                             className="p-2 rounded-lg transition-colors duration-200 hover:bg-red-50"
@@ -460,10 +711,17 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
                 </div>
             </header>
 
-            <div className="flex">
-                {/* Sidebar */}
+            <div className="flex min-h-screen">
+                {isMobileMenuOpen && (
+                    <div
+                        className="fixed inset-0 bg-black bg-opacity-50 z-[50] lg:hidden"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                    />
+                )}
+
                 <aside
-                    className="w-64 min-h-screen border-r hidden lg:block"
+                    className={`w-64 min-h-screen border-r fixed lg:relative z-[60] transition-transform duration-300 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+                        } lg:block`}
                     style={{
                         backgroundColor: colors.card,
                         borderColor: colors.border + '30'
@@ -501,7 +759,6 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
                                                 )}
                                             </motion.button>
 
-                                            {/* Dropdown submenu */}
                                             {isReportsDropdownOpen && (
                                                 <motion.div
                                                     initial={{ opacity: 0, height: 0 }}
@@ -515,7 +772,12 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
                                                         return (
                                                             <motion.button
                                                                 key={subItem.title}
-                                                                onClick={() => subItem.page && setCurrentPage(subItem.page)}
+                                                                onClick={() => {
+                                                                    if (subItem.page) {
+                                                                        setCurrentPage(subItem.page)
+                                                                        setIsMobileMenuOpen(false)
+                                                                    }
+                                                                }}
                                                                 initial={{ opacity: 0, x: -10 }}
                                                                 animate={{ opacity: 1, x: 0 }}
                                                                 transition={{ duration: 0.2, delay: subIndex * 0.05 }}
@@ -541,7 +803,12 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
                                 return (
                                     <motion.button
                                         key={item.title}
-                                        onClick={() => item.page && setCurrentPage(item.page)}
+                                        onClick={() => {
+                                            if (item.page) {
+                                                setCurrentPage(item.page)
+                                                setIsMobileMenuOpen(false)
+                                            }
+                                        }}
                                         initial={{ opacity: 0, x: -20 }}
                                         animate={{ opacity: 1, x: 0 }}
                                         transition={{ duration: 0.3, delay: index * 0.1 }}
@@ -574,49 +841,78 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
                     </nav>
                 </aside>
 
-                {/* Main Content */}
-                <main className="flex-1 p-6">
-                    {/* Welcome Section */}
+                <main className="flex-1 lg:ml-0 p-4 md:p-6 w-full min-w-0">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6 }}
-                        className="mb-8"
+                        className="mb-6 md:mb-8"
                     >
                         <h2
-                            className="text-3xl font-bold mb-2"
+                            className="text-2xl md:text-3xl font-bold mb-2"
                             style={{
                                 color: colors.cardText,
                                 fontFamily: 'var(--font-header-modern)'
                             }}
                         >
                             Selamat datang, {adminName}! 👋
+                            {userRole && (
+                                <span
+                                    className="block sm:inline ml-0 sm:ml-3 mt-2 sm:mt-0 px-3 py-1 rounded-full text-sm font-medium"
+                                    style={{
+                                        backgroundColor: ROLE_COLORS[userRole] + '20',
+                                        color: ROLE_COLORS[userRole]
+                                    }}
+                                >
+                                    {ROLE_LABELS[userRole]}
+                                </span>
+                            )}
                         </h2>
                         <p
-                            className="text-lg mb-2"
+                            className="text-base md:text-lg mb-2"
                             style={{ color: colors.detail }}
                         >
-                            Kelola konten Masjid Al-Furqon dengan mudah dari dashboard ini.
+                            {getRoleBasedWelcomeMessage()}
                         </p>
 
-                        {/* Data Status Indicator */}
-                        <div className="flex items-center space-x-2">
-                            <div
-                                className="w-2 h-2 rounded-full"
-                                style={{
-                                    backgroundColor: realArticleCount > 0 ? '#10b981' : '#f59e0b'
-                                }}
-                            />
-                            <span
-                                className="text-sm"
-                                style={{ color: colors.detail }}
-                            >
-                                {realArticleCount > 0 ?
-                                    `${realArticleCount} artikel ditemukan dari database` :
-                                    'Menggunakan data simulasi dashboard'
-                                }
-                            </span>
-                            {isStatsLoading && (
+                        <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
+                            <div className="flex items-center space-x-2">
+                                <div
+                                    className="w-2 h-2 rounded-full"
+                                    style={{
+                                        backgroundColor: realArticleCount > 0 ? '#10b981' : '#f59e0b'
+                                    }}
+                                />
+                                <span
+                                    className="text-sm"
+                                    style={{ color: colors.detail }}
+                                >
+                                    {realArticleCount > 0 ?
+                                        `${realArticleCount} artikel dari database` :
+                                        'Data artikel simulasi'
+                                    }
+                                </span>
+                            </div>
+
+                            <div className="flex items-center space-x-2">
+                                <div
+                                    className="w-2 h-2 rounded-full"
+                                    style={{
+                                        backgroundColor: realUserCount > 0 ? '#10b981' : '#f59e0b'
+                                    }}
+                                />
+                                <span
+                                    className="text-sm"
+                                    style={{ color: colors.detail }}
+                                >
+                                    {realUserCount > 0 ?
+                                        `${realUserCount} pengguna dari database` :
+                                        'Data pengguna simulasi'
+                                    }
+                                </span>
+                            </div>
+
+                            {(isStatsLoading || usersLoading) && (
                                 <span
                                     className="text-sm"
                                     style={{ color: colors.accent }}
@@ -627,68 +923,31 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
                         </div>
                     </motion.div>
 
-                    {/* Stats Grid */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, delay: 0.1 }}
-                        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+                        className={`grid gap-4 md:gap-6 mb-6 md:mb-8 ${roleBasedStats.length === 1 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' :
+                            roleBasedStats.length === 2 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' :
+                                roleBasedStats.length === 3 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' :
+                                    roleBasedStats.length === 4 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' :
+                                        'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5'
+                            }`}
                     >
-                        {[
-                            {
-                                label: 'Total Artikel',
-                                value: stats.totalArticles,
-                                icon: FaFileAlt,
-                                color: colors.accent,
-                                description: realArticleCount > 0 ?
-                                    `${realArticleCount} artikel dari database` :
-                                    'Artikel yang telah dipublikasi',
-                                formatter: (value: number) => (value ?? 0).toString()
-                            },
-                            {
-                                label: 'Program Donasi',
-                                value: stats.activeDonations,
-                                icon: FaDonate,
-                                color: '#10b981',
-                                description: 'Program donasi aktif',
-                                formatter: (value: number) => (value ?? 0).toString()
-                            },
-                            {
-                                label: 'Pemasukan Bulan Ini',
-                                value: stats.monthlyIncome,
-                                icon: FaMoneyBillWave,
-                                color: '#10b981',
-                                description: 'Total pemasukan bulan Juli',
-                                formatter: (value: number) => new Intl.NumberFormat('id-ID', {
-                                    style: 'currency',
-                                    currency: 'IDR',
-                                    minimumFractionDigits: 0
-                                }).format(value ?? 0)
-                            },
-                            {
-                                label: 'Saldo Bersih',
-                                value: stats.totalBalance,
-                                icon: FaFileInvoiceDollar,
-                                color: '#6366f1',
-                                description: 'Saldo bersih bulan ini',
-                                formatter: (value: number) => new Intl.NumberFormat('id-ID', {
-                                    style: 'currency',
-                                    currency: 'IDR',
-                                    minimumFractionDigits: 0
-                                }).format(value ?? 0)
-                            }
-                        ].map((stat, index) => {
+                        {roleBasedStats.map((stat, index) => {
                             const Icon = stat.icon
                             return (
-                                <div
+                                <motion.div
                                     key={stat.label}
-                                    className="p-6 rounded-xl border hover:shadow-lg transition-all duration-300 group relative"
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.4, delay: index * 0.1 }}
+                                    className="p-4 md:p-6 rounded-xl border hover:shadow-lg transition-all duration-300 group relative"
                                     style={{
                                         backgroundColor: colors.card,
                                         borderColor: colors.border + '30'
                                     }}
                                 >
-                                    {/* Loading Overlay */}
                                     {isStatsLoading && (
                                         <div className="absolute inset-0 bg-white bg-opacity-50 rounded-xl flex items-center justify-center z-10">
                                             <div className="w-6 h-6 border-2 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
@@ -721,74 +980,79 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
                                     >
                                         {stat.description}
                                     </div>
-                                </div>
+                                </motion.div>
                             )
                         })}
                     </motion.div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        {/* Quick Actions */}
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.6, delay: 0.2 }}
-                            className="lg:col-span-2"
-                        >
-                            <div
-                                className="p-6 rounded-xl border"
-                                style={{
-                                    backgroundColor: colors.card,
-                                    borderColor: colors.border + '30'
-                                }}
+                    <div className={`grid gap-4 md:gap-6 ${quickActions.length > 0 ? 'grid-cols-1 xl:grid-cols-3' : 'grid-cols-1'}`}>
+                        {quickActions.length > 0 && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.6, delay: 0.2 }}
+                                className="xl:col-span-2"
                             >
-                                <h3
-                                    className="text-xl font-bold mb-6"
+                                <div
+                                    className="p-4 md:p-6 rounded-xl border"
                                     style={{
-                                        color: colors.cardText,
-                                        fontFamily: 'var(--font-header-modern)'
+                                        backgroundColor: colors.card,
+                                        borderColor: colors.border + '30'
                                     }}
                                 >
-                                    Aksi Cepat
-                                </h3>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    {quickActions.map((action, index) => {
-                                        const Icon = action.icon
-                                        return (
-                                            <button
-                                                key={action.title}
-                                                onClick={action.action}
-                                                className="p-4 rounded-lg border-2 border-dashed transition-all duration-200 hover:border-solid hover:shadow-md hover:scale-105"
-                                                style={{
-                                                    borderColor: action.color + '40',
-                                                    color: action.color
-                                                }}
-                                            >
-                                                <div className="flex items-center space-x-3">
-                                                    <Icon size={20} />
-                                                    <span className="font-medium">{action.title}</span>
-                                                </div>
-                                            </button>
-                                        )
-                                    })}
+                                    <h3
+                                        className="text-lg md:text-xl font-bold mb-4 md:mb-6"
+                                        style={{
+                                            color: colors.cardText,
+                                            fontFamily: 'var(--font-header-modern)'
+                                        }}
+                                    >
+                                        Aksi Cepat
+                                    </h3>
+                                    <div className={`grid gap-3 md:gap-4 ${quickActions.length === 1 ? 'grid-cols-1 max-w-sm' :
+                                        quickActions.length === 2 ? 'grid-cols-1 sm:grid-cols-2' :
+                                            quickActions.length === 3 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' :
+                                                'grid-cols-1 sm:grid-cols-2'
+                                        }`}>
+                                        {quickActions.map((action, index) => {
+                                            const Icon = action.icon
+                                            return (
+                                                <button
+                                                    key={action.title}
+                                                    onClick={action.action}
+                                                    className="p-3 md:p-4 rounded-lg border-2 border-dashed transition-all duration-200 hover:border-solid hover:shadow-md hover:scale-105 text-left"
+                                                    style={{
+                                                        borderColor: action.color + '40',
+                                                        color: action.color
+                                                    }}
+                                                >
+                                                    <div className="flex items-center space-x-3">
+                                                        <Icon size={18} className="flex-shrink-0" />
+                                                        <span className="font-medium text-sm md:text-base">{action.title}</span>
+                                                    </div>
+                                                </button>
+                                            )
+                                        })}
+                                    </div>
                                 </div>
-                            </div>
-                        </motion.div>
+                            </motion.div>
+                        )}
 
-                        {/* Recent Activity */}
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.6, delay: 0.3 }}
+                            className={`${quickActions.length > 0 ? '' : 'max-w-2xl mx-auto'}`}
                         >
                             <div
-                                className="p-6 rounded-xl border"
+                                className="p-4 md:p-6 rounded-xl border"
                                 style={{
                                     backgroundColor: colors.card,
                                     borderColor: colors.border + '30'
                                 }}
                             >
                                 <h3
-                                    className="text-xl font-bold mb-6"
+                                    className="text-lg md:text-xl font-bold mb-4 md:mb-6"
                                     style={{
                                         color: colors.cardText,
                                         fontFamily: 'var(--font-header-modern)'
@@ -796,19 +1060,19 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
                                 >
                                     Aktivitas Terbaru
                                 </h3>
-                                <div className="space-y-4">
+                                <div className="space-y-3 md:space-y-4">
                                     {recentActivities.length > 0 ? (
                                         recentActivities.slice(0, 5).map((activity: AdminActivity) => {
                                             const Icon = getActivityIcon(activity.resource)
                                             return (
                                                 <div key={activity.id} className="flex items-start space-x-3">
                                                     <div
-                                                        className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                                                        className="w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center flex-shrink-0"
                                                         style={{
                                                             backgroundColor: getActivityStatusColor(activity.status) + '20'
                                                         }}
                                                     >
-                                                        <Icon size={14} style={{
+                                                        <Icon size={12} className="md:w-3.5 md:h-3.5" style={{
                                                             color: getActivityStatusColor(activity.status)
                                                         }} />
                                                     </div>
@@ -825,7 +1089,7 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
                                                         >
                                                             {activity.action} • {activity.userName}
                                                         </div>
-                                                        <div className="flex items-center space-x-2 mt-1">
+                                                        <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2 mt-1">
                                                             <span
                                                                 className="text-xs"
                                                                 style={{ color: colors.detail }}
@@ -833,7 +1097,7 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
                                                                 {formatActivityTimestamp(activity.timestamp)}
                                                             </span>
                                                             <span
-                                                                className="px-2 py-0.5 rounded-full text-xs font-medium"
+                                                                className="px-2 py-0.5 rounded-full text-xs font-medium inline-block mt-1 sm:mt-0"
                                                                 style={{
                                                                     backgroundColor: getActivityStatusColor(activity.status) + '20',
                                                                     color: getActivityStatusColor(activity.status)
@@ -847,12 +1111,12 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
                                             )
                                         })
                                     ) : (
-                                        <div className="text-center py-8">
+                                        <div className="text-center py-6 md:py-8">
                                             <div
-                                                className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+                                                className="w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4"
                                                 style={{ backgroundColor: colors.detail + '20' }}
                                             >
-                                                <FaFileAlt size={24} style={{ color: colors.detail }} />
+                                                <FaFileAlt size={20} className="md:w-6 md:h-6" style={{ color: colors.detail }} />
                                             </div>
                                             <div
                                                 className="text-sm font-medium mb-1"

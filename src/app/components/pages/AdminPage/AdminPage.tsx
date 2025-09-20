@@ -1,8 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAdminAuthentication } from '../../hooks/useAdmin'
-import { useAdminAuth } from '../../stores/adminStore'
+import { useAdminAuthentication } from '../../../hooks/useAdmin'
 import AdminLoginPage from './AdminLoginPage'
 import AdminHomePage from './AdminHomePage'
 

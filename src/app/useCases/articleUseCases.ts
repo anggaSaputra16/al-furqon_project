@@ -2,9 +2,7 @@ import { articleRepository, AdminArticle, CreateArticleRequest, UpdateArticleReq
 import { PaginatedResponse } from '../types/adminResponseTypes'
 
 class ArticleUseCases {
-    /**
-     * Get articles with comprehensive filtering and error handling
-     */
+
     async getArticles(request?: GetArticlesRequest): Promise<PaginatedResponse<AdminArticle> | null> {
         try {
             return await articleRepository.getArticlesWithFallback(request)
@@ -14,9 +12,7 @@ class ArticleUseCases {
         }
     }
 
-    /**
-     * Get article by ID with error handling
-     */
+
     async getArticleById(id: string): Promise<AdminArticle | null> {
         try {
             const response = await articleRepository.getArticleById(id)
@@ -27,17 +23,11 @@ class ArticleUseCases {
         }
     }
 
-    /**
-     * Create new article with validation
-     */
     async createArticle(request: CreateArticleRequest): Promise<AdminArticle | null> {
         try {
-            // Validate required fields
             if (!request.title || !request.description || !request.content) {
                 throw new Error('Title, description, and content are required')
             }
-
-            // Generate slug from title if not provided
             const slug = this.generateSlug(request.title)
             
             const response = await articleRepository.createArticle({
@@ -56,9 +46,6 @@ class ArticleUseCases {
         }
     }
 
-    /**
-     * Update existing article with validation
-     */
     async updateArticle(request: UpdateArticleRequest): Promise<AdminArticle | null> {
         try {
             if (!request.id) {
@@ -78,9 +65,7 @@ class ArticleUseCases {
         }
     }
 
-    /**
-     * Delete article with confirmation
-     */
+
     async deleteArticle(id: string): Promise<boolean> {
         try {
             if (!id) {
@@ -95,9 +80,6 @@ class ArticleUseCases {
         }
     }
 
-    /**
-     * Bulk delete articles
-     */
     async bulkDeleteArticles(ids: string[]): Promise<number> {
         try {
             if (!ids || ids.length === 0) {
@@ -112,9 +94,6 @@ class ArticleUseCases {
         }
     }
 
-    /**
-     * Toggle featured status
-     */
     async toggleFeatured(id: string): Promise<AdminArticle | null> {
         try {
             if (!id) {
@@ -129,9 +108,6 @@ class ArticleUseCases {
         }
     }
 
-    /**
-     * Duplicate article
-     */
     async duplicateArticle(id: string): Promise<AdminArticle | null> {
         try {
             if (!id) {
@@ -146,9 +122,6 @@ class ArticleUseCases {
         }
     }
 
-    /**
-     * Get article statistics
-     */
     async getArticleStats(): Promise<{
         total: number
         published: number
@@ -158,7 +131,7 @@ class ArticleUseCases {
         featuredCount: number
     } | null> {
         try {
-            const allArticles = await this.getArticles({ limit: 1000 }) // Get all articles
+            const allArticles = await this.getArticles({ limit: 1000 })
             
             if (!allArticles || !allArticles.data) {
                 return null
@@ -180,15 +153,12 @@ class ArticleUseCases {
         }
     }
 
-    /**
-     * Get available categories from existing articles
-     */
     async getCategories(): Promise<string[]> {
         try {
             const articles = await this.getArticles({ limit: 1000 })
             
             if (!articles || !articles.data) {
-                return ['Kajian', 'Pengumuman', 'Kegiatan', 'Berita', 'Program'] // Default categories
+                return ['Kajian', 'Pengumuman', 'Kegiatan', 'Berita', 'Program'] 
             }
 
             const categories = [...new Set(articles.data.map(a => a.category).filter(Boolean))]
@@ -199,9 +169,6 @@ class ArticleUseCases {
         }
     }
 
-    /**
-     * Get popular tags from existing articles
-     */
     async getPopularTags(limit: number = 20): Promise<string[]> {
         try {
             const articles = await this.getArticles({ limit: 1000 })
@@ -228,21 +195,15 @@ class ArticleUseCases {
         }
     }
 
-    /**
-     * Generate URL-friendly slug from title
-     */
     private generateSlug(title: string): string {
         return title
             .toLowerCase()
-            .replace(/[^\w\s-]/g, '') // Remove special characters
-            .replace(/\s+/g, '-') // Replace spaces with hyphens
-            .replace(/-+/g, '-') // Replace multiple hyphens with single
+            .replace(/[^\w\s-]/g, '')
+            .replace(/\s+/g, '-')
+            .replace(/-+/g, '-')
             .trim()
     }
 
-    /**
-     * Validate article data
-     */
     validateArticleData(data: Partial<CreateArticleRequest>): {
         isValid: boolean
         errors: string[]
@@ -279,9 +240,6 @@ class ArticleUseCases {
         }
     }
 
-    /**
-     * Check if URL is valid
-     */
     private isValidUrl(url: string): boolean {
         try {
             new URL(url)
@@ -291,9 +249,6 @@ class ArticleUseCases {
         }
     }
 
-    /**
-     * Format article for display
-     */
     formatArticleForDisplay(article: AdminArticle) {
         return {
             ...article,
@@ -305,15 +260,13 @@ class ArticleUseCases {
             shortDescription: article.description.length > 100 
                 ? article.description.substring(0, 100) + '...'
                 : article.description,
-            readTime: Math.ceil(article.content.split(' ').length / 200), // Assume 200 WPM reading speed
+            readTime: Math.ceil(article.content.split(' ').length / 200),
             statusColor: this.getStatusColor(article.status),
             statusText: this.getStatusText(article.status)
         }
     }
 
-    /**
-     * Get status color
-     */
+
     private getStatusColor(status: string): string {
         switch (status) {
             case 'published': return '#10b981'
@@ -323,9 +276,6 @@ class ArticleUseCases {
         }
     }
 
-    /**
-     * Get status text
-     */
     private getStatusText(status: string): string {
         switch (status) {
             case 'published': return 'Dipublikasi'

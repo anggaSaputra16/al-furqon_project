@@ -24,7 +24,7 @@ export const useGuideStore = create<GuideStore>((set) => ({
       set({ cards: data })
     } catch (error) {
       console.warn('Failed to fetch guide cards, using empty array:', error)
-      set({ cards: [] }) // Set empty array as fallback
+      set({ cards: [] }) 
     }
   },
 }))

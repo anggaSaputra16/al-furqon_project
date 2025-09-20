@@ -3,9 +3,6 @@ import { useArticleStore, useArticleActions, useArticleOperations } from '../sto
 import { articleUseCases } from '../useCases/articleUseCases'
 import { AdminArticle, CreateArticleRequest, UpdateArticleRequest, GetArticlesRequest } from '../repositories/articleRepository'
 
-/**
- * Main hook for article management
- */
 export const useArticles = () => {
     const {
         articles,
@@ -44,19 +41,16 @@ export const useArticles = () => {
         setDeleting
     } = useArticleOperations()
 
-    // Load articles with current filters
     const loadArticles = useCallback(async (forceRefresh = false) => {
         try {
             setError(null)
             setLoading(true)
 
-            // Get current state without subscription
             const currentArticles = useArticleStore.getState().articles
             const currentFilters = useArticleStore.getState().filters
             const currentPagination = useArticleStore.getState().pagination
             const isCurrentDataFresh = useArticleStore.getState().isDataFresh
 
-            // Check if we need to refresh data
             const shouldRefresh = forceRefresh || !isCurrentDataFresh() || currentArticles.length === 0
 
             if (!shouldRefresh && currentArticles.length > 0) {
@@ -66,7 +60,7 @@ export const useArticles = () => {
 
             const request: GetArticlesRequest = {
                 page: currentPagination?.page || 1,
-                limit: 12, // Show 12 articles per page
+                limit: 12, 
                 search: currentFilters.search || undefined,
                 status: currentFilters.status !== 'all' ? currentFilters.status : undefined,
                 category: currentFilters.category || undefined,
@@ -87,15 +81,15 @@ export const useArticles = () => {
         } finally {
             setLoading(false)
         }
-    }, [setArticles, setError, setLoading]) // Remove problematic dependencies
+    }, [setArticles, setError, setLoading])
 
-    // Create new article
+
     const createArticle = useCallback(async (data: CreateArticleRequest): Promise<AdminArticle | null> => {
         try {
             setError(null)
             setCreating(true)
 
-            // Validate data
+
             const validation = articleUseCases.validateArticleData(data)
             if (!validation.isValid) {
                 throw new Error(validation.errors.join(', '))
@@ -119,7 +113,7 @@ export const useArticles = () => {
         }
     }, [addArticle, setCreating, setError, setCurrentView])
 
-    // Update existing article
+
     const updateExistingArticle = useCallback(async (data: UpdateArticleRequest): Promise<AdminArticle | null> => {
         try {
             setError(null)
@@ -147,7 +141,7 @@ export const useArticles = () => {
         }
     }, [updateArticle, setUpdating, setError, setCurrentView])
 
-    // Delete article
+
     const deleteArticle = useCallback(async (id: string): Promise<boolean> => {
         try {
             setError(null)
@@ -170,7 +164,7 @@ export const useArticles = () => {
         }
     }, [removeArticle, setDeleting, setError])
 
-    // Toggle featured status
+
     const toggleFeatured = useCallback(async (id: string): Promise<boolean> => {
         try {
             setError(null)
@@ -190,7 +184,7 @@ export const useArticles = () => {
         }
     }, [updateArticle, setError])
 
-    // Load categories and tags
+
     const loadMetadata = useCallback(async () => {
         try {
             const [categoriesResult, tagsResult] = await Promise.all([
@@ -205,17 +199,17 @@ export const useArticles = () => {
         }
     }, [])
 
-    // Handle filter changes
+
     const handleFilterChange = useCallback((newFilters: Partial<typeof filters>) => {
         setFilters(newFilters)
     }, [setFilters])
 
-    // Handle pagination
+
     const handlePageChange = useCallback((page: number) => {
         setFilters({ ...filters, page } as any)
     }, [filters, setFilters])
 
-    // Auto-load articles when component mounts or filters change
+
     useEffect(() => {
         let isCancelled = false
         
@@ -224,13 +218,13 @@ export const useArticles = () => {
                 setError(null)
                 setLoading(true)
 
-                // Get current state without subscription
+
                 const currentArticles = useArticleStore.getState().articles
                 const currentFilters = useArticleStore.getState().filters
                 const currentPagination = useArticleStore.getState().pagination
                 const isCurrentDataFresh = useArticleStore.getState().isDataFresh
 
-                // Check if we need to refresh data
+
                 const shouldRefresh = !isCurrentDataFresh() || currentArticles.length === 0
 
                 if (!shouldRefresh && currentArticles.length > 0) {
@@ -270,9 +264,9 @@ export const useArticles = () => {
         return () => {
             isCancelled = true
         }
-    }, [setArticles, setError, setLoading]) // Remove filters dependency
+    }, [setArticles, setError, setLoading])
 
-    // Load metadata on mount only
+
     useEffect(() => {
         let isCancelled = false
         
@@ -283,11 +277,6 @@ export const useArticles = () => {
                     articleUseCases.getPopularTags(20)
                 ])
 
-                if (!isCancelled) {
-                    // Update store with metadata if needed
-                    console.log('Categories loaded:', categoriesResult)
-                    console.log('Tags loaded:', tagsResult)
-                }
             } catch (err: any) {
                 if (!isCancelled) {
                     console.error('Error loading metadata:', err)
@@ -300,17 +289,17 @@ export const useArticles = () => {
         return () => {
             isCancelled = true
         }
-    }, []) // Empty dependency array - load once on mount
+    }, [])
 
     return {
-        // Data
+
         articles,
         pagination,
         selectedArticle,
         categories,
         popularTags,
         
-        // State
+
         isLoading,
         isCreating,
         isUpdating,
@@ -319,14 +308,14 @@ export const useArticles = () => {
         filters,
         currentView,
         
-        // Actions
+
         loadArticles,
         createArticle,
         updateArticle: updateExistingArticle,
         deleteArticle,
         toggleFeatured,
         
-        // UI Actions
+
         setSelectedArticle,
         setCurrentView,
         handleFilterChange,
@@ -334,15 +323,11 @@ export const useArticles = () => {
         resetFilters,
         clearError,
         
-        // Utils
         refreshData: () => loadArticles(true),
         formatArticle: articleUseCases.formatArticleForDisplay
     }
 }
 
-/**
- * Hook for article form management
- */
 export const useArticleForm = (initialData?: AdminArticle) => {
     const { createArticle, updateArticle } = useArticles()
     const { isCreating, isUpdating } = useArticleOperations()
@@ -350,13 +335,12 @@ export const useArticleForm = (initialData?: AdminArticle) => {
     const handleSave = useCallback(async (data: Partial<AdminArticle>) => {
         try {
             if (initialData?.id) {
-                // Update existing article
                 return await updateArticle({
                     id: initialData.id,
                     ...data
                 } as UpdateArticleRequest)
             } else {
-                // Create new article
+
                 return await createArticle(data as CreateArticleRequest)
             }
         } catch (error) {
@@ -376,9 +360,6 @@ export const useArticleForm = (initialData?: AdminArticle) => {
     }
 }
 
-/**
- * Hook for article statistics
- */
 export const useArticleStats = () => {
     const { articles } = useArticles()
 

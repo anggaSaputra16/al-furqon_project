@@ -24,7 +24,6 @@ export default function FasilitasPage() {
   const { search } = useSearchStore()
   const { menus, fetchMenus } = useMenuStore()
   const [showScrollToTop, setShowScrollToTop] = useState(false)
-  const [selectedArticle, setSelectedArticle] = useState<string | null>(null)
 
   useEffect(() => {
     fetchMenus()
@@ -63,9 +62,6 @@ export default function FasilitasPage() {
     }
   })
 
-  const introArticle = articles.find(
-    (a) => a.category === 'fasilitas' && a.mode === 'detail'
-  )
 
   const filteredArticles = articles.filter((article) => {
     const searchWords = search.toLowerCase().split(' ').filter(Boolean)

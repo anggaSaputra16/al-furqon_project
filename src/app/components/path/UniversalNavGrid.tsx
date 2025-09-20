@@ -29,13 +29,12 @@ export default function UniversalNavGrid({
   const [isVisible, setIsVisible] = useState(true)
   const [isMobile, setIsMobile] = useState(false)
 
-  // Update mobile state on resize
   useEffect(() => {
     const updateMobileState = () => {
       setIsMobile(window.innerWidth < 768)
     }
 
-    updateMobileState() // Call once on mount
+    updateMobileState()
     window.addEventListener('resize', updateMobileState, { passive: true })
     return () => window.removeEventListener('resize', updateMobileState)
   }, [])
@@ -49,7 +48,6 @@ export default function UniversalNavGrid({
           const currentScrollY = window.scrollY
           setScrollY(currentScrollY)
 
-          // Simplified show/hide logic
           if (currentScrollY > 150) {
             setIsVisible(false)
           } else {
@@ -66,7 +64,6 @@ export default function UniversalNavGrid({
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  // Determine if we should show compact mode - only for mobile
   const isCompact = variant === 'compact' && isMobile
 
   return (
@@ -124,7 +121,6 @@ export default function UniversalNavGrid({
                     backdropFilter: shouldShowCompact ? 'blur(10px)' : 'none'
                   }}
                 >
-                  {/* Icon */}
                   <div
                     className={clsx(
                       'transition-all duration-300 flex items-center justify-center',
@@ -137,7 +133,6 @@ export default function UniversalNavGrid({
                     {item.icon}
                   </div>
 
-                  {/* Title - always show on desktop, conditional on mobile */}
                   {!shouldShowCompact && (
                     <span
                       className="text-xs sm:text-sm md:text-base font-medium text-center leading-tight transition-colors duration-300 px-1"
@@ -150,7 +145,6 @@ export default function UniversalNavGrid({
                     </span>
                   )}
 
-                  {/* Tooltip for compact mode */}
                   {shouldShowCompact && (
                     <div
                       className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50"

@@ -1,4 +1,4 @@
-// Admin Authentication Request Types
+
 export interface AdminLoginRequest {
   username: string
   password: string
@@ -19,7 +19,7 @@ export interface AdminChangePasswordRequest {
   confirmPassword: string
 }
 
-// Admin User Management Request Types
+
 export interface CreateAdminUserRequest {
   username: string
   email: string
@@ -43,7 +43,7 @@ export interface DeleteAdminUserRequest {
   id: string
 }
 
-// Admin Profile Request Types
+
 export interface UpdateAdminProfileRequest {
   name: string
   email: string
@@ -51,7 +51,7 @@ export interface UpdateAdminProfileRequest {
   avatar?: File
 }
 
-// Admin Activity Log Request Types
+
 export interface GetAdminActivityLogsRequest {
   page?: number
   limit?: number
@@ -61,18 +61,18 @@ export interface GetAdminActivityLogsRequest {
   action?: string
 }
 
-// Admin Dashboard Stats Request Types
+
 export interface GetAdminStatsRequest {
   period?: 'day' | 'week' | 'month' | 'year'
   startDate?: string
   endDate?: string
 }
 
-// Dashboard Stats Request Types
+
 export interface GetDashboardStatsRequest {
   dateRange?: {
-    startDate: string // ISO date string
-    endDate: string   // ISO date string
+    startDate: string
+    endDate: string
   }
   includeCharts?: boolean
   includeTopArticles?: boolean
@@ -90,7 +90,7 @@ export interface GetDashboardChartsRequest {
   metrics?: ('articles' | 'donations' | 'views' | 'revenue' | 'users')[]
 }
 
-// Admin Bulk Operations Request Types
+
 export interface BulkDeleteRequest {
   ids: string[]
 }
@@ -100,7 +100,7 @@ export interface BulkUpdateStatusRequest {
   status: 'active' | 'inactive' | 'pending'
 }
 
-// Admin Settings Request Types
+
 export interface UpdateAdminSettingsRequest {
   siteName?: string
   siteDescription?: string
@@ -116,7 +116,7 @@ export interface UpdateAdminSettingsRequest {
   smsNotifications?: boolean
 }
 
-// Admin Security Settings Request Types
+
 export interface UpdateSecuritySettingsRequest {
   sessionTimeout?: number
   passwordMinLength?: number

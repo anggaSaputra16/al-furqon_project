@@ -9,7 +9,7 @@ import {
     ApiResponse 
 } from '../types/adminResponseTypes'
 
-// Base API configuration
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
 const API_VERSION = '/api/v1'
 
@@ -24,7 +24,7 @@ class DashboardRepository {
         }
     }
 
-    // Helper method to get auth headers
+
     private getAuthHeaders(): HeadersInit {
         const token = localStorage.getItem('admin_auth')
         const parsedToken = token ? JSON.parse(token) : null
@@ -35,14 +35,14 @@ class DashboardRepository {
         }
     }
 
-    // Generic API request method
+
     private async makeRequest<T>(
         method: 'GET' | 'POST' | 'PUT' | 'DELETE',
         endpoint: string,
         body?: any
     ): Promise<T> {
         const controller = new AbortController()
-        const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+        const timeoutId = setTimeout(() => controller.abort(), 10000)
 
         try {
             const response = await fetch(`${this.baseUrl}${endpoint}`, {
@@ -77,9 +77,6 @@ class DashboardRepository {
         SUMMARY: '/admin/dashboard/summary'
     } as const
 
-    /**
-     * Get comprehensive dashboard statistics
-     */
     async getDashboardStats(request?: GetDashboardStatsRequest): Promise<ApiResponse<DashboardStatsResponse>> {
         try {
             const params = new URLSearchParams()
@@ -128,9 +125,6 @@ class DashboardRepository {
         }
     }
 
-    /**
-     * Get dashboard charts data
-     */
     async getDashboardCharts(request: GetDashboardChartsRequest): Promise<ApiResponse<DashboardChartsData>> {
         try {
             const params = new URLSearchParams()
@@ -160,9 +154,6 @@ class DashboardRepository {
         }
     }
 
-    /**
-     * Get quick dashboard summary (lightweight version)
-     */
     async getDashboardSummary(): Promise<ApiResponse<Partial<DashboardStatsResponse>>> {
         try {
             const response = await this.makeRequest<Partial<DashboardStatsResponse>>('GET', this.DASHBOARD_ENDPOINTS.SUMMARY)
@@ -179,9 +170,6 @@ class DashboardRepository {
         }
     }
 
-    /**
-     * Get real-time activity data
-     */
     async getRealtimeActivity(): Promise<ApiResponse<{
         onlineUsers: number
         todayViews: number
@@ -220,9 +208,6 @@ class DashboardRepository {
         }
     }
 
-    /**
-     * Refresh dashboard cache (force update)
-     */
     async refreshDashboardCache(): Promise<ApiResponse<{ message: string }>> {
         try {
             const response = await this.makeRequest<{ message: string }>('POST', `${this.DASHBOARD_ENDPOINTS.STATS}/refresh`)
@@ -239,9 +224,6 @@ class DashboardRepository {
         }
     }
 
-    /**
-     * Get dashboard stats with fallback to mock data
-     */
     async getDashboardStatsWithFallback(request?: GetDashboardStatsRequest): Promise<DashboardStatsResponse> {
         try {
             const response = await this.getDashboardStats(request)
@@ -255,9 +237,6 @@ class DashboardRepository {
         }
     }
 
-    /**
-     * Mock dashboard stats for development/fallback
-     */
     private getMockDashboardStats(): DashboardStatsResponse {
         return {
             totalArticles: 45,
@@ -339,6 +318,6 @@ class DashboardRepository {
     }
 }
 
-// Export singleton instance
+
 export const dashboardRepository = new DashboardRepository()
 export default dashboardRepository

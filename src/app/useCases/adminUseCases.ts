@@ -18,7 +18,7 @@ import {
 } from '../types/adminResponseTypes'
 
 class AdminUseCases {
-  // Safe localStorage utilities
+
   private safeLocalStorage = {
     getItem: (key: string): string | null => {
       try {
@@ -34,7 +34,7 @@ class AdminUseCases {
           localStorage.setItem(key, value)
         }
       } catch {
-        // Silently fail
+
       }
     },
     removeItem: (key: string): void => {
@@ -43,12 +43,12 @@ class AdminUseCases {
           localStorage.removeItem(key)
         }
       } catch {
-        // Silently fail
+
       }
     }
   }
 
-  // Authentication Use Cases
+
   async login(credentials: AdminLoginRequest): Promise<{
     success: boolean
     user?: AdminUser
@@ -59,7 +59,7 @@ class AdminUseCases {
       const response = await adminRepository.login(credentials)
       
       if (response.success && response.data) {
-        // Store authentication data
+
         const authData = {
           token: response.data.token,
           refreshToken: response.data.refreshToken,
@@ -97,14 +97,14 @@ class AdminUseCases {
         await adminRepository.logout({ token })
       }
       
-      // Clear local storage
+
       this.safeLocalStorage.removeItem('admin_auth')
       this.safeLocalStorage.removeItem('admin_user')
       
       return true
     } catch (error) {
       console.error('Logout use case error:', error)
-      // Clear local storage even if API call fails
+
       this.safeLocalStorage.removeItem('admin_auth')
       this.safeLocalStorage.removeItem('admin_user')
       return false
@@ -139,17 +139,14 @@ class AdminUseCases {
 
   async getCurrentUser(): Promise<AdminUser | null> {
     try {
-      // Don't make API call if no token available
       const authData = this.safeLocalStorage.getItem('admin_auth')
       if (!authData) {
-        console.log('No auth data available for getCurrentUser')
         return null
       }
 
       const response = await adminRepository.getCurrentUser()
       
       if (response.success && response.data) {
-        // Update stored user data
         this.safeLocalStorage.setItem('admin_user', JSON.stringify(response.data))
         return response.data
       }
@@ -157,7 +154,6 @@ class AdminUseCases {
       return null
     } catch (error) {
       console.error('Get current user use case error:', error)
-      // Clear invalid auth data on error
       if (error instanceof Error && error.message.includes('Unauthorized')) {
         this.safeLocalStorage.removeItem('admin_auth')
         this.safeLocalStorage.removeItem('admin_user')
@@ -193,7 +189,7 @@ class AdminUseCases {
     }
   }
 
-  // Dashboard Use Cases
+
   async getDashboardStats(request?: GetAdminStatsRequest): Promise<AdminDashboardStats | null> {
     try {
       const response = await adminRepository.getDashboardStats(request)
@@ -209,7 +205,7 @@ class AdminUseCases {
     }
   }
 
-  // User Management Use Cases
+
   async getAdminUsers(page = 1, limit = 10): Promise<AdminUserListResponse | null> {
     try {
       const response = await adminRepository.getAdminUsers(page, limit)
@@ -231,7 +227,7 @@ class AdminUseCases {
     message: string
   }> {
     try {
-      // Validate request
+
       if (!request.username || !request.email || !request.password) {
         return {
           success: false,
@@ -297,7 +293,7 @@ class AdminUseCases {
     }
   }
 
-  // Profile Management Use Cases
+
   async updateProfile(request: UpdateAdminProfileRequest): Promise<{
     success: boolean
     user?: AdminUser
@@ -307,7 +303,7 @@ class AdminUseCases {
       const response = await adminRepository.updateProfile(request)
       
       if (response.success && response.data) {
-        // Update stored user data
+
         this.safeLocalStorage.setItem('admin_user', JSON.stringify(response.data))
       }
       
@@ -325,7 +321,7 @@ class AdminUseCases {
     }
   }
 
-  // Settings Use Cases
+
   async getSettings(): Promise<AdminSettingsResponse | null> {
     try {
       const response = await adminRepository.getSettings()
@@ -383,15 +379,15 @@ class AdminUseCases {
     }
   }
 
-  // File Upload Use Cases
+  
   async uploadFile(file: File, folder?: string): Promise<{
     success: boolean
     url?: string
     message: string
   }> {
     try {
-      // Validate file
-      const maxSize = 5 * 1024 * 1024 // 5MB
+
+      const maxSize = 5 * 1024 * 1024
       if (file.size > maxSize) {
         return {
           success: false,
@@ -423,10 +419,10 @@ class AdminUseCases {
     }
   }
 
-  // Utility Methods
+
   isAuthenticated(): boolean {
     try {
-      // Check if we're in browser environment
+
       if (typeof window === 'undefined') return false
       
       const authData = this.safeLocalStorage.getItem('admin_auth')
@@ -441,7 +437,7 @@ class AdminUseCases {
 
   getStoredUser(): AdminUser | null {
     try {
-      // Check if we're in browser environment
+
       if (typeof window === 'undefined') return null
       
       const userData = this.safeLocalStorage.getItem('admin_user')
@@ -460,7 +456,7 @@ class AdminUseCases {
 
   async checkTokenExpiry(): Promise<boolean> {
     try {
-      // Check if we're in browser environment
+
       if (typeof window === 'undefined') return false
       
       const authData = this.safeLocalStorage.getItem('admin_auth')
@@ -470,7 +466,7 @@ class AdminUseCases {
       const now = new Date().getTime()
       const timeUntilExpiry = expires - now
       
-      // If token expires in less than 5 minutes, try to refresh
+
       if (timeUntilExpiry < 5 * 60 * 1000) {
         return await this.refreshToken()
       }
@@ -482,6 +478,6 @@ class AdminUseCases {
   }
 }
 
-// Export singleton instance
+
 export const adminUseCases = new AdminUseCases()
 export default adminUseCases

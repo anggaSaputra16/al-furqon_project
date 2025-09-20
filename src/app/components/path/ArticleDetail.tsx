@@ -20,10 +20,10 @@ export default function ArticleDetail({ articleId, showRelated = true }: Props) 
   const [imageError, setImageError] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
-  // Combine both data sources - prioritize featured articles (homepage data)
+
   const allArticles = featuredArticles.length > 0 ? featuredArticles : storeArticles
 
-  // Ensure articles are loaded
+
   useEffect(() => {
     const loadArticles = async () => {
       if (featuredArticles.length === 0 && storeArticles.length === 0) {
@@ -34,7 +34,7 @@ export default function ArticleDetail({ articleId, showRelated = true }: Props) 
     loadArticles()
   }, [featuredArticles.length, storeArticles.length, fetchArticles])
 
-  // Show loading state
+
   if (isLoading || featuredLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-16 space-y-4">
@@ -62,7 +62,7 @@ export default function ArticleDetail({ articleId, showRelated = true }: Props) 
     )
   }
 
-  // Handle different data structures between featuredArticles and storeArticles
+
   const safeTitle = article.title
   const safeContent = (article as any).content || (article as any).description || ''
   const safeImage = article.image || '/images/al-furqon.png'
@@ -81,7 +81,7 @@ export default function ArticleDetail({ articleId, showRelated = true }: Props) 
 
   const isImageLeft = imagePosition === 'left'
 
-  // Function to render content paragraphs safely
+
   const renderContent = () => {
     if (!safeContent) {
       return (

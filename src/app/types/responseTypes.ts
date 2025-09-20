@@ -1,6 +1,6 @@
-// ===== API Response Types =====
 
-// Base Response Structure
+
+
 export interface ApiResponse<T> {
   success: boolean
   message: string
@@ -13,7 +13,7 @@ export interface ApiResponse<T> {
   }
 }
 
-// Error Response
+
 export interface ApiError {
   success: false
   message: string
@@ -24,9 +24,7 @@ export interface ApiError {
   timestamp: string
 }
 
-// ===== Home Page Response Types =====
 
-// Article/Activity Response
 export interface ArticleResponse {
   id: string
   title: string
@@ -49,7 +47,6 @@ export interface ArticleResponse {
   featured: boolean
 }
 
-// Donation Program Response
 export interface DonationResponse {
   id: string
   title: string
@@ -81,7 +78,6 @@ export interface DonationResponse {
   }
 }
 
-// News Response
 export interface NewsResponse {
   id: string
   title: string
@@ -101,7 +97,7 @@ export interface NewsResponse {
   summary?: string
 }
 
-// Menu Navigation Response
+
 export interface MenuResponse {
   id: string
   title: string
@@ -114,7 +110,7 @@ export interface MenuResponse {
   description?: string
 }
 
-// Home Page Stats Response
+
 export interface HomeStatsResponse {
   totalDonations: {
     amount: number
@@ -136,7 +132,7 @@ export interface HomeStatsResponse {
   }
 }
 
-// ===== Combined Home Page Data Response =====
+
 export interface HomePageData {
   articles: ArticleResponse[]
   donations: DonationResponse[]
@@ -145,7 +141,7 @@ export interface HomePageData {
   stats: HomeStatsResponse
 }
 
-// ===== Pagination Response =====
+
 export interface PaginatedResponse<T> {
   data: T[]
   pagination: {

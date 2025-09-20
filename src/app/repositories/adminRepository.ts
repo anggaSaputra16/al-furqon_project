@@ -1,4 +1,3 @@
-import { ApiResponse, PaginatedResponse } from '../types/adminResponseTypes'
 import {
   AdminLoginRequest,
   AdminRefreshTokenRequest,
@@ -16,6 +15,7 @@ import {
   BulkUpdateStatusRequest
 } from '../types/adminRequestTypes'
 import {
+  ApiResponse,
   AdminLoginResponse,
   AdminRefreshTokenResponse,
   AdminUser,
@@ -30,13 +30,13 @@ import {
   AdminSystemInfo
 } from '../types/adminResponseTypes'
 
-// Base API configuration
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
 const API_VERSION = '/api/v1'
 
 class AdminRepository {
-  private baseUrl: string
-  private defaultHeaders: HeadersInit
+  private readonly baseUrl: string
+  private readonly defaultHeaders: HeadersInit
 
   constructor() {
     this.baseUrl = `${API_BASE_URL}${API_VERSION}`
@@ -45,7 +45,7 @@ class AdminRepository {
     }
   }
 
-  // Helper method to get auth headers
+
   private getAuthHeaders(): HeadersInit {
     const token = localStorage.getItem('admin_auth')
     if (token) {
@@ -58,13 +58,13 @@ class AdminRepository {
     return this.defaultHeaders
   }
 
-  // Helper method for API requests
+
   private async apiRequest<T>(
     endpoint: string,
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 10000)
 
     try {
       const response = await fetch(`${this.baseUrl}${endpoint}`, {
@@ -81,13 +81,13 @@ class AdminRepository {
       const data = await response.json()
       
       if (!response.ok) {
-        // For authentication endpoints, return the response data even if not ok
-        // This allows us to get the proper error message from the server
+
+
         if (response.status === 401 && endpoint.includes('/auth/')) {
-          return data // Return the actual response with error details
+          return data
         }
         
-        // Handle other HTTP errors by throwing
+
         if (response.status === 404) {
           throw new Error('Endpoint not found')
         } else if (response.status >= 500) {
@@ -113,7 +113,7 @@ class AdminRepository {
     }
   }
 
-  // Authentication Methods
+
   async login(request: AdminLoginRequest): Promise<ApiResponse<AdminLoginResponse>> {
     return this.apiRequest<AdminLoginResponse>('/admin/auth/login', {
       method: 'POST',
@@ -146,7 +146,7 @@ class AdminRepository {
     return this.apiRequest<AdminUser>('/admin/auth/me')
   }
 
-  // Dashboard Methods
+
   async getDashboardStats(request?: GetAdminStatsRequest): Promise<ApiResponse<AdminDashboardStats>> {
     const params = new URLSearchParams()
     if (request?.period) params.append('period', request.period)
@@ -157,7 +157,7 @@ class AdminRepository {
     return this.apiRequest<AdminDashboardStats>(`/admin/dashboard${query}`)
   }
 
-  // User Management Methods
+
   async getAdminUsers(page = 1, limit = 10): Promise<ApiResponse<AdminUserListResponse>> {
     return this.apiRequest<AdminUserListResponse>(`/admin/users?page=${page}&limit=${limit}`)
   }
@@ -200,7 +200,7 @@ class AdminRepository {
     })
   }
 
-  // Profile Management Methods
+
   async updateProfile(request: UpdateAdminProfileRequest): Promise<ApiResponse<AdminUser>> {
     const formData = new FormData()
     formData.append('name', request.name)
@@ -211,11 +211,11 @@ class AdminRepository {
     return this.apiRequest<AdminUser>('/admin/profile', {
       method: 'PUT',
       body: formData,
-      headers: {} // Remove Content-Type to let browser set it for FormData
+      headers: {}
     })
   }
 
-  // Settings Methods
+
   async getSettings(): Promise<ApiResponse<AdminSettingsResponse>> {
     return this.apiRequest<AdminSettingsResponse>('/admin/settings')
   }
@@ -247,12 +247,12 @@ class AdminRepository {
     })
   }
 
-  // Permissions & Roles Methods
+
   async getPermissions(): Promise<ApiResponse<AdminPermissionsResponse>> {
     return this.apiRequest<AdminPermissionsResponse>('/admin/permissions')
   }
 
-  // Activity Logs Methods
+
   async getActivityLogs(request?: GetAdminActivityLogsRequest): Promise<ApiResponse<AdminAuditLogsResponse>> {
     const params = new URLSearchParams()
     if (request?.page) params.append('page', String(request.page))
@@ -266,7 +266,7 @@ class AdminRepository {
     return this.apiRequest<AdminAuditLogsResponse>(`/admin/activity-logs${query}`)
   }
 
-  // File Upload Methods
+
   async uploadFile(file: File, folder?: string): Promise<ApiResponse<AdminFileUploadResponse>> {
     const formData = new FormData()
     formData.append('file', file)
@@ -279,7 +279,7 @@ class AdminRepository {
     })
   }
 
-  // Backup Methods
+
   async getBackups(page = 1, limit = 10): Promise<ApiResponse<AdminBackupsResponse>> {
     return this.apiRequest<AdminBackupsResponse>(`/admin/backups?page=${page}&limit=${limit}`)
   }
@@ -297,7 +297,7 @@ class AdminRepository {
     return response.blob()
   }
 
-  // System Info Methods
+
   async getSystemInfo(): Promise<ApiResponse<AdminSystemInfo>> {
     return this.apiRequest<AdminSystemInfo>('/admin/system/info')
   }
@@ -315,6 +315,6 @@ class AdminRepository {
   }
 }
 
-// Export singleton instance
+
 export const adminRepository = new AdminRepository()
 export default adminRepository

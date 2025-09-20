@@ -220,7 +220,6 @@ export default function AdminNotificationPage({ onBack }: AdminNotificationPageP
             </header>
 
             <div className="p-6">
-                {/* Filters */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -242,7 +241,6 @@ export default function AdminNotificationPage({ onBack }: AdminNotificationPageP
                                 </span>
                             </div>
 
-                            {/* Status Filter */}
                             <div className="flex items-center space-x-2">
                                 {['all', 'unread', 'read'].map((status) => (
                                     <button
@@ -259,7 +257,6 @@ export default function AdminNotificationPage({ onBack }: AdminNotificationPageP
                                 ))}
                             </div>
 
-                            {/* Category Filter */}
                             <div className="flex items-center space-x-2">
                                 {[
                                     { key: 'all', label: 'Semua Kategori' },
@@ -286,7 +283,6 @@ export default function AdminNotificationPage({ onBack }: AdminNotificationPageP
                     </div>
                 </motion.div>
 
-                {/* Notifications List */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -324,7 +320,6 @@ export default function AdminNotificationPage({ onBack }: AdminNotificationPageP
                                     } as React.CSSProperties}
                                 >
                                     <div className="flex items-start space-x-4">
-                                        {/* Type Icon */}
                                         <div
                                             className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
                                             style={{ backgroundColor: getTypeColor(notification.type) + '20' }}
@@ -332,7 +327,6 @@ export default function AdminNotificationPage({ onBack }: AdminNotificationPageP
                                             <TypeIcon size={18} style={{ color: getTypeColor(notification.type) }} />
                                         </div>
 
-                                        {/* Content */}
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-start justify-between">
                                                 <div className="flex-1">
@@ -379,7 +373,6 @@ export default function AdminNotificationPage({ onBack }: AdminNotificationPageP
                                                     </div>
                                                 </div>
 
-                                                {/* Actions */}
                                                 <div className="flex items-center space-x-2 ml-4">
                                                     {!notification.isRead && (
                                                         <button

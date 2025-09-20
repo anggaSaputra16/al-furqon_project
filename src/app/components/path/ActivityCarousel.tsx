@@ -27,7 +27,7 @@ interface ActivityCarouselProps {
 export default function ActivityCarousel({
   articles = [],
   autoplay = true,
-  autoplayInterval = 10000, // 10 seconds
+  autoplayInterval = 10000,
   onArticleClick
 }: ActivityCarouselProps) {
   const { colors } = useTheme()
@@ -38,17 +38,17 @@ export default function ActivityCarousel({
   const touchStartX = useRef<number | null>(null)
   const touchEndX = useRef<number | null>(null)
 
-  // Use latest 5 articles
+  
   const latestArticles = articles.slice(0, 5)
 
-  // Auto-play functionality
+
   useEffect(() => {
     if (!isAutoPlaying || latestArticles.length <= 1) return
 
     intervalRef.current = setInterval(() => {
       setDirection(1)
       setCurrentIndex((prevIndex) => {
-        // Same logic as goToNext for autoplay
+
         const isDesktop = window.innerWidth >= 768
         const maxIndex = isDesktop
           ? Math.max(0, latestArticles.length - 3)
@@ -74,11 +74,9 @@ export default function ActivityCarousel({
 
   const goToNext = () => {
     setDirection(1)
-    // For desktop: move by 1, for mobile: move through all articles
     const maxIndex = window.innerWidth >= 768
-      ? Math.max(0, latestArticles.length - 3) // Desktop: stop when showing last 3 articles
-      : latestArticles.length - 1 // Mobile: go through all articles
-
+      ? Math.max(0, latestArticles.length - 3)
+      : latestArticles.length - 1
     setCurrentIndex((prevIndex) => {
       const nextIndex = prevIndex + 1
       return nextIndex > maxIndex ? 0 : nextIndex
@@ -99,7 +97,7 @@ export default function ActivityCarousel({
     setIsAutoPlaying(false)
   }
 
-  // Touch/swipe handlers
+
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX
   }
@@ -130,15 +128,11 @@ export default function ActivityCarousel({
   const handleMouseLeave = () => setIsAutoPlaying(true)
 
   const formatDate = (dateString: string) => {
-    // Handle different date formats
     if (!dateString) return 'Tanggal tidak tersedia'
 
-    // Try to parse the date string
     let date: Date
 
-    // Check if it's already in DD Month YYYY format (Indonesian)
     if (dateString.includes(' ')) {
-      // For dates like "27 Mei 2025", we need to convert to valid format
       const monthMap: { [key: string]: string } = {
         'Januari': '01', 'Februari': '02', 'Maret': '03', 'April': '04',
         'Mei': '05', 'Juni': '06', 'Juli': '07', 'Agustus': '08',
@@ -158,12 +152,10 @@ export default function ActivityCarousel({
       date = new Date(dateString)
     }
 
-    // Check if date is valid
     if (isNaN(date.getTime())) {
-      return dateString // Return original string if can't parse
+      return dateString
     }
 
-    // Return short format for badge (DD MMM YYYY)
     return date.toLocaleDateString('id-ID', {
       day: '2-digit',
       month: 'short',
@@ -171,7 +163,6 @@ export default function ActivityCarousel({
     })
   }
 
-  // If no articles, show placeholder
   if (!latestArticles.length) {
     return (
       <div className="text-center py-8" style={{ color: colors.subheading }}>
@@ -186,7 +177,6 @@ export default function ActivityCarousel({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      {/* Mobile: Show 1 card at a time with smooth transition */}
       <div className="block md:hidden">
         <div
           className="relative overflow-hidden rounded-xl"
@@ -221,15 +211,13 @@ export default function ActivityCarousel({
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
                 >
-                  {/* Mobile Card Content */}
                   <div className="relative h-64 overflow-hidden">
                     <img
-                      src={article.image}
+                      src={article.image || '/images/placeholder.jpg'}
                       alt={article.title}
                       className="w-full h-full object-cover transition-transform duration-300"
                     />
 
-                    {/* Date Badge */}
                     {article.date && (
                       <div
                         className="absolute top-3 right-3 px-2 py-1 rounded-lg text-xs font-medium backdrop-blur-md"
@@ -260,7 +248,6 @@ export default function ActivityCarousel({
                   </div>
 
                   <div className="p-4">
-                    {/* Meta info - Remove date, keep author only */}
                     {article.author && (
                       <div className="flex items-center gap-1 mb-3 text-xs">
                         <div
@@ -273,7 +260,6 @@ export default function ActivityCarousel({
                       </div>
                     )}
 
-                    {/* Title */}
                     <h3
                       className="font-bold text-lg mb-2 line-clamp-2 leading-tight"
                       style={{
@@ -285,7 +271,6 @@ export default function ActivityCarousel({
                       {article.title}
                     </h3>
 
-                    {/* Description */}
                     <p
                       className="text-sm line-clamp-3 mb-4 leading-relaxed"
                       style={{
@@ -297,7 +282,6 @@ export default function ActivityCarousel({
                       {article.description || article.content || 'Tidak ada deskripsi tersedia.'}
                     </p>
 
-                    {/* Read more button */}
                     <button
                       onClick={() => onArticleClick?.(article.id)}
                       className="flex items-center gap-2 group transition-all duration-200 hover:gap-3 font-sharp-bold"
@@ -317,11 +301,8 @@ export default function ActivityCarousel({
             ))}
           </motion.div>
         </div>
-
-        {/* Mobile - No navigation arrows, users know to swipe */}
       </div>
 
-      {/* Desktop: Show multiple cards */}
       <div className="hidden md:block">
         <div className="relative overflow-hidden rounded-xl">
           <motion.div
@@ -346,15 +327,13 @@ export default function ActivityCarousel({
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
                 >
-                  {/* Desktop Card Content - same as before */}
                   <div className="relative h-48 md:h-56 overflow-hidden">
                     <img
-                      src={article.image}
+                      src={article.image || '/images/placeholder.jpg'}
                       alt={article.title}
                       className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                     />
 
-                    {/* Date Badge */}
                     {article.date && (
                       <div
                         className="absolute top-3 right-3 px-2 py-1 rounded-lg text-xs font-medium backdrop-blur-md"
@@ -385,7 +364,6 @@ export default function ActivityCarousel({
                   </div>
 
                   <div className="p-4 md:p-5">
-                    {/* Meta info - Remove date, keep author only */}
                     {article.author && (
                       <div className="flex items-center gap-1 mb-3 text-xs">
                         <div
@@ -398,7 +376,6 @@ export default function ActivityCarousel({
                       </div>
                     )}
 
-                    {/* Title */}
                     <h3
                       className="font-bold text-lg mb-2 line-clamp-2 leading-tight"
                       style={{
@@ -410,7 +387,6 @@ export default function ActivityCarousel({
                       {article.title}
                     </h3>
 
-                    {/* Description */}
                     <p
                       className="text-sm line-clamp-3 mb-4 leading-relaxed"
                       style={{
@@ -422,7 +398,6 @@ export default function ActivityCarousel({
                       {article.description || article.content || 'Tidak ada deskripsi tersedia.'}
                     </p>
 
-                    {/* Read more button */}
                     <button
                       onClick={() => onArticleClick?.(article.id)}
                       className="flex items-center gap-2 group transition-all duration-200 hover:gap-3 font-sharp-bold"
@@ -443,7 +418,6 @@ export default function ActivityCarousel({
           </motion.div>
         </div>
 
-        {/* Desktop Navigation Arrows */}
         {latestArticles.length > 3 && (
           <>
             <button
@@ -475,14 +449,12 @@ export default function ActivityCarousel({
         )}
       </div>
 
-      {/* Dots Pagination */}
       <div className="flex justify-center mt-6 gap-2">
-        {/* For desktop: show dots based on number of possible slides */}
         {(() => {
           const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768
           const totalDots = isDesktop
-            ? Math.max(1, latestArticles.length - 2) // Desktop: number of possible slide positions
-            : latestArticles.length // Mobile: one dot per article
+            ? Math.max(1, latestArticles.length - 2)
+            : latestArticles.length
 
           return Array.from({ length: totalDots }).map((_, index) => (
             <button
@@ -501,7 +473,6 @@ export default function ActivityCarousel({
         })()}
       </div>
 
-      {/* Mobile swipe indicators */}
       <div className="md:hidden text-center mt-4">
         <div className="flex items-center justify-center gap-2">
           <span
@@ -520,7 +491,6 @@ export default function ActivityCarousel({
           </div>
         </div>
 
-        {/* Auto-play progress indicator */}
         {isAutoPlaying && latestArticles.length > 1 && (
           <div className="mt-2 mx-auto w-16 h-1 bg-gray-200 rounded-full overflow-hidden">
             <motion.div

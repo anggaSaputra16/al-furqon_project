@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import UniversalNavGrid, { NavItem } from '../path/UniversalNavGrid'
-import { FaRoute, FaChevronUp } from 'react-icons/fa'
+import { FaRoute, FaChevronUp, FaHeart } from 'react-icons/fa'
 import { AnimatePresence, motion } from 'framer-motion'
 import Footer from '../path/Footer'
 import { CardData } from '../../layouts/CardLayout'
@@ -43,40 +43,7 @@ export default function HomePage() {
   const isInitialLoading = (articlesLoading || donationsLoading || newsLoading) &&
     !hasBackendArticles && !hasBackendDonations && !hasBackendNews
 
-  const activityCards = useMemo(() => {
-    // Only use backend data - no static fallback
-    if (!hasBackendArticles || !featuredArticles) {
-      return []
-    }
-
-    try {
-      return featuredArticles.map((article: any) => ({
-        id: article.id,
-        title: article.title,
-        description: article.description,
-        image: article.image,
-        category: 'kegiatan' as const,
-        size: article.featured ? 'large' as const : 'small' as const,
-        details: {
-          date: article.publishedAt,
-          author: article.author?.name || 'Admin',
-          views: article.views,
-          likes: article.likes
-        },
-        extra: {
-          content: article.content,
-          tags: article.tags,
-          slug: article.slug
-        }
-      }))
-    } catch (error) {
-      console.error('Error processing article data:', error)
-      return []
-    }
-  }, [hasBackendArticles, featuredArticles])
-
   const donationCards = useMemo(() => {
-    // Only use backend data - no static fallback
     if (!hasBackendDonations || !donationPrograms) {
       return []
     }
@@ -110,7 +77,6 @@ export default function HomePage() {
   }, [hasBackendDonations, donationPrograms])
 
   const upcomingCards = useMemo(() => {
-    // Only use backend data - no static fallback  
     if (!hasBackendNews || !latestNews) {
       return []
     }
@@ -333,6 +299,212 @@ export default function HomePage() {
 
           <HomeHeader />
 
+          <motion.section
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center space-y-8 py-12"
+          >
+            <div
+              className="rounded-3xl p-8 sm:p-12 space-y-6"
+              style={{
+                backgroundColor: colors.accent + '10',
+                border: `2px solid ${colors.accent}20`
+              }}
+            >
+              <h2
+                className="text-3xl sm:text-4xl font-bold"
+                style={{
+                  color: colors.heading,
+                  fontFamily: 'var(--font-header-masjid)',
+                  lineHeight: '1.2',
+                  letterSpacing: '-0.01em'
+                }}
+              >
+                Visi Masa Depan
+              </h2>
+              <p
+                className="text-lg sm:text-xl max-w-3xl mx-auto leading-relaxed"
+                style={{
+                  color: colors.detail,
+                  fontFamily: 'var(--font-body)',
+                  lineHeight: '1.7'
+                }}
+              >
+                Masjid Al-Furqon berkomitmen untuk terus menjadi mercusuar spiritualitas dan pemberdayaan masyarakat. Dengan rencana pengembangan fasilitas digital, program dakwah online, dan ekspansi kegiatan sosial, kami optimis dapat melayani umat dengan lebih baik di era modern ini.
+              </p>
+
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                className="inline-flex items-center gap-3 px-8 py-4 rounded-full font-bold text-lg"
+                style={{
+                  backgroundColor: colors.accent,
+                  color: 'white',
+                  fontFamily: 'var(--font-sharp-bold)'
+                }}
+              >
+                <FaHeart size={20} />
+                Bersama Membangun Masa Depan
+              </motion.div>
+            </div>
+          </motion.section>
+
+          <motion.section
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="py-8"
+          >
+            <div className="max-w-4xl mx-auto">
+              <motion.div
+                whileHover={{ scale: 1.02, y: -5 }}
+                transition={{ duration: 0.3, ease: 'easeOut' }}
+                className="rounded-2xl shadow-xl overflow-hidden border group cursor-pointer"
+                style={{
+                  backgroundColor: colors.card,
+                  border: `1px solid ${colors.border}`
+                }}
+                onClick={() => window.location.href = '/graha-subagdja'}
+              >
+                <div className="flex flex-col md:flex-row">
+                  <div className="relative w-full md:w-2/5 h-64 md:h-80 overflow-hidden">
+                    <img
+                      src="/images/gambar1.jpg"
+                      alt="Graha Subagdja"
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                    <div
+                      className="absolute top-4 left-4 px-3 py-1 rounded-full text-xs font-bold backdrop-blur-md"
+                      style={{
+                        backgroundColor: colors.accent + '90',
+                        color: 'white',
+                        fontFamily: 'var(--font-sharp-bold)'
+                      }}
+                    >
+                      FASILITAS UNGGULAN
+                    </div>
+                  </div>
+
+                  <div className="flex-1 p-6 md:p-8 flex flex-col justify-center">
+                    <div className="space-y-4">
+                      <h2
+                        className="text-2xl md:text-3xl font-bold leading-tight"
+                        style={{
+                          color: colors.heading,
+                          fontFamily: 'var(--font-header-masjid)',
+                          letterSpacing: '-0.01em'
+                        }}
+                      >
+                        Graha Subagdja
+                      </h2>
+
+                      <p
+                        className="text-base md:text-lg leading-relaxed"
+                        style={{
+                          color: colors.detail,
+                          fontFamily: 'var(--font-body)',
+                          lineHeight: '1.6'
+                        }}
+                      >
+                        Aula serbaguna modern dengan kapasitas hingga 300 orang, dilengkapi fasilitas sound system profesional, AC, dan area parkir luas. Cocok untuk resepsi pernikahan, seminar, kajian, dan berbagai acara komunitas.
+                      </p>
+
+                      <div className="grid grid-cols-2 gap-3 mt-4">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-2 h-2 rounded-full"
+                            style={{ backgroundColor: colors.accent }}
+                          />
+                          <span
+                            className="text-sm font-medium"
+                            style={{
+                              color: colors.cardText,
+                              fontFamily: 'var(--font-sharp-bold)'
+                            }}
+                          >
+                            Kapasitas 300 Orang
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-2 h-2 rounded-full"
+                            style={{ backgroundColor: colors.accent }}
+                          />
+                          <span
+                            className="text-sm font-medium"
+                            style={{
+                              color: colors.cardText,
+                              fontFamily: 'var(--font-sharp-bold)'
+                            }}
+                          >
+                            Sound System Pro
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-2 h-2 rounded-full"
+                            style={{ backgroundColor: colors.accent }}
+                          />
+                          <span
+                            className="text-sm font-medium"
+                            style={{
+                              color: colors.cardText,
+                              fontFamily: 'var(--font-sharp-bold)'
+                            }}
+                          >
+                            Area Parkir Luas
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-2 h-2 rounded-full"
+                            style={{ backgroundColor: colors.accent }}
+                          />
+                          <span
+                            className="text-sm font-medium"
+                            style={{
+                              color: colors.cardText,
+                              fontFamily: 'var(--font-sharp-bold)'
+                            }}
+                          >
+                            Full AC
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="mt-6">
+                        <motion.div
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          className="inline-flex items-center gap-3 px-6 py-3 rounded-lg font-semibold transition-all duration-300"
+                          style={{
+                            backgroundColor: colors.accent,
+                            color: 'white',
+                            fontFamily: 'var(--font-sharp-bold)'
+                          }}
+                        >
+                          Lihat Detail & Reservasi
+                          <motion.span
+                            animate={{ x: [0, 4, 0] }}
+                            transition={{
+                              duration: 1.5,
+                              repeat: Infinity,
+                              ease: "easeInOut"
+                            }}
+                          >
+                            →
+                          </motion.span>
+                        </motion.div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          </motion.section>
+
           <section className="space-y-4 sm:space-y-6">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
               <h2
@@ -461,7 +633,7 @@ export default function HomePage() {
                     >
                       <div className="relative h-48 sm:h-52 overflow-hidden">
                         <img
-                          src={card.image}
+                          src={card.image || '/images/placeholder.jpg'}
                           alt={card.title}
                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                         />
@@ -601,7 +773,7 @@ export default function HomePage() {
                     >
                       <div className="relative h-48 sm:h-52 overflow-hidden">
                         <img
-                          src={news.image}
+                          src={news.image || '/images/placeholder.jpg'}
                           alt={news.title}
                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                         />
@@ -976,7 +1148,7 @@ export default function HomePage() {
         {selectedNews?.image && (
           <div className="mb-4 sm:mb-6 w-full h-60 sm:h-80 relative rounded-xl overflow-hidden">
             <img
-              src={selectedNews.image}
+              src={selectedNews.image || '/images/placeholder.jpg'}
               alt={selectedNews.title}
               className="object-cover w-full h-full"
             />

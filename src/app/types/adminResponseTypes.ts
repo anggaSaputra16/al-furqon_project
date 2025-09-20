@@ -1,4 +1,4 @@
-// Base Response Types
+
 export interface ApiResponse<T = any> {
   success: boolean
   message: string
@@ -19,7 +19,7 @@ export interface PaginatedResponse<T> {
   }
 }
 
-// Admin Authentication Response Types
+
 export interface AdminLoginResponse {
   user: AdminUser
   token: string
@@ -48,7 +48,7 @@ export interface AdminUser {
   updatedAt: string
 }
 
-// Admin Dashboard Stats Response Types
+
 export interface AdminDashboardStats {
   totalArticles: number
   totalDonations: number
@@ -95,7 +95,7 @@ export interface SystemHealth {
   lastBackup: string
 }
 
-// Admin User Management Response Types
+
 export interface AdminUserListResponse extends PaginatedResponse<AdminUser> {}
 
 export interface AdminUserDetailResponse {
@@ -109,7 +109,7 @@ export interface AdminUserDetailResponse {
   }
 }
 
-// Admin Settings Response Types
+
 export interface AdminSettingsResponse {
   general: {
     siteName: string
@@ -147,7 +147,7 @@ export interface AdminSettingsResponse {
   }
 }
 
-// Admin Permissions Response Types
+
 export interface AdminPermission {
   id: string
   name: string
@@ -169,7 +169,7 @@ export interface AdminPermissionsResponse {
   permissions: AdminPermission[]
 }
 
-// Admin Audit Log Response Types
+
 export interface AdminAuditLog {
   id: string
   userId: string
@@ -186,7 +186,7 @@ export interface AdminAuditLog {
 
 export interface AdminAuditLogsResponse extends PaginatedResponse<AdminAuditLog> {}
 
-// Admin File Upload Response Types
+
 export interface AdminFileUploadResponse {
   file: {
     id: string
@@ -201,7 +201,7 @@ export interface AdminFileUploadResponse {
   }
 }
 
-// Admin Backup Response Types
+
 export interface AdminBackup {
   id: string
   fileName: string
@@ -213,8 +213,6 @@ export interface AdminBackup {
 }
 
 export interface AdminBackupsResponse extends PaginatedResponse<AdminBackup> {}
-
-// Admin System Info Response Types
 export interface AdminSystemInfo {
   version: string
   environment: 'development' | 'staging' | 'production'
@@ -245,8 +243,6 @@ export interface AdminSystemInfo {
     free: number
   }
 }
-
-// Dashboard Stats Response Types
 export interface DashboardStatsResponse {
   totalArticles?: number
   totalDonations?: number

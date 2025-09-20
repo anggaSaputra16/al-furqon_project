@@ -4,9 +4,6 @@ import { dashboardUseCases } from '../useCases/dashboardUseCases'
 import { DashboardStatsResponse } from '../types/adminResponseTypes'
 import { GetDashboardStatsRequest } from '../types/adminRequestTypes'
 
-/**
- * Custom hook for dashboard statistics with automatic loading and caching
- */
 export const useDashboardStats = () => {
   const {
     stats,
@@ -19,13 +16,13 @@ export const useDashboardStats = () => {
   const [error, setError] = useState<string | null>(null)
   const [isInitialized, setIsInitialized] = useState(false)
 
-  // Load dashboard stats
+
   const loadStats = useCallback(async (request?: GetDashboardStatsRequest, forceRefresh = false) => {
     try {
       setError(null)
       setStatsLoading(true)
 
-      // Check if we need to refresh data
+
       const shouldRefresh = forceRefresh || 
                            !stats || 
                            !dashboardUseCases.isDashboardDataFresh()
@@ -49,7 +46,7 @@ export const useDashboardStats = () => {
       console.error('Error loading dashboard stats:', err)
       setError(err.message || 'Failed to load dashboard statistics')
       
-      // If no existing stats, load fallback data
+
       if (!stats) {
         const fallbackStats = await dashboardUseCases.getDashboardSummary()
         if (fallbackStats) {
@@ -61,7 +58,7 @@ export const useDashboardStats = () => {
     }
   }, [stats, setStats, setStatsLoading])
 
-  // Load current month stats
+
   const loadCurrentMonthStats = useCallback(async (forceRefresh = false) => {
     const currentMonthStats = await dashboardUseCases.getCurrentMonthStats()
     if (currentMonthStats) {
@@ -70,46 +67,37 @@ export const useDashboardStats = () => {
     }
   }, [setStats])
 
-  // Refresh stats
+
   const refreshStats = useCallback(async () => {
     return loadStats(undefined, true)
   }, [loadStats])
 
-  // Auto-load stats on mount
+
   useEffect(() => {
     if (!isInitialized && !isStatsLoading) {
       loadStats()
     }
   }, [isInitialized, isStatsLoading, loadStats])
 
-  // Format stats for display with safety checks
+
   const formattedStats = (stats && typeof stats === 'object') ? 
     dashboardUseCases.formatStatsForDisplay(stats) : null
 
   return {
-    // Data
     stats,
     formattedStats,
-    
-    // Status
     isLoading: isStatsLoading,
     error,
     isInitialized,
     lastUpdate: lastStatsUpdate,
-    
-    // Actions
     loadStats,
     loadCurrentMonthStats,
     refreshStats,
     
-    // Helpers
     isDataFresh: dashboardUseCases.isDashboardDataFresh()
   }
 }
 
-/**
- * Hook for real-time dashboard activity
- */
 export const useRealtimeDashboard = () => {
   const {
     realtimeActivity,
@@ -137,7 +125,7 @@ export const useRealtimeDashboard = () => {
     }
   }, [setRealtimeActivity, setActivityLoading])
 
-  // Auto-refresh every 30 seconds
+
   useEffect(() => {
     loadRealtimeActivity()
     
@@ -153,9 +141,7 @@ export const useRealtimeDashboard = () => {
   }
 }
 
-/**
- * Hook for dashboard charts
- */
+
 export const useDashboardCharts = () => {
   const {
     charts,
@@ -194,9 +180,7 @@ export const useDashboardCharts = () => {
   }
 }
 
-/**
- * Simple hook that just returns the current stats data
- */
+
 export const useCurrentDashboardStats = () => {
   return useDashboardStatsData()
 }
