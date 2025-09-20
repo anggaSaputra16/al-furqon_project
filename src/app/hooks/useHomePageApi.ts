@@ -205,6 +205,137 @@ export const useFeaturedArticles = (limit = 6) => {
   }
 }
 
+export const usePublishedArticles = (limit = 6) => {
+  const [articles, setArticles] = useState<ArticleResponse[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  
+  const { isAvailable: backendAvailable, isChecking } = useBackendAvailability()
+
+  const fetchArticles = useCallback(async () => {
+    if (backendAvailable === null || isChecking) {
+      return
+    }
+
+    setLoading(true)
+    setError(null)
+    
+    try {
+      if (!backendAvailable) {        
+        const staticArticles: ArticleResponse[] = activityCards.slice(0, limit).map((card, index) => ({
+          id: card.id,
+          title: card.title,
+          slug: card.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+          description: card.description,
+          content: card.detail,
+          image: card.image,
+          category: 'kegiatan' as const,
+          status: 'published' as const,
+          author: { 
+            id: 'admin',
+            name: 'Admin Al-Furqon',
+            avatar: undefined
+          },
+          publishedAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          views: Math.floor(Math.random() * 100) + 50,
+          likes: Math.floor(Math.random() * 20) + 5,
+          tags: ['kegiatan', 'masjid'],
+          featured: false
+        }))
+        
+        setArticles(staticArticles)
+        setLoading(false)
+        return
+      }
+
+      const result = await homePageUseCases.getPublishedArticles(limit)      
+      if (result.success) {
+        let articleData = result.data
+
+        if (articleData && typeof articleData === 'object' && 'data' in articleData) {
+          articleData = (articleData as any).data
+        }
+        
+        const transformedArticles = (articleData || [])
+          .filter((article: any) => article.status === 'published')
+          .map((article: any) => ({
+            id: article.id,
+            title: article.title,
+            slug: article.slug || article.title.toLowerCase().replace(/ /g, '-'),
+            description: article.description,
+            content: article.content,
+            image: article.image,
+            category: article.category,
+            status: article.status,
+            author: article.author || { 
+              id: article.authorId || 'admin',
+              name: article.authorName || 'Admin',
+              avatar: article.authorAvatar
+            },
+            publishedAt: article.publishedAt,
+            updatedAt: article.updatedAt,
+            views: article.views || 0,
+            likes: article.likes || 0,
+            tags: article.tags || [],
+            featured: article.featured
+          }))
+        
+        setArticles(transformedArticles)
+      } else {
+        if (result.error === 'Backend not available') {
+          const staticArticles: ArticleResponse[] = activityCards.slice(0, limit).map((card, index) => ({
+            id: card.id,
+            title: card.title,
+            slug: card.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+            description: card.description,
+            content: card.detail,
+            image: card.image,
+            category: 'kegiatan' as const,
+            status: 'published' as const,
+            author: { 
+              id: 'admin',
+              name: 'Admin Al-Furqon',
+              avatar: undefined
+            },
+            publishedAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            views: Math.floor(Math.random() * 100) + 50,
+            likes: Math.floor(Math.random() * 20) + 5,
+            tags: ['kegiatan', 'masjid'],
+            featured: false
+          }))
+          
+          setArticles(staticArticles)
+        } else {
+          setError(result.error || 'Failed to load articles')
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching published articles:', err)
+      setError('Failed to load published articles')
+    } finally {
+      setLoading(false)
+    }
+  }, [limit, backendAvailable, isChecking])
+
+  useEffect(() => {
+    fetchArticles()
+  }, [fetchArticles])
+
+  const trackArticleView = useCallback(async (articleId: string) => {
+    await homePageUseCases.trackArticleView(articleId)
+  }, [])
+
+  return {
+    articles,
+    loading,
+    error,
+    refetch: fetchArticles,
+    trackView: trackArticleView
+  }
+}
+
 
 export const useActiveDonations = (limit = 3) => {
   const [donations, setDonations] = useState<DonationResponse[]>([])

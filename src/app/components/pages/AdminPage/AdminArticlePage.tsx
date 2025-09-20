@@ -11,6 +11,7 @@ import { useArticles } from '../../../hooks/useArticles'
 import { useArticleStore, useArticles as useArticleSelectors, usePagination, useSelectedArticle, useArticleLoading } from '../../../stores/adminArticleStore'
 import { useAdminUIStore } from '../../../stores/adminStore'
 import { AdminArticle, articleRepository } from '../../../repositories/articleRepository'
+import ImageUpload from '../../ui/ImageUpload'
 
 interface AdminArticlePageProps {
     onBack: () => void
@@ -1025,7 +1026,26 @@ export default function AdminArticlePage({ onBack }: AdminArticlePageProps) {
                             <h3 className="font-medium mb-3" style={{ color: colors.cardText }}>
                                 Gambar Utama
                             </h3>
+                            
+                            {/* Image Upload Component */}
+                            <div className="mb-4">
+                                <ImageUpload
+                                    allowMultiple={false}
+                                    maxFiles={1}
+                                    maxFileSize={5}
+                                    showPreview={false}
+                                    onImageSelected={(imageUrl) => {
+                                        setFormData(prev => ({ ...prev, image: imageUrl }))
+                                    }}
+                                    className="mb-4"
+                                />
+                            </div>
+
+                            {/* Or manual URL input */}
                             <div className="space-y-3">
+                                <div className="text-xs" style={{ color: colors.detail }}>
+                                    Atau masukkan URL gambar manual:
+                                </div>
                                 <input
                                     type="url"
                                     value={formData.image || ''}
@@ -1048,6 +1068,14 @@ export default function AdminArticlePage({ onBack }: AdminArticlePageProps) {
                                                 (e.target as HTMLImageElement).src = '/images/placeholder.jpg'
                                             }}
                                         />
+                                        {/* Clear image button */}
+                                        <button
+                                            onClick={() => setFormData(prev => ({ ...prev, image: '' }))}
+                                            className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                                            title="Hapus gambar"
+                                        >
+                                            <span className="text-xs">×</span>
+                                        </button>
                                     </div>
                                 )}
                             </div>

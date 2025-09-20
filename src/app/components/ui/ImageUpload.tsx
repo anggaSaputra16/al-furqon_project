@@ -1,0 +1,365 @@
+import React, { useState, useRef, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FaUpload, FaImage, FaTimes, FaCheck, FaSpinner, FaTrash, FaEye } from 'react-icons/fa';
+import { useTheme } from '@/context/themeContext';
+
+interface UploadedImage {
+  filename: string;
+  originalName: string;
+  size: number;
+  mimetype: string;
+  urls: {
+    original: string;
+    optimized: string;
+    medium: string;
+    thumbnail: string;
+  };
+}
+
+interface ImageUploadProps {
+  maxFiles?: number;
+  maxFileSize?: number; // in MB
+  onImagesUploaded?: (images: UploadedImage[]) => void;
+  onImageSelected?: (imageUrl: string) => void;
+  allowMultiple?: boolean;
+  showPreview?: boolean;
+  className?: string;
+}
+
+export default function ImageUpload({
+  maxFiles = 5,
+  maxFileSize = 10,
+  onImagesUploaded,
+  onImageSelected,
+  allowMultiple = true,
+  showPreview = true,
+  className = ''
+}: ImageUploadProps) {
+  const { colors } = useTheme();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [dragOver, setDragOver] = useState(false);
+
+  const validateFile = (file: File): string | null => {
+    // Check file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+    if (!allowedTypes.includes(file.type)) {
+      return 'Format file tidak didukung. Gunakan JPEG, PNG, WebP, atau GIF.';
+    }
+
+    // Check file size
+    const fileSizeMB = file.size / (1024 * 1024);
+    if (fileSizeMB > maxFileSize) {
+      return `Ukuran file terlalu besar. Maksimal ${maxFileSize}MB.`;
+    }
+
+    return null;
+  };
+
+  const uploadFiles = async (files: FileList | File[]) => {
+    setError(null);
+    setUploading(true);
+    setUploadProgress(0);
+
+    try {
+      const fileArray = Array.from(files);
+      
+      // Validate all files first
+      for (const file of fileArray) {
+        const validationError = validateFile(file);
+        if (validationError) {
+          throw new Error(validationError);
+        }
+      }
+
+      // Check total files limit
+      if (!allowMultiple && fileArray.length > 1) {
+        throw new Error('Hanya dapat mengupload 1 file.');
+      }
+
+      if (uploadedImages.length + fileArray.length > maxFiles) {
+        throw new Error(`Maksimal ${maxFiles} file dapat diupload.`);
+      }
+
+      const formData = new FormData();
+      fileArray.forEach((file) => {
+        formData.append('images', file);
+      });
+
+      // Get admin token
+      const adminAuth = localStorage.getItem('admin_auth');
+      if (!adminAuth) {
+        throw new Error('Token admin tidak ditemukan. Silakan login kembali.');
+      }
+
+      const authData = JSON.parse(adminAuth);
+      const token = authData.token;
+
+      const xhr = new XMLHttpRequest();
+
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+          const progress = Math.round((e.loaded / e.total) * 100);
+          setUploadProgress(progress);
+        }
+      });
+
+      const uploadPromise = new Promise<UploadedImage[]>((resolve, reject) => {
+        xhr.onload = () => {
+          if (xhr.status === 200) {
+            const response = JSON.parse(xhr.responseText);
+            if (response.success) {
+              resolve(response.data.images);
+            } else {
+              reject(new Error(response.message || 'Upload gagal'));
+            }
+          } else {
+            reject(new Error(`Upload gagal (${xhr.status})`));
+          }
+        };
+
+        xhr.onerror = () => reject(new Error('Terjadi kesalahan saat upload'));
+      });
+
+      xhr.open('POST', `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/upload/article/image`);
+      xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+      xhr.send(formData);
+
+      const newImages = await uploadPromise;
+      
+      setUploadedImages(prev => [...prev, ...newImages]);
+      
+      if (onImagesUploaded) {
+        onImagesUploaded(newImages);
+      }
+
+      // If single image mode, auto-select the uploaded image
+      if (!allowMultiple && newImages.length > 0 && onImageSelected) {
+        onImageSelected(newImages[0].urls.medium);
+      }
+
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      setError(error.message || 'Gagal mengupload gambar');
+    } finally {
+      setUploading(false);
+      setUploadProgress(0);
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      uploadFiles(files);
+    }
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      uploadFiles(files);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+  };
+
+  const removeImage = (index: number) => {
+    setUploadedImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const selectImage = (imageUrl: string) => {
+    if (onImageSelected) {
+      onImageSelected(imageUrl);
+    }
+  };
+
+  return (
+    <div className={`space-y-4 ${className}`}>
+      {/* Upload Area */}
+      <div
+        className={`relative border-2 border-dashed rounded-xl p-8 transition-all duration-300 cursor-pointer ${
+          dragOver 
+            ? 'border-blue-400 bg-blue-50' 
+            : uploading 
+            ? 'border-green-400 bg-green-50' 
+            : 'border-gray-300 hover:border-gray-400'
+        }`}
+        style={{
+          backgroundColor: dragOver ? colors.accent + '10' : colors.card,
+          borderColor: dragOver ? colors.accent : colors.border
+        }}
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onClick={() => !uploading && fileInputRef.current?.click()}
+      >
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          multiple={allowMultiple}
+          onChange={handleFileSelect}
+          className="hidden"
+          disabled={uploading}
+        />
+
+        <div className="text-center">
+          {uploading ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="space-y-4"
+            >
+              <FaSpinner 
+                className="mx-auto animate-spin text-4xl" 
+                style={{ color: colors.accent }} 
+              />
+              <div>
+                <p className="text-lg font-semibold" style={{ color: colors.cardText }}>
+                  Mengupload gambar...
+                </p>
+                <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                  <div 
+                    className="h-2 rounded-full transition-all duration-300"
+                    style={{ 
+                      backgroundColor: colors.accent,
+                      width: `${uploadProgress}%` 
+                    }}
+                  />
+                </div>
+                <p className="text-sm mt-1" style={{ color: colors.detail }}>
+                  {uploadProgress}%
+                </p>
+              </div>
+            </motion.div>
+          ) : (
+            <div className="space-y-4">
+              <FaUpload 
+                className="mx-auto text-4xl" 
+                style={{ color: dragOver ? colors.accent : colors.detail }} 
+              />
+              <div>
+                <p className="text-lg font-semibold" style={{ color: colors.cardText }}>
+                  {dragOver ? 'Lepaskan file di sini' : 'Drag & drop gambar atau klik untuk upload'}
+                </p>
+                <p className="text-sm mt-2" style={{ color: colors.detail }}>
+                  Maksimal {maxFiles} file, masing-masing {maxFileSize}MB
+                </p>
+                <p className="text-xs mt-1" style={{ color: colors.detail }}>
+                  Format: JPEG, PNG, WebP, GIF
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Error Message */}
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="bg-red-50 border border-red-200 rounded-lg p-4"
+          >
+            <div className="flex items-center space-x-2">
+              <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
+                <FaTimes className="text-white text-xs" />
+              </div>
+              <p className="text-red-700 text-sm font-medium">{error}</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Uploaded Images Preview */}
+      {showPreview && uploadedImages.length > 0 && (
+        <div className="space-y-3">
+          <h4 className="font-semibold" style={{ color: colors.cardText }}>
+            Gambar yang diupload ({uploadedImages.length})
+          </h4>
+          
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {uploadedImages.map((image, index) => (
+              <motion.div
+                key={image.filename}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="relative group rounded-lg overflow-hidden"
+                style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}` }}
+              >
+                <div className="aspect-square relative">
+                  <img
+                    src={image.urls.thumbnail}
+                    alt={image.originalName}
+                    className="w-full h-full object-cover"
+                  />
+                  
+                  {/* Overlay */}
+                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 flex items-center justify-center">
+                    <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      {onImageSelected && (
+                        <button
+                          onClick={() => selectImage(image.urls.medium)}
+                          className="p-2 bg-white bg-opacity-90 rounded-full hover:bg-opacity-100 transition-all duration-200"
+                          title="Pilih gambar ini"
+                        >
+                          <FaCheck className="text-green-600" />
+                        </button>
+                      )}
+                      
+                      <button
+                        onClick={() => window.open(image.urls.original, '_blank')}
+                        className="p-2 bg-white bg-opacity-90 rounded-full hover:bg-opacity-100 transition-all duration-200"
+                        title="Lihat ukuran penuh"
+                      >
+                        <FaEye className="text-blue-600" />
+                      </button>
+                      
+                      <button
+                        onClick={() => removeImage(index)}
+                        className="p-2 bg-white bg-opacity-90 rounded-full hover:bg-opacity-100 transition-all duration-200"
+                        title="Hapus gambar"
+                      >
+                        <FaTrash className="text-red-600" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="p-3">
+                  <p className="text-xs font-medium truncate" style={{ color: colors.cardText }}>
+                    {image.originalName}
+                  </p>
+                  <p className="text-xs mt-1" style={{ color: colors.detail }}>
+                    {(image.size / 1024 / 1024).toFixed(2)} MB
+                  </p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

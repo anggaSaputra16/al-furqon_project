@@ -20,43 +20,14 @@ import {
     FaWhatsapp
 } from 'react-icons/fa'
 import { useTheme } from '@/context/themeContext'
-
-interface UMKMPartner {
-    id: number
-    name: string
-    category: string
-    description: string
-    services: string[]
-    contact: {
-        phone: string
-        whatsapp: string
-        instagram: string
-    }
-    image: string
-}
-
-interface GalleryImage {
-    id: number
-    title: string
-    image: string
-    category: 'facility' | 'event' | 'ceremony'
-}
-
-interface FAQ {
-    id: number
-    question: string
-    answer: string
-}
-
-interface FacilityInfo {
-    id: number
-    title: string
-    description: string
-    capacity: string
-    facilities: string[]
-    price: string
-    contact: string
-}
+import { useGraha } from '../../../hooks/useGraha'
+import ImageUpload from '../../ui/ImageUpload'
+import { 
+    UMKMPartner, 
+    GalleryItem, 
+    FAQ, 
+    FacilityInfo 
+} from '../../../repositories/grahaRepository'
 
 interface AdminGrahaSubagdjaPageProps {
     onBack: () => void
@@ -64,100 +35,38 @@ interface AdminGrahaSubagdjaPageProps {
 
 export default function AdminGrahaSubagdjaPage({ onBack }: AdminGrahaSubagdjaPageProps) {
     const { colors } = useTheme()
+    
+    // useGraha hook untuk mengambil data dari backend
+    const {
+        umkmPartners,
+        gallery,
+        faqs,
+        facilityInfo,
+        loading,
+        error,
+        fetchAllData,
+        createUMKMPartner,
+        createGalleryItem,
+        createFAQ,
+        updateFacilityInfo,
+        updateUMKMPartner,
+        updateGalleryItem,
+        updateFAQ,
+        deleteUMKMPartner,
+        deleteGalleryItem,
+        deleteFAQ,
+        clearErrors
+    } = useGraha()
+    
     const [activeTab, setActiveTab] = useState<'partners' | 'gallery' | 'faq' | 'facility'>('partners')
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [editingItem, setEditingItem] = useState<any>(null)
     const [formData, setFormData] = useState<any>({})
+    const [useImageUpload, setUseImageUpload] = useState(false) // State untuk mode upload gambar
 
-    // Mock data - dalam implementasi nyata, data ini akan diambil dari API
-    const [umkmPartners, setUmkmPartners] = useState<UMKMPartner[]>([
-        {
-            id: 1,
-            name: "Barokah Event Organizer",
-            category: "Event Organizer",
-            description: "Spesialis event organizer untuk acara keagamaan dan pernikahan Islami",
-            services: [
-                "Wedding Organizer",
-                "Aqiqah & Khitanan",
-                "Halal Bihalal",
-                "Kajian & Seminar",
-                "Event Keagamaan",
-                "Dekorasi Islami"
-            ],
-            contact: {
-                phone: "021-8765-4321",
-                whatsapp: "0812-3456-7890",
-                instagram: "@barokahevent"
-            },
-            image: "/images/gambar2.jpg"
-        },
-        {
-            id: 2,
-            name: "Sari Ayu Wedding Organizer",
-            category: "Wedding Organizer",
-            description: "Mengkhususkan diri dalam pernikahan Islami dengan konsep elegant dan berkesan",
-            services: [
-                "Full Wedding Package",
-                "Akad Nikah Organizer",
-                "Resepsi Pernikahan",
-                "Henna & Siraman",
-                "Koordinator Acara",
-                "Konsultasi Pernikahan Islami"
-            ],
-            contact: {
-                phone: "021-5432-1098",
-                whatsapp: "0813-9876-5432",
-                instagram: "@sariayuwedding"
-            },
-            image: "/images/gambar3.jpg"
-        }
-    ])
-
-    const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([
-        {
-            id: 1,
-            title: "Main Hall",
-            image: "/images/gambar8.jpg",
-            category: "facility"
-        },
-        {
-            id: 2,
-            title: "Wedding Ceremony",
-            image: "/images/gambar9.jpg",
-            category: "ceremony"
-        }
-    ])
-
-    const [faqs, setFaqs] = useState<FAQ[]>([
-        {
-            id: 1,
-            question: "Bagaimana cara booking Graha Subagdja?",
-            answer: "Anda dapat menghubungi kami melalui WhatsApp atau telepon untuk melakukan reservasi. Tim kami akan membantu mengatur jadwal dan kebutuhan acara Anda."
-        },
-        {
-            id: 2,
-            question: "Apakah ada paket all-in untuk acara pernikahan?",
-            answer: "Ya, kami menyediakan berbagai paket pernikahan yang dapat disesuaikan dengan budget dan kebutuhan Anda. Hubungi UMKM partner kami untuk detail lengkap."
-        }
-    ])
-
-    const [facilityInfo, setFacilityInfo] = useState<FacilityInfo>({
-        id: 1,
-        title: "Graha Subagdja Al-Furqon",
-        description: "Gedung serbaguna yang nyaman dan elegan untuk berbagai acara keagamaan dan pernikahan Islami",
-        capacity: "200-300 tamu",
-        facilities: [
-            "Sound System Professional",
-            "Lighting System",
-            "Air Conditioning",
-            "Kitchen & Pantry",
-            "Parking Area",
-            "Prayer Room",
-            "Bridal Room"
-        ],
-        price: "Mulai dari Rp 5.000.000",
-        contact: "0812-3456-7890"
-    })
+    useEffect(() => {
+        fetchAllData()
+    }, [])
 
     const tabs = [
         { id: 'partners', label: 'UMKM Partners', icon: FaHandshake },
@@ -169,75 +78,89 @@ export default function AdminGrahaSubagdjaPage({ onBack }: AdminGrahaSubagdjaPag
     const handleAddNew = (type: string) => {
         setEditingItem(null)
         setFormData({})
+        setUseImageUpload(false) // Reset mode upload
         setIsModalOpen(true)
     }
 
     const handleEdit = (item: any, type: string) => {
         setEditingItem({ ...item, type })
         setFormData(item)
+        setUseImageUpload(false) // Reset mode upload
         setIsModalOpen(true)
     }
 
-    const handleDelete = (id: number, type: string) => {
+    const handleImageSelected = (imageUrl: string) => {
+        setFormData({ ...formData, image: imageUrl })
+        setUseImageUpload(false) 
+    }
+
+    const handleDelete = async (id: string, type: string) => {
         if (window.confirm('Apakah Anda yakin ingin menghapus item ini?')) {
-            switch (type) {
-                case 'partners':
-                    setUmkmPartners(prev => prev.filter(item => item.id !== id))
-                    break
-                case 'gallery':
-                    setGalleryImages(prev => prev.filter(item => item.id !== id))
-                    break
-                case 'faq':
-                    setFaqs(prev => prev.filter(item => item.id !== id))
-                    break
+            try {
+                switch (type) {
+                    case 'partners':
+                        await deleteUMKMPartner(id)
+                        break
+                    case 'gallery':
+                        await deleteGalleryItem(id)
+                        break
+                    case 'faq':
+                        await deleteFAQ(id)
+                        break
+                }
+            } catch (error) {
+                console.error('Error deleting item:', error)
+                alert('Gagal menghapus item. Silakan coba lagi.')
             }
         }
     }
 
-    const handleSave = () => {
+    const handleSave = async () => {
         const type = editingItem?.type || activeTab
 
-        if (editingItem) {
-            // Update existing item
-            switch (type) {
-                case 'partners':
-                    setUmkmPartners(prev => prev.map(item =>
-                        item.id === editingItem.id ? { ...formData, id: editingItem.id } : item
-                    ))
-                    break
-                case 'gallery':
-                    setGalleryImages(prev => prev.map(item =>
-                        item.id === editingItem.id ? { ...formData, id: editingItem.id } : item
-                    ))
-                    break
-                case 'faq':
-                    setFaqs(prev => prev.map(item =>
-                        item.id === editingItem.id ? { ...formData, id: editingItem.id } : item
-                    ))
-                    break
-                case 'facility':
-                    setFacilityInfo({ ...formData, id: 1 })
-                    break
+        try {
+            if (editingItem) {
+                // Update existing item
+                switch (type) {
+                    case 'partners':
+                        await updateUMKMPartner(editingItem.id, formData)
+                        break
+                    case 'gallery':
+                        await updateGalleryItem(editingItem.id, formData)
+                        break
+                    case 'faq':
+                        await updateFAQ(editingItem.id, formData)
+                        break
+                    case 'facility':
+                        await updateFacilityInfo(formData)
+                        break
+                }
+            } else {
+                // Add new item
+                switch (type) {
+                    case 'partners':
+                        await createUMKMPartner(formData)
+                        break
+                    case 'gallery':
+                        await createGalleryItem(formData)
+                        break
+                    case 'faq':
+                        await createFAQ(formData)
+                        break
+                    case 'facility':
+                        await updateFacilityInfo(formData)
+                        break
+                }
             }
-        } else {
-            // Add new item
-            const newId = Date.now()
-            switch (type) {
-                case 'partners':
-                    setUmkmPartners(prev => [...prev, { ...formData, id: newId }])
-                    break
-                case 'gallery':
-                    setGalleryImages(prev => [...prev, { ...formData, id: newId }])
-                    break
-                case 'faq':
-                    setFaqs(prev => [...prev, { ...formData, id: newId }])
-                    break
-            }
-        }
 
-        setIsModalOpen(false)
-        setEditingItem(null)
-        setFormData({})
+            setIsModalOpen(false)
+            setEditingItem(null)
+            setFormData({})
+            // Data akan ter-update otomatis melalui state management di useGraha
+        } catch (error) {
+            console.error('Error saving item:', error)
+            alert('Gagal menyimpan data. Silakan coba lagi.')
+        }
     }
 
     const renderPartners = () => (
@@ -301,7 +224,7 @@ export default function AdminGrahaSubagdjaPage({ onBack }: AdminGrahaSubagdjaPag
                         </p>
 
                         <div className="flex flex-wrap gap-2 mb-3">
-                            {partner.services.slice(0, 3).map((service, index) => (
+                            {partner.services?.slice(0, 3).map((service, index) => (
                                 <span
                                     key={index}
                                     className="px-2 py-1 rounded text-xs"
@@ -313,7 +236,7 @@ export default function AdminGrahaSubagdjaPage({ onBack }: AdminGrahaSubagdjaPag
                                     {service}
                                 </span>
                             ))}
-                            {partner.services.length > 3 && (
+                            {partner.services?.length > 3 && (
                                 <span className="text-xs" style={{ color: colors.detail }}>
                                     +{partner.services.length - 3} lainnya
                                 </span>
@@ -323,12 +246,14 @@ export default function AdminGrahaSubagdjaPage({ onBack }: AdminGrahaSubagdjaPag
                         <div className="flex items-center space-x-3 text-sm">
                             <div className="flex items-center space-x-1">
                                 <FaPhone size={12} style={{ color: colors.detail }} />
-                                <span style={{ color: colors.detail }}>{partner.contact.phone}</span>
+                                <span style={{ color: colors.detail }}>{partner.contact?.phone}</span>
                             </div>
-                            <div className="flex items-center space-x-1">
-                                <FaWhatsapp size={12} style={{ color: '#25D366' }} />
-                                <span style={{ color: colors.detail }}>{partner.contact.whatsapp}</span>
-                            </div>
+                            {partner.contact?.whatsapp && (
+                                <div className="flex items-center space-x-1">
+                                    <FaWhatsapp size={12} style={{ color: '#25D366' }} />
+                                    <span style={{ color: colors.detail }}>{partner.contact.whatsapp}</span>
+                                </div>
+                            )}
                         </div>
                     </motion.div>
                 ))}
@@ -340,7 +265,7 @@ export default function AdminGrahaSubagdjaPage({ onBack }: AdminGrahaSubagdjaPag
         <div className="space-y-4">
             <div className="flex justify-between items-center">
                 <h3 className="text-lg font-semibold" style={{ color: colors.cardText }}>
-                    Gallery ({galleryImages.length})
+                    Gallery ({gallery?.length || 0})
                 </h3>
                 <button
                     onClick={() => handleAddNew('gallery')}
@@ -356,7 +281,7 @@ export default function AdminGrahaSubagdjaPage({ onBack }: AdminGrahaSubagdjaPag
             </div>
 
             <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4">
-                {galleryImages.map((image) => (
+                {gallery?.map((image: any) => (
                     <motion.div
                         key={image.id}
                         initial={{ opacity: 0, scale: 0.9 }}
@@ -491,10 +416,10 @@ export default function AdminGrahaSubagdjaPage({ onBack }: AdminGrahaSubagdjaPag
                 }}
             >
                 <h4 className="text-xl font-bold mb-2" style={{ color: colors.cardText }}>
-                    {facilityInfo.title}
+                    {facilityInfo?.title || 'Graha Subagdja'}
                 </h4>
                 <p className="text-base mb-4" style={{ color: colors.detail }}>
-                    {facilityInfo.description}
+                    {facilityInfo?.description || 'Belum ada deskripsi'}
                 </p>
 
                 <div className="grid md:grid-cols-2 gap-4 mb-4">
@@ -502,13 +427,13 @@ export default function AdminGrahaSubagdjaPage({ onBack }: AdminGrahaSubagdjaPag
                         <h5 className="font-semibold mb-2" style={{ color: colors.cardText }}>
                             Kapasitas
                         </h5>
-                        <p style={{ color: colors.detail }}>{facilityInfo.capacity}</p>
+                        <p style={{ color: colors.detail }}>{facilityInfo?.capacity || 'Belum ditentukan'}</p>
                     </div>
                     <div>
                         <h5 className="font-semibold mb-2" style={{ color: colors.cardText }}>
                             Harga
                         </h5>
-                        <p style={{ color: colors.detail }}>{facilityInfo.price}</p>
+                        <p style={{ color: colors.detail }}>{facilityInfo?.price || 'Hubungi kami'}</p>
                     </div>
                 </div>
 
@@ -517,7 +442,7 @@ export default function AdminGrahaSubagdjaPage({ onBack }: AdminGrahaSubagdjaPag
                         Fasilitas
                     </h5>
                     <div className="grid md:grid-cols-2 gap-2">
-                        {facilityInfo.facilities.map((facility, index) => (
+                        {facilityInfo?.facilities?.map((facility: string, index: number) => (
                             <div key={index} className="flex items-center space-x-2">
                                 <div
                                     className="w-2 h-2 rounded-full"
@@ -525,7 +450,7 @@ export default function AdminGrahaSubagdjaPage({ onBack }: AdminGrahaSubagdjaPag
                                 />
                                 <span style={{ color: colors.detail }}>{facility}</span>
                             </div>
-                        ))}
+                        )) || <p style={{ color: colors.detail }}>Belum ada data fasilitas</p>}
                     </div>
                 </div>
 
@@ -535,7 +460,7 @@ export default function AdminGrahaSubagdjaPage({ onBack }: AdminGrahaSubagdjaPag
                     </h5>
                     <div className="flex items-center space-x-2">
                         <FaWhatsapp style={{ color: '#25D366' }} />
-                        <span style={{ color: colors.detail }}>{facilityInfo.contact}</span>
+                        <span style={{ color: colors.detail }}>{facilityInfo?.contact || 'Belum ada kontak'}</span>
                     </div>
                 </div>
             </motion.div>
@@ -772,21 +697,73 @@ export default function AdminGrahaSubagdjaPage({ onBack }: AdminGrahaSubagdjaPag
                                                     className="block text-sm font-medium mb-2"
                                                     style={{ color: colors.cardText }}
                                                 >
-                                                    URL Gambar
+                                                    Gambar Partner
                                                 </label>
-                                                <input
-                                                    type="text"
-                                                    value={formData.image || ''}
-                                                    onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                                                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-opacity-50"
-                                                    style={{
-                                                        backgroundColor: colors.background,
-                                                        color: colors.cardText,
-                                                        borderColor: colors.border,
-                                                        '--tw-ring-color': colors.accent
-                                                    } as React.CSSProperties}
-                                                    placeholder="/images/partner.jpg"
-                                                />
+                                                
+                                                {/* Toggle antara upload dan manual input */}
+                                                <div className="flex items-center space-x-4 mb-3">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setUseImageUpload(false)}
+                                                        className={`px-3 py-1 text-sm rounded transition-colors ${
+                                                            !useImageUpload 
+                                                                ? 'bg-blue-500 text-white' 
+                                                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                                        }`}
+                                                    >
+                                                        Manual URL
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setUseImageUpload(true)}
+                                                        className={`px-3 py-1 text-sm rounded transition-colors ${
+                                                            useImageUpload 
+                                                                ? 'bg-blue-500 text-white' 
+                                                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                                        }`}
+                                                    >
+                                                        Upload File
+                                                    </button>
+                                                </div>
+
+                                                {useImageUpload ? (
+                                                    <ImageUpload
+                                                        allowMultiple={false}
+                                                        maxFiles={1}
+                                                        onImageSelected={handleImageSelected}
+                                                        showPreview={false}
+                                                        className="mb-4"
+                                                    />
+                                                ) : (
+                                                    <input
+                                                        type="text"
+                                                        value={formData.image || ''}
+                                                        onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                                                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-opacity-50"
+                                                        style={{
+                                                            backgroundColor: colors.background,
+                                                            color: colors.cardText,
+                                                            borderColor: colors.border,
+                                                            '--tw-ring-color': colors.accent
+                                                        } as React.CSSProperties}
+                                                        placeholder="/images/partner.jpg"
+                                                    />
+                                                )}
+                                                
+                                                {/* Preview gambar jika ada URL */}
+                                                {formData.image && (
+                                                    <div className="mt-2">
+                                                        <img 
+                                                            src={formData.image} 
+                                                            alt="Preview" 
+                                                            className="w-20 h-20 object-cover rounded border"
+                                                            onError={(e) => {
+                                                                const target = e.target as HTMLImageElement;
+                                                                target.style.display = 'none';
+                                                            }}
+                                                        />
+                                                    </div>
+                                                )}
                                             </div>
                                         </>
                                     )}
@@ -845,21 +822,73 @@ export default function AdminGrahaSubagdjaPage({ onBack }: AdminGrahaSubagdjaPag
                                                     className="block text-sm font-medium mb-2"
                                                     style={{ color: colors.cardText }}
                                                 >
-                                                    URL Gambar
+                                                    Gambar Gallery
                                                 </label>
-                                                <input
-                                                    type="text"
-                                                    value={formData.image || ''}
-                                                    onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                                                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-opacity-50"
-                                                    style={{
-                                                        backgroundColor: colors.background,
-                                                        color: colors.cardText,
-                                                        borderColor: colors.border,
-                                                        '--tw-ring-color': colors.accent
-                                                    } as React.CSSProperties}
-                                                    placeholder="/images/gallery.jpg"
-                                                />
+                                                
+                                                {/* Toggle antara upload dan manual input */}
+                                                <div className="flex items-center space-x-4 mb-3">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setUseImageUpload(false)}
+                                                        className={`px-3 py-1 text-sm rounded transition-colors ${
+                                                            !useImageUpload 
+                                                                ? 'bg-blue-500 text-white' 
+                                                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                                        }`}
+                                                    >
+                                                        Manual URL
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setUseImageUpload(true)}
+                                                        className={`px-3 py-1 text-sm rounded transition-colors ${
+                                                            useImageUpload 
+                                                                ? 'bg-blue-500 text-white' 
+                                                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                                        }`}
+                                                    >
+                                                        Upload File
+                                                    </button>
+                                                </div>
+
+                                                {useImageUpload ? (
+                                                    <ImageUpload
+                                                        allowMultiple={false}
+                                                        maxFiles={1}
+                                                        onImageSelected={handleImageSelected}
+                                                        showPreview={false}
+                                                        className="mb-4"
+                                                    />
+                                                ) : (
+                                                    <input
+                                                        type="text"
+                                                        value={formData.image || ''}
+                                                        onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                                                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-opacity-50"
+                                                        style={{
+                                                            backgroundColor: colors.background,
+                                                            color: colors.cardText,
+                                                            borderColor: colors.border,
+                                                            '--tw-ring-color': colors.accent
+                                                        } as React.CSSProperties}
+                                                        placeholder="/images/gallery.jpg"
+                                                    />
+                                                )}
+                                                
+                                                {/* Preview gambar jika ada URL */}
+                                                {formData.image && (
+                                                    <div className="mt-2">
+                                                        <img 
+                                                            src={formData.image} 
+                                                            alt="Preview" 
+                                                            className="w-20 h-20 object-cover rounded border"
+                                                            onError={(e) => {
+                                                                const target = e.target as HTMLImageElement;
+                                                                target.style.display = 'none';
+                                                            }}
+                                                        />
+                                                    </div>
+                                                )}
                                             </div>
                                         </>
                                     )}
@@ -1142,18 +1171,56 @@ export default function AdminGrahaSubagdjaPage({ onBack }: AdminGrahaSubagdjaPag
                     </div>
                 </div>
 
-                {/* Content */}
-                <motion.div
-                    key={activeTab}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
-                >
-                    {activeTab === 'partners' && renderPartners()}
-                    {activeTab === 'gallery' && renderGallery()}
-                    {activeTab === 'faq' && renderFAQ()}
-                    {activeTab === 'facility' && renderFacilityInfo()}
-                </motion.div>
+                {/* Error State */}
+                {(error.umkmPartners || error.gallery || error.faqs || error.facilityInfo) && (
+                    <div className="mb-4 p-4 rounded-lg border" style={{ 
+                        backgroundColor: '#fee2e2', 
+                        borderColor: '#fecaca',
+                        color: '#dc2626'
+                    }}>
+                        <h4 className="font-medium mb-2">Terjadi kesalahan:</h4>
+                        <ul className="text-sm space-y-1">
+                            {error.umkmPartners && <li>• UMKM Partners: {error.umkmPartners}</li>}
+                            {error.gallery && <li>• Gallery: {error.gallery}</li>}
+                            {error.faqs && <li>• FAQ: {error.faqs}</li>}
+                            {error.facilityInfo && <li>• Facility Info: {error.facilityInfo}</li>}
+                        </ul>
+                        <button
+                            onClick={() => {
+                                clearErrors()
+                                fetchAllData()
+                            }}
+                            className="mt-3 px-4 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 transition-colors"
+                        >
+                            Coba Lagi
+                        </button>
+                    </div>
+                )}
+
+                {/* Loading State */}
+                {loading.umkmPartners || loading.gallery || loading.faqs || loading.facilityInfo ? (
+                    <div className="flex items-center justify-center p-8">
+                        <div className="text-center">
+                            <div
+                                className="animate-spin rounded-full h-8 w-8 border-b-2 mx-auto mb-4"
+                                style={{ borderColor: colors.accent }}
+                            />
+                            <p style={{ color: colors.detail }}>Memuat data...</p>
+                        </div>
+                    </div>
+                ) : (
+                    <motion.div
+                        key={activeTab}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3 }}
+                    >
+                        {activeTab === 'partners' && renderPartners()}
+                        {activeTab === 'gallery' && renderGallery()}
+                        {activeTab === 'faq' && renderFAQ()}
+                        {activeTab === 'facility' && renderFacilityInfo()}
+                    </motion.div>
+                )}
             </div>
 
             {renderModal()}

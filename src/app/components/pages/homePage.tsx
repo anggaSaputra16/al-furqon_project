@@ -20,6 +20,7 @@ import VideoGalleryPage from './VideoGalleryPage'
 import {
   useHomePageData,
   useFeaturedArticles,
+  usePublishedArticles,
   useActiveDonations,
   useLatestNews,
   useDonationSubmission
@@ -32,12 +33,12 @@ export default function HomePage() {
   const { menus, fetchMenus } = useMenuStore()
 
   const { error: homeError, refetch: refetchHome } = useHomePageData()
-  const { articles: featuredArticles, loading: articlesLoading, error: articlesError } = useFeaturedArticles()
+  const { articles: publishedArticles, loading: articlesLoading, error: articlesError } = usePublishedArticles()
   const { donations: donationPrograms, loading: donationsLoading } = useActiveDonations()
   const { news: latestNews, loading: newsLoading } = useLatestNews()
   const { submitDonation, submitting: donationSubmitting } = useDonationSubmission()
 
-  const hasBackendArticles = featuredArticles && featuredArticles.length > 0
+  const hasBackendArticles = publishedArticles && publishedArticles.length > 0
   const hasBackendDonations = donationPrograms && donationPrograms.length > 0
   const hasBackendNews = latestNews && latestNews.length > 0
 
@@ -578,9 +579,9 @@ export default function HomePage() {
                   Memuat aktivitas...
                 </span>
               </div>
-            ) : hasBackendArticles && featuredArticles && featuredArticles.length > 0 ? (
+            ) : hasBackendArticles && publishedArticles && publishedArticles.length > 0 ? (
               <ActivityCarousel
-                articles={featuredArticles.map((article: any) => ({
+                articles={publishedArticles.map((article: any) => ({
                   ...article,
                   author: article.author?.name || article.author || 'Admin'
                 }))}

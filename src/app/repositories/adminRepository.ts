@@ -87,13 +87,16 @@ class AdminRepository {
       const data = await response.json()
       
       if (!response.ok) {
+        // Check for invalid token errors and trigger auto logout (exclude login endpoint)
+        if (!endpoint.includes('/auth/login') && this.isInvalidTokenError(response.status, data)) {
+          this.handleInvalidToken(endpoint)
+        }
 
-
+        // Special handling for login endpoint
         if (response.status === 401 && endpoint.includes('/auth/')) {
           return data
         }
         
-
         if (response.status === 404) {
           throw new Error('Endpoint not found')
         } else if (response.status >= 500) {
@@ -116,6 +119,39 @@ class AdminRepository {
       }
       
       throw new Error('Network error occurred')
+    }
+  }
+
+  private isInvalidTokenError(statusCode: number, errorData: any): boolean {
+    // Check for invalid token based on status code and error message
+    const isUnauthorized = statusCode === 401 || errorData?.error === 401
+    const hasInvalidTokenMessage = errorData?.message?.toLowerCase().includes('invalid token') ||
+                                   errorData?.message?.toLowerCase().includes('token expired') ||
+                                   errorData?.message?.toLowerCase().includes('unauthorized') ||
+                                   errorData?.message?.toLowerCase().includes('access token required')
+    
+    return (isUnauthorized || statusCode === 500) && hasInvalidTokenMessage
+  }
+
+  private handleInvalidToken(endpoint: string): void {
+    console.warn('🔒 Invalid token detected in admin repository, logging out user...')
+    
+    // Clear tokens from localStorage
+    if (typeof window !== 'undefined') {
+      // Clear admin token since this is admin repository
+      localStorage.removeItem('admin_auth')
+      localStorage.removeItem('alfurqon_token')
+      
+      // Dispatch auto logout event for AuthHandler to pick up
+      const event = new CustomEvent('autoLogout', {
+        detail: {
+          message: 'Sesi Anda telah berakhir. Silakan login kembali.',
+          type: 'warning',
+          endpoint: endpoint,
+          source: 'admin'
+        }
+      })
+      window.dispatchEvent(event)
     }
   }
 
