@@ -18,7 +18,8 @@ import {
     FaSync,
     FaBars,
     FaTimes,
-    FaBuilding
+    FaBuilding,
+    FaVideo
 } from 'react-icons/fa'
 import { useTheme } from '@/context/themeContext'
 import { useAdminAuthentication } from '../../../hooks/useAdmin'
@@ -38,6 +39,7 @@ import AdminSettingsPage from './AdminSettingsPage'
 import AdminFinancePage from './AdminFinancePage'
 import AdminFinancialReportPage from './AdminFinancialReportPage'
 import AdminGrahaSubagdjaPage from './AdminGrahaSubagdjaPage'
+import AdminVideoPage from './AdminVideoPage'
 interface AdminStats {
     totalArticles: number
     totalDonations: number
@@ -57,14 +59,14 @@ interface AdminHomePageProps {
 interface MenuSubItem {
     title: string
     icon: any
-    page: 'dashboard' | 'articles' | 'donations' | 'users' | 'reports' | 'settings' | 'finance' | 'financial-reports' | 'notifications' | 'graha-subagdja'
+    page: 'dashboard' | 'articles' | 'donations' | 'users' | 'reports' | 'settings' | 'finance' | 'financial-reports' | 'notifications' | 'graha-subagdja' | 'videos'
     active: boolean
 }
 
 interface MenuItem {
     title: string
     icon: any
-    page?: 'dashboard' | 'articles' | 'donations' | 'users' | 'reports' | 'settings' | 'finance' | 'financial-reports' | 'notifications' | 'graha-subagdja'
+    page?: 'dashboard' | 'articles' | 'donations' | 'users' | 'reports' | 'settings' | 'finance' | 'financial-reports' | 'notifications' | 'graha-subagdja' | 'videos'
     count?: number
     active: boolean
     hasDropdown?: boolean
@@ -80,7 +82,7 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
     const articleStore = useArticleStore()
     const { articles: featuredArticles, refetch: refetchFeaturedArticles } = useFeaturedArticles()
     const { users, loading: usersLoading, pagination: userPagination } = useAdminUsers()
-    const [currentPage, setCurrentPage] = useState<'dashboard' | 'articles' | 'donations' | 'users' | 'reports' | 'settings' | 'finance' | 'financial-reports' | 'notifications' | 'graha-subagdja'>('dashboard')
+    const [currentPage, setCurrentPage] = useState<'dashboard' | 'articles' | 'donations' | 'users' | 'reports' | 'settings' | 'finance' | 'financial-reports' | 'notifications' | 'graha-subagdja' | 'videos'>('dashboard')
     const [mounted, setMounted] = useState(false)
     const [isReportsDropdownOpen, setIsReportsDropdownOpen] = useState(false)
     const [isNotificationDropdownOpen, setIsNotificationDropdownOpen] = useState(false)
@@ -239,6 +241,15 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
             })
         }
 
+        if (userPermissions?.canAccessArticles || (user?.role === 'admin' || user?.role === 'super_admin')) {
+            baseItems.push({
+                title: 'Video',
+                icon: FaVideo,
+                page: 'videos' as const,
+                active: currentPage === 'videos'
+            })
+        }
+
         return baseItems
     }
 
@@ -266,6 +277,10 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
 
         if (userPermissions?.canAccessGraha || (user?.role === 'admin' || user?.role === 'super_admin')) {
             actions.push({ title: 'Kelola Graha Subagdja', icon: FaBuilding, action: () => setCurrentPage('graha-subagdja'), color: '#8b5cf6' })
+        }
+
+        if (userPermissions?.canAccessArticles || (user?.role === 'admin' || user?.role === 'super_admin')) {
+            actions.push({ title: 'Kelola Video', icon: FaVideo, action: () => setCurrentPage('videos'), color: '#ef4444' })
         }
 
         return actions
@@ -502,6 +517,15 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
                     />
                 }
                 return <AdminGrahaSubagdjaPage onBack={() => setCurrentPage('dashboard')} />
+            case 'videos':
+                if (!userPermissions?.canAccessArticles) {
+                    return <ForbiddenPage
+                        requiredRole="Editor, Reviewer, Viewer atau lebih tinggi"
+                        userRole={userRoleLabel}
+                        onBack={() => setCurrentPage('dashboard')}
+                    />
+                }
+                return <AdminVideoPage onBack={() => setCurrentPage('dashboard')} />
             default:
                 return null
         }

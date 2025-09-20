@@ -6,7 +6,8 @@ import {
   MenuResponse,
   HomeStatsResponse,
   HomePageData,
-  PaginatedResponse
+  PaginatedResponse,
+  VideoResponse
 } from '../types/responseTypes'
 
 import {
@@ -19,7 +20,10 @@ import {
   ContactRequest,
   SearchRequest,
   AnalyticsRequest,
-  FeedbackRequest
+  FeedbackRequest,
+  VideoRequest,
+  CreateVideoRequest,
+  UpdateVideoRequest
 } from '../types/requestTypes'
 
 
@@ -95,6 +99,17 @@ export interface IFeedbackRepository {
   }>>
 }
 
+export interface IVideoRepository {
+  getVideos(params?: VideoRequest): Promise<ApiResponse<PaginatedResponse<VideoResponse>>>
+  getVideoById(id: string): Promise<ApiResponse<VideoResponse>>
+  getFeaturedVideos(limit?: number): Promise<ApiResponse<VideoResponse[]>>
+  getVideosByCategory(category: string, limit?: number): Promise<ApiResponse<VideoResponse[]>>
+  incrementViews(id: string): Promise<ApiResponse<{ views: number }>>
+  createVideo(data: CreateVideoRequest): Promise<ApiResponse<VideoResponse>>
+  updateVideo(data: UpdateVideoRequest): Promise<ApiResponse<VideoResponse>>
+  deleteVideo(id: string): Promise<ApiResponse<{ message: string }>>
+}
+
 export interface IApiRepository {
   articles: IArticleRepository
   donations: IDonationRepository
@@ -103,4 +118,5 @@ export interface IApiRepository {
   home: IHomeRepository
   analytics: IAnalyticsRepository
   feedback: IFeedbackRepository
+  videos: IVideoRepository
 }

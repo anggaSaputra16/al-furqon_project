@@ -1,6 +1,3 @@
-
-
-
 export interface BaseParams {
   page?: number
   limit?: number
@@ -115,4 +112,30 @@ export interface FeedbackRequest {
   comment?: string
   email?: string
   isAnonymous?: boolean
+}
+
+export interface VideoRequest extends BaseParams {
+  category?: 'kajian' | 'ceramah' | 'kegiatan' | 'tutorial' | 'lainnya'
+  isActive?: boolean
+  isFeatured?: boolean
+  search?: string
+  tags?: string[]
+  publishedAfter?: string
+  publishedBefore?: string
+}
+
+export interface CreateVideoRequest {
+  title: string
+  description?: string
+  youtubeUrl: string
+  duration?: string
+  category?: string
+  tags?: string
+  orderIndex?: number
+  isActive?: boolean
+  isFeatured?: boolean
+}
+
+export interface UpdateVideoRequest extends Partial<CreateVideoRequest> {
+  id: string
 }

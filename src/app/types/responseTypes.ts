@@ -1,6 +1,3 @@
-
-
-
 export interface ApiResponse<T> {
   success: boolean
   message: string
@@ -154,6 +151,29 @@ export interface PaginatedResponse<T> {
   }
 }
 
+export interface VideoResponse {
+  id: string
+  title: string
+  description?: string
+  youtubeUrl: string
+  thumbnailUrl?: string
+  category: 'kajian' | 'ceramah' | 'kegiatan' | 'tutorial' | 'lainnya'
+  duration?: string
+  viewCount: number
+  isActive: boolean
+  isFeatured: boolean
+  tags: string[]
+  publishedAt: string
+  createdAt: string
+  updatedAt: string
+  author?: {
+    id: string
+    name: string
+    avatar?: string
+  }
+}
+
 export type PaginatedArticles = ApiResponse<PaginatedResponse<ArticleResponse>>
 export type PaginatedDonations = ApiResponse<PaginatedResponse<DonationResponse>>
 export type PaginatedNews = ApiResponse<PaginatedResponse<NewsResponse>>
+export type PaginatedVideos = ApiResponse<PaginatedResponse<VideoResponse>>

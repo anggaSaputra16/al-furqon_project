@@ -12,7 +12,11 @@ import {
   UpdateAdminSettingsRequest,
   UpdateSecuritySettingsRequest,
   BulkDeleteRequest,
-  BulkUpdateStatusRequest
+  BulkUpdateStatusRequest,
+  CreateVideoRequest,
+  UpdateVideoRequest,
+  DeleteVideoRequest,
+  GetVideosRequest
 } from '../types/adminRequestTypes'
 import {
   ApiResponse,
@@ -27,8 +31,10 @@ import {
   AdminAuditLogsResponse,
   AdminFileUploadResponse,
   AdminBackupsResponse,
-  AdminSystemInfo
+  AdminSystemInfo,
+  PaginatedResponse
 } from '../types/adminResponseTypes'
+import { VideoResponse } from '../types/responseTypes'
 
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
@@ -312,6 +318,46 @@ class AdminRepository {
     return this.apiRequest<void>('/admin/system/restart', {
       method: 'POST'
     })
+  }
+
+  // Video Management Methods
+  async getVideos(params?: GetVideosRequest): Promise<ApiResponse<PaginatedResponse<VideoResponse>>> {
+    const queryParams = new URLSearchParams()
+    if (params?.page) queryParams.append('page', params.page.toString())
+    if (params?.limit) queryParams.append('limit', params.limit.toString())
+    if (params?.search) queryParams.append('search', params.search)
+    if (params?.category) queryParams.append('category', params.category)
+    if (params?.isActive !== undefined) queryParams.append('isActive', params.isActive.toString())
+    if (params?.isFeatured !== undefined) queryParams.append('isFeatured', params.isFeatured.toString())
+    if (params?.sortBy) queryParams.append('sortBy', params.sortBy)
+    if (params?.sortOrder) queryParams.append('sortOrder', params.sortOrder)
+
+    const url = queryParams.toString() ? `/admin/videos?${queryParams.toString()}` : '/admin/videos'
+    return this.apiRequest<PaginatedResponse<VideoResponse>>(url)
+  }
+
+  async createVideo(data: CreateVideoRequest): Promise<ApiResponse<VideoResponse>> {
+    return this.apiRequest<VideoResponse>('/admin/videos', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    })
+  }
+
+  async updateVideo(data: UpdateVideoRequest): Promise<ApiResponse<VideoResponse>> {
+    return this.apiRequest<VideoResponse>(`/admin/videos/${data.id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    })
+  }
+
+  async deleteVideo(id: string): Promise<ApiResponse<void>> {
+    return this.apiRequest<void>(`/admin/videos/${id}`, {
+      method: 'DELETE'
+    })
+  }
+
+  async getVideoById(id: string): Promise<ApiResponse<VideoResponse>> {
+    return this.apiRequest<VideoResponse>(`/admin/videos/${id}`)
   }
 }
 
