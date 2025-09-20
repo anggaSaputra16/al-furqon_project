@@ -1,4 +1,3 @@
-
 export interface AdminLoginRequest {
   username: string
   password: string
@@ -125,4 +124,41 @@ export interface UpdateSecuritySettingsRequest {
   loginAttempts?: number
   lockoutDuration?: number
   ipWhitelist?: string[]
+}
+
+// Admin Video Management Request Types
+export interface CreateVideoRequest {
+  title: string
+  description: string
+  youtubeUrl: string
+  isActive?: boolean
+  isFeatured?: boolean
+  tags?: string
+  category?: 'general' | 'kajian' | 'ceramah' | 'tilawah' | 'tutorial' | 'event'
+}
+
+export interface UpdateVideoRequest {
+  id: string
+  title?: string
+  description?: string
+  youtubeUrl?: string
+  isActive?: boolean
+  isFeatured?: boolean
+  tags?: string
+  category?: 'general' | 'kajian' | 'ceramah' | 'tilawah' | 'tutorial' | 'event'
+}
+
+export interface DeleteVideoRequest {
+  id: string
+}
+
+export interface GetVideosRequest {
+  page?: number
+  limit?: number
+  search?: string
+  category?: string
+  isActive?: boolean
+  isFeatured?: boolean
+  sortBy?: 'createdAt' | 'updatedAt' | 'title' | 'viewCount'
+  sortOrder?: 'asc' | 'desc'
 }

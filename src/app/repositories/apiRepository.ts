@@ -6,7 +6,8 @@ import {
   MenuResponse,
   HomeStatsResponse,
   HomePageData,
-  PaginatedResponse
+  PaginatedResponse,
+  VideoResponse
 } from '../types/responseTypes'
 
 import {
@@ -19,7 +20,10 @@ import {
   ContactRequest,
   SearchRequest,
   AnalyticsRequest,
-  FeedbackRequest
+  FeedbackRequest,
+  VideoRequest,
+  CreateVideoRequest,
+  UpdateVideoRequest
 } from '../types/requestTypes'
 
 import {
@@ -30,6 +34,7 @@ import {
   IHomeRepository,
   IAnalyticsRepository,
   IFeedbackRepository,
+  IVideoRepository,
   IApiRepository
 } from './interfaces'
 
@@ -42,6 +47,12 @@ class BackendChecker {
   static async checkAvailability(): Promise<boolean> {
     const now = Date.now()
     
+    // If no external API URL is configured, assume we're in development mode
+    if (!process.env.NEXT_PUBLIC_API_URL) {
+      this.isAvailable = true
+      this.lastCheck = now
+      return true
+    }
 
     if (this.isAvailable !== null && (now - this.lastCheck) < this.CHECK_INTERVAL) {
       return this.isAvailable
@@ -51,8 +62,10 @@ class BackendChecker {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 3000)
       
+      // Use the configured external API URL for health check
+      const healthUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/health`
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/health`, {
+      const response = await fetch(healthUrl, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         signal: controller.signal
@@ -66,7 +79,7 @@ class BackendChecker {
     } catch (error) {
       this.isAvailable = false
       this.lastCheck = now
-      console.warn('⚠️ Local API routes check failed:', error)
+      console.warn('⚠️ External backend API check failed:', error)
       return false
     }
   }
@@ -105,7 +118,11 @@ class HttpClient {
     options: RequestInit = {}
   ): Promise<T> {
 
-    if (!endpoint.includes('/health')) {
+    // Skip backend check for development when no external API is configured
+    if (!endpoint.includes('/health') && !process.env.NEXT_PUBLIC_API_URL) {
+      // In development mode without external API, proceed without checking
+      console.log('📍 Development mode: skipping backend availability check')
+    } else if (!endpoint.includes('/health')) {
       const isBackendAvailable = await BackendChecker.checkAvailability()
       if (!isBackendAvailable) {
         throw new Error('Backend not available')
@@ -346,6 +363,42 @@ export class FeedbackRepository implements IFeedbackRepository {
   }
 }
 
+export class VideoRepository implements IVideoRepository {
+  constructor(private httpClient: HttpClient) {}
+
+  async getVideos(params?: VideoRequest): Promise<ApiResponse<PaginatedResponse<VideoResponse>>> {
+    return this.httpClient.get('/videos', params)
+  }
+
+  async getVideoById(id: string): Promise<ApiResponse<VideoResponse>> {
+    return this.httpClient.get(`/videos/${id}`)
+  }
+
+  async getFeaturedVideos(limit = 6): Promise<ApiResponse<VideoResponse[]>> {
+    return this.httpClient.get('/videos', { limit, isFeatured: true })
+  }
+
+  async getVideosByCategory(category: string, limit = 10): Promise<ApiResponse<VideoResponse[]>> {
+    return this.httpClient.get('/videos', { category, limit })
+  }
+
+  async incrementViews(id: string): Promise<ApiResponse<{ views: number }>> {
+    return this.httpClient.post(`/videos/${id}/view`)
+  }
+
+  async createVideo(data: CreateVideoRequest): Promise<ApiResponse<VideoResponse>> {
+    return this.httpClient.post('/admin/videos', data)
+  }
+
+  async updateVideo(data: UpdateVideoRequest): Promise<ApiResponse<VideoResponse>> {
+    const { id, ...updateData } = data
+    return this.httpClient.put(`/admin/videos/${id}`, updateData)
+  }
+
+  async deleteVideo(id: string): Promise<ApiResponse<{ message: string }>> {
+    return this.httpClient.delete(`/admin/videos/${id}`)
+  }
+}
 
 export class ApiRepository implements IApiRepository {
   private httpClient: HttpClient
@@ -357,6 +410,7 @@ export class ApiRepository implements IApiRepository {
   public home: IHomeRepository
   public analytics: IAnalyticsRepository
   public feedback: IFeedbackRepository
+  public videos: IVideoRepository
 
   constructor(baseUrl?: string) {
     this.httpClient = new HttpClient(baseUrl)
@@ -368,6 +422,7 @@ export class ApiRepository implements IApiRepository {
     this.home = new HomeRepository(this.httpClient)
     this.analytics = new AnalyticsRepository(this.httpClient)
     this.feedback = new FeedbackRepository(this.httpClient)
+    this.videos = new VideoRepository(this.httpClient)
   }
 }
 

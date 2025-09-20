@@ -15,6 +15,7 @@ import HomeHeader from '../path/HomeHeader'
 import ActivityCarousel from '../path/ActivityCarousel'
 import UniversalModal from '../path/UniversalModal'
 import ArticleDetail from '../path/ArticleDetail'
+import VideoGalleryPage from './VideoGalleryPage'
 
 import {
   useHomePageData,
@@ -502,6 +503,42 @@ export default function HomePage() {
                   </div>
                 </div>
               </motion.div>
+            </div>
+          </motion.section>
+
+          {/* Video Kajian & Ceramah Section */}
+          <motion.section
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="py-8"
+          >
+            <div className="max-w-7xl mx-auto">
+              <div className="mb-8">
+                <h2
+                  className="text-2xl md:text-3xl font-bold text-center mb-4"
+                  style={{
+                    color: colors.heading,
+                    fontFamily: 'var(--font-header-masjid)',
+                    letterSpacing: '-0.01em'
+                  }}
+                >
+                  Video Kajian & Ceramah
+                </h2>
+                <p
+                  className="text-center text-lg max-w-2xl mx-auto"
+                  style={{
+                    color: colors.detail,
+                    fontFamily: 'var(--font-body)',
+                    lineHeight: '1.6'
+                  }}
+                >
+                  Koleksi video kajian Islam, ceramah, dan siraman rohani untuk memperkuat iman dan takwa
+                </p>
+              </div>
+              
+              {/* Video Gallery Component */}
+              <VideoGalleryPage showHeader={false} maxVideos={6} />
             </div>
           </motion.section>
 
