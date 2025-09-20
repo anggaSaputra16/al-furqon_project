@@ -40,6 +40,11 @@ export const useMenuStore = create<MenuStore>((set) => ({
         slug: 'galeri',
         icon: 'FaImages',
       },
+      {
+        title: 'Video',
+        slug: 'video',
+        icon: 'FaVideo',
+      },
     ]
     set({ menus: staticMenus })
   },
