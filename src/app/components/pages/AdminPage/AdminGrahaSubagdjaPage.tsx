@@ -20,43 +20,8 @@ import {
     FaWhatsapp
 } from 'react-icons/fa'
 import { useTheme } from '@/context/themeContext'
-
-interface UMKMPartner {
-    id: number
-    name: string
-    category: string
-    description: string
-    services: string[]
-    contact: {
-        phone: string
-        whatsapp: string
-        instagram: string
-    }
-    image: string
-}
-
-interface GalleryImage {
-    id: number
-    title: string
-    image: string
-    category: 'facility' | 'event' | 'ceremony'
-}
-
-interface FAQ {
-    id: number
-    question: string
-    answer: string
-}
-
-interface FacilityInfo {
-    id: number
-    title: string
-    description: string
-    capacity: string
-    facilities: string[]
-    price: string
-    contact: string
-}
+import { grahaSubagdjaUseCases } from '../../../useCases/grahaSubagdjaUseCases'
+import type { UMKMPartner, GalleryImage, FAQ, FacilityInfo } from '../../../repositories/grahaSubagdjaRepository'
 
 interface AdminGrahaSubagdjaPageProps {
     onBack: () => void
@@ -69,95 +34,17 @@ export default function AdminGrahaSubagdjaPage({ onBack }: AdminGrahaSubagdjaPag
     const [editingItem, setEditingItem] = useState<any>(null)
     const [formData, setFormData] = useState<any>({})
 
-    // Mock data - dalam implementasi nyata, data ini akan diambil dari API
-    const [umkmPartners, setUmkmPartners] = useState<UMKMPartner[]>([
-        {
-            id: 1,
-            name: "Barokah Event Organizer",
-            category: "Event Organizer",
-            description: "Spesialis event organizer untuk acara keagamaan dan pernikahan Islami",
-            services: [
-                "Wedding Organizer",
-                "Aqiqah & Khitanan",
-                "Halal Bihalal",
-                "Kajian & Seminar",
-                "Event Keagamaan",
-                "Dekorasi Islami"
-            ],
-            contact: {
-                phone: "021-8765-4321",
-                whatsapp: "0812-3456-7890",
-                instagram: "@barokahevent"
-            },
-            image: "/images/gambar2.jpg"
-        },
-        {
-            id: 2,
-            name: "Sari Ayu Wedding Organizer",
-            category: "Wedding Organizer",
-            description: "Mengkhususkan diri dalam pernikahan Islami dengan konsep elegant dan berkesan",
-            services: [
-                "Full Wedding Package",
-                "Akad Nikah Organizer",
-                "Resepsi Pernikahan",
-                "Henna & Siraman",
-                "Koordinator Acara",
-                "Konsultasi Pernikahan Islami"
-            ],
-            contact: {
-                phone: "021-5432-1098",
-                whatsapp: "0813-9876-5432",
-                instagram: "@sariayuwedding"
-            },
-            image: "/images/gambar3.jpg"
-        }
-    ])
+    const [umkmPartners, setUmkmPartners] = useState<UMKMPartner[]>([])
+    const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([])
+    const [faqs, setFaqs] = useState<FAQ[]>([])
+    const [facilityInfo, setFacilityInfo] = useState<FacilityInfo | null>(null)
 
-    const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([
-        {
-            id: 1,
-            title: "Main Hall",
-            image: "/images/gambar8.jpg",
-            category: "facility"
-        },
-        {
-            id: 2,
-            title: "Wedding Ceremony",
-            image: "/images/gambar9.jpg",
-            category: "ceremony"
-        }
-    ])
-
-    const [faqs, setFaqs] = useState<FAQ[]>([
-        {
-            id: 1,
-            question: "Bagaimana cara booking Graha Subagdja?",
-            answer: "Anda dapat menghubungi kami melalui WhatsApp atau telepon untuk melakukan reservasi. Tim kami akan membantu mengatur jadwal dan kebutuhan acara Anda."
-        },
-        {
-            id: 2,
-            question: "Apakah ada paket all-in untuk acara pernikahan?",
-            answer: "Ya, kami menyediakan berbagai paket pernikahan yang dapat disesuaikan dengan budget dan kebutuhan Anda. Hubungi UMKM partner kami untuk detail lengkap."
-        }
-    ])
-
-    const [facilityInfo, setFacilityInfo] = useState<FacilityInfo>({
-        id: 1,
-        title: "Graha Subagdja Al-Furqon",
-        description: "Gedung serbaguna yang nyaman dan elegan untuk berbagai acara keagamaan dan pernikahan Islami",
-        capacity: "200-300 tamu",
-        facilities: [
-            "Sound System Professional",
-            "Lighting System",
-            "Air Conditioning",
-            "Kitchen & Pantry",
-            "Parking Area",
-            "Prayer Room",
-            "Bridal Room"
-        ],
-        price: "Mulai dari Rp 5.000.000",
-        contact: "0812-3456-7890"
-    })
+    useEffect(() => {
+        grahaSubagdjaUseCases.getPartners().then(setUmkmPartners)
+        grahaSubagdjaUseCases.getGallery().then(setGalleryImages)
+        grahaSubagdjaUseCases.getFAQs().then(setFaqs)
+        grahaSubagdjaUseCases.getFacilityInfo().then(setFacilityInfo)
+    }, [])
 
     const tabs = [
         { id: 'partners', label: 'UMKM Partners', icon: FaHandshake },
@@ -178,59 +65,61 @@ export default function AdminGrahaSubagdjaPage({ onBack }: AdminGrahaSubagdjaPag
         setIsModalOpen(true)
     }
 
-    const handleDelete = (id: number, type: string) => {
+    const handleDelete = async (id: number, type: string) => {
         if (window.confirm('Apakah Anda yakin ingin menghapus item ini?')) {
             switch (type) {
                 case 'partners':
-                    setUmkmPartners(prev => prev.filter(item => item.id !== id))
+                    await grahaSubagdjaUseCases.removePartner(id)
+                    setUmkmPartners(await grahaSubagdjaUseCases.getPartners())
                     break
                 case 'gallery':
-                    setGalleryImages(prev => prev.filter(item => item.id !== id))
+                    await grahaSubagdjaUseCases.removeGalleryImage(id)
+                    setGalleryImages(await grahaSubagdjaUseCases.getGallery())
                     break
                 case 'faq':
-                    setFaqs(prev => prev.filter(item => item.id !== id))
+                    await grahaSubagdjaUseCases.removeFAQ(id)
+                    setFaqs(await grahaSubagdjaUseCases.getFAQs())
                     break
             }
         }
     }
 
-    const handleSave = () => {
+    const handleSave = async () => {
         const type = editingItem?.type || activeTab
 
         if (editingItem) {
-            // Update existing item
             switch (type) {
                 case 'partners':
-                    setUmkmPartners(prev => prev.map(item =>
-                        item.id === editingItem.id ? { ...formData, id: editingItem.id } : item
-                    ))
+                    await grahaSubagdjaUseCases.editPartner(editingItem.id, formData)
+                    setUmkmPartners(await grahaSubagdjaUseCases.getPartners())
                     break
                 case 'gallery':
-                    setGalleryImages(prev => prev.map(item =>
-                        item.id === editingItem.id ? { ...formData, id: editingItem.id } : item
-                    ))
+                    await grahaSubagdjaUseCases.editGalleryImage(editingItem.id, formData)
+                    setGalleryImages(await grahaSubagdjaUseCases.getGallery())
                     break
                 case 'faq':
-                    setFaqs(prev => prev.map(item =>
-                        item.id === editingItem.id ? { ...formData, id: editingItem.id } : item
-                    ))
+                    await grahaSubagdjaUseCases.editFAQ(editingItem.id, formData)
+                    setFaqs(await grahaSubagdjaUseCases.getFAQs())
                     break
                 case 'facility':
-                    setFacilityInfo({ ...formData, id: 1 })
+                    await grahaSubagdjaUseCases.updateFacilityInfo(formData)
+                    setFacilityInfo(await grahaSubagdjaUseCases.getFacilityInfo())
                     break
             }
         } else {
             // Add new item
-            const newId = Date.now()
             switch (type) {
                 case 'partners':
-                    setUmkmPartners(prev => [...prev, { ...formData, id: newId }])
+                    await grahaSubagdjaUseCases.addPartner(formData)
+                    setUmkmPartners(await grahaSubagdjaUseCases.getPartners())
                     break
                 case 'gallery':
-                    setGalleryImages(prev => [...prev, { ...formData, id: newId }])
+                    await grahaSubagdjaUseCases.addGalleryImage(formData)
+                    setGalleryImages(await grahaSubagdjaUseCases.getGallery())
                     break
                 case 'faq':
-                    setFaqs(prev => [...prev, { ...formData, id: newId }])
+                    await grahaSubagdjaUseCases.addFAQ(formData)
+                    setFaqs(await grahaSubagdjaUseCases.getFAQs())
                     break
             }
         }
@@ -491,10 +380,10 @@ export default function AdminGrahaSubagdjaPage({ onBack }: AdminGrahaSubagdjaPag
                 }}
             >
                 <h4 className="text-xl font-bold mb-2" style={{ color: colors.cardText }}>
-                    {facilityInfo.title}
+                    {facilityInfo?.title}
                 </h4>
                 <p className="text-base mb-4" style={{ color: colors.detail }}>
-                    {facilityInfo.description}
+                    {facilityInfo?.description}
                 </p>
 
                 <div className="grid md:grid-cols-2 gap-4 mb-4">
@@ -502,13 +391,13 @@ export default function AdminGrahaSubagdjaPage({ onBack }: AdminGrahaSubagdjaPag
                         <h5 className="font-semibold mb-2" style={{ color: colors.cardText }}>
                             Kapasitas
                         </h5>
-                        <p style={{ color: colors.detail }}>{facilityInfo.capacity}</p>
+                        <p style={{ color: colors.detail }}>{facilityInfo?.capacity}</p>
                     </div>
                     <div>
                         <h5 className="font-semibold mb-2" style={{ color: colors.cardText }}>
                             Harga
                         </h5>
-                        <p style={{ color: colors.detail }}>{facilityInfo.price}</p>
+                        <p style={{ color: colors.detail }}>{facilityInfo?.price}</p>
                     </div>
                 </div>
 
@@ -517,7 +406,7 @@ export default function AdminGrahaSubagdjaPage({ onBack }: AdminGrahaSubagdjaPag
                         Fasilitas
                     </h5>
                     <div className="grid md:grid-cols-2 gap-2">
-                        {facilityInfo.facilities.map((facility, index) => (
+                        {facilityInfo?.facilities?.map((facility, index) => (
                             <div key={index} className="flex items-center space-x-2">
                                 <div
                                     className="w-2 h-2 rounded-full"
@@ -535,7 +424,7 @@ export default function AdminGrahaSubagdjaPage({ onBack }: AdminGrahaSubagdjaPag
                     </h5>
                     <div className="flex items-center space-x-2">
                         <FaWhatsapp style={{ color: '#25D366' }} />
-                        <span style={{ color: colors.detail }}>{facilityInfo.contact}</span>
+                        <span style={{ color: colors.detail }}>{facilityInfo?.contact}</span>
                     </div>
                 </div>
             </motion.div>

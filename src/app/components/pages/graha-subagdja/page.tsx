@@ -25,33 +25,16 @@ import MasjidHeader from '../../path/MasjidHeader'
 import Footer from '../../path/Footer'
 import ThemeToggle from '../../path/ThemeToggle'
 import FacilityInfoModal from '../../path/FacilityInfoModal'
+import { grahaSubagdjaUseCases } from '@/app/useCases/grahaSubagdjaUseCases'
+import type { GalleryImage as BackendGalleryImage, UMKMPartner, FAQ as BackendFAQ } from '@/app/repositories/grahaSubagdjaRepository'
 
-interface GalleryImage {
-    id: number
+interface GalleryImage extends BackendGalleryImage {
     src: string
     alt: string
-    category: 'interior' | 'exterior' | 'event' | 'facility'
 }
 
-interface FAQ {
-    id: number
-    question: string
-    answer: string
+interface FAQ extends BackendFAQ {
     isOpen: boolean
-}
-
-interface UMKMPartner {
-    id: number
-    name: string
-    category: string
-    description: string
-    services: string[]
-    contact: {
-        phone: string
-        whatsapp: string
-        instagram?: string
-    }
-    image: string
 }
 
 export default function GrahaSubagdjaPage() {
@@ -59,38 +42,13 @@ export default function GrahaSubagdjaPage() {
     const [showScrollToTop, setShowScrollToTop] = useState(false)
     const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null)
     const [activeTab, setActiveTab] = useState<'overview' | 'gallery' | 'umkm' | 'contact'>('overview')
-    const [faqs, setFaqs] = useState<FAQ[]>([
-        {
-            id: 1,
-            question: "Bagaimana cara menghubungi UMKM partner yang berafiliasi?",
-            answer: "Anda dapat langsung menghubungi UMKM partner melalui kontak yang tersedia (WhatsApp atau Instagram). Setiap partner telah diverifikasi dan dipercaya untuk melayani acara di Graha Subagdja.",
-            isOpen: false
-        },
-        {
-            id: 2,
-            question: "Berapa kapasitas maksimal Graha Subagdja?",
-            answer: "Graha Subagdja dapat menampung hingga 300 orang untuk acara resepsi pernikahan, 200 orang untuk seminar/rapat kerja, dan 150 orang untuk akad nikah. Kapasitas dapat disesuaikan dengan jenis acara dan arrangement meja.",
-            isOpen: false
-        },
-        {
-            id: 3,
-            question: "Apakah UMKM partner ini terpercaya dan sudah diverifikasi?",
-            answer: "Ya, semua UMKM partner yang tercantum telah melalui proses verifikasi dan seleksi ketat. Mereka memiliki pengalaman, kualitas pelayanan yang baik, dan telah bekerja sama dengan Graha Subagdja dalam berbagai acara.",
-            isOpen: false
-        },
-        {
-            id: 4,
-            question: "Berapa lama durasi maksimal penggunaan fasilitas?",
-            answer: "Durasi penggunaan maksimal adalah 8 jam untuk satu acara. Waktu ini sudah termasuk persiapan dan bersih-bersih. Jika memerlukan waktu tambahan, dapat didiskusikan dengan admin masjid.",
-            isOpen: false
-        },
-        {
-            id: 5,
-            question: "Bisakah saya menggunakan jasa di luar UMKM partner yang tercantum?",
-            answer: "Tentu saja! UMKM partner yang kami tampilkan hanya sebagai rekomendasi. Anda bebas menggunakan jasa dari vendor lain sesuai kebutuhan dan budget Anda. Namun, partner yang tercantum sudah terjamin kualitas dan pengalamannya.",
-            isOpen: false
-        }
-    ])
+
+    // Dynamic data states
+    const [umkmPartners, setUmkmPartners] = useState<UMKMPartner[]>([])
+    const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([])
+    const [facilityInfo, setFacilityInfo] = useState<any>(null)
+
+    const [faqs, setFaqs] = useState<FAQ[]>([])
 
     const [modalInfo, setModalInfo] = useState<{
         isOpen: boolean
@@ -101,140 +59,6 @@ export default function GrahaSubagdjaPage() {
         type: 'tata-tertib',
         facilityName: 'Graha Subagdja'
     })
-
-    const galleryImages: GalleryImage[] = [
-        { id: 1, src: '/images/gambar1.jpg', alt: 'Interior Graha Subagdja', category: 'interior' },
-        { id: 2, src: '/images/gambar2.jpg', alt: 'Setup Resepsi Pernikahan', category: 'event' },
-        { id: 3, src: '/images/gambar3.jpg', alt: 'Area Panggung', category: 'interior' },
-        { id: 4, src: '/images/gambar4.jpg', alt: 'Setup Seminar', category: 'event' },
-        { id: 5, src: '/images/gambar5.jpg', alt: 'Fasilitas Sound System', category: 'facility' },
-        { id: 6, src: '/images/gambar6.jpg', alt: 'Area Parkir', category: 'exterior' },
-        { id: 7, src: '/images/gambar7.jpg', alt: 'Ruang Persiapan', category: 'interior' },
-        { id: 8, src: '/images/gambar8.jpg', alt: 'Setup Kajian', category: 'event' }
-    ]
-
-    const umkmPartners: UMKMPartner[] = [
-        {
-            id: 1,
-            name: "Barokah Event Organizer",
-            category: "Event Organizer",
-            description: "Spesialis penyelenggaraan acara pernikahan, seminar, dan event corporate dengan pengalaman 10+ tahun",
-            services: [
-                "Wedding Planning",
-                "Corporate Event",
-                "Seminar & Workshop",
-                "Dekorasi Pelaminan",
-                "Sound System & Lighting",
-                "Photography & Videography"
-            ],
-            contact: {
-                phone: "021-8765-4321",
-                whatsapp: "0812-3456-7890",
-                instagram: "@barokahevent"
-            },
-            image: "/images/gambar2.jpg"
-        },
-        {
-            id: 2,
-            name: "Sari Ayu Wedding Organizer",
-            category: "Wedding Organizer",
-            description: "Mengkhususkan diri dalam pernikahan Islami dengan konsep elegant dan berkesan",
-            services: [
-                "Full Wedding Package",
-                "Akad Nikah Organizer",
-                "Resepsi Pernikahan",
-                "Henna & Siraman",
-                "Koordinator Acara",
-                "Konsultasi Pernikahan Islami"
-            ],
-            contact: {
-                phone: "021-5432-1098",
-                whatsapp: "0813-9876-5432",
-                instagram: "@sariayuwedding"
-            },
-            image: "/images/gambar3.jpg"
-        },
-        {
-            id: 3,
-            name: "Cantik MUA & Hairdo",
-            category: "Make Up Artist",
-            description: "Make up artist profesional untuk pengantin dengan teknik natural dan hijab-friendly",
-            services: [
-                "Bridal Make Up",
-                "Hijab Styling",
-                "Family Make Up",
-                "Pre-Wedding Make Up",
-                "Traditional Make Up",
-                "Hair Styling & Sanggul"
-            ],
-            contact: {
-                phone: "0856-7890-1234",
-                whatsapp: "0856-7890-1234",
-                instagram: "@cantikmua"
-            },
-            image: "/images/gambar4.jpg"
-        },
-        {
-            id: 4,
-            name: "Berkah Catering",
-            category: "Catering",
-            description: "Penyedia catering halal dengan menu nusantara dan internasional untuk berbagai acara",
-            services: [
-                "Catering Pernikahan",
-                "Catering Aqiqah",
-                "Nasi Box Event",
-                "Prasmanan Lengkap",
-                "Snack & Coffee Break",
-                "Dessert & Traditional Cake"
-            ],
-            contact: {
-                phone: "021-9876-5432",
-                whatsapp: "0817-6543-2109",
-                instagram: "@berkahcatering"
-            },
-            image: "/images/gambar5.jpg"
-        },
-        {
-            id: 5,
-            name: "Cahaya Photography",
-            category: "Photography & Videography",
-            description: "Jasa foto dan video profesional untuk dokumentasi momen berharga Anda",
-            services: [
-                "Wedding Photography",
-                "Cinematic Videography",
-                "Pre-Wedding Session",
-                "Event Documentation",
-                "Drone Photography",
-                "Same Day Edit Video"
-            ],
-            contact: {
-                phone: "0878-1234-5678",
-                whatsapp: "0878-1234-5678",
-                instagram: "@cahayaphoto"
-            },
-            image: "/images/gambar6.jpg"
-        },
-        {
-            id: 6,
-            name: "Flower Decoration",
-            category: "Dekorasi & Florist",
-            description: "Spesialis dekorasi bunga dan pelaminan dengan konsep modern dan tradisional",
-            services: [
-                "Dekorasi Pelaminan",
-                "Buket Pengantin",
-                "Centerpiece Meja",
-                "Backdrop Photobooth",
-                "Corsage & Boutonniere",
-                "Fresh Flower Arrangement"
-            ],
-            contact: {
-                phone: "0819-2345-6789",
-                whatsapp: "0819-2345-6789",
-                instagram: "@flowerdeco"
-            },
-            image: "/images/gambar7.jpg"
-        }
-    ]
 
     const facilities = [
         {
@@ -274,6 +98,76 @@ export default function GrahaSubagdjaPage() {
             color: colors.accent
         }
     ]
+
+    // Fetch data from backend
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [partnersData, galleryData, faqData, facilityData] = await Promise.all([
+                    grahaSubagdjaUseCases.getPartners(),
+                    grahaSubagdjaUseCases.getGallery(),
+                    grahaSubagdjaUseCases.getFAQs(),
+                    grahaSubagdjaUseCases.getFacilityInfo()
+                ])
+
+                setUmkmPartners(partnersData)
+
+                // Transform gallery data to add src and alt fields
+                const transformedGalleryData: GalleryImage[] = galleryData.map(item => ({
+                    ...item,
+                    src: item.image,
+                    alt: item.title
+                }))
+                setGalleryImages(transformedGalleryData)
+
+                // Transform FAQ data to match local interface
+                const transformedFaqData = faqData.map(item => ({
+                    ...item,
+                    isOpen: false
+                }))
+                setFaqs(transformedFaqData)
+
+                setFacilityInfo(facilityData)
+            } catch (error) {
+                console.error('Error fetching data:', error)
+                // Keep FAQ static data as fallback
+                setFaqs([
+                    {
+                        id: 1,
+                        question: "Bagaimana cara menghubungi UMKM partner yang berafiliasi?",
+                        answer: "Anda dapat langsung menghubungi UMKM partner melalui kontak yang tersedia (WhatsApp atau Instagram). Setiap partner telah diverifikasi dan dipercaya untuk melayani acara di Graha Subagdja.",
+                        isOpen: false
+                    },
+                    {
+                        id: 2,
+                        question: "Berapa kapasitas maksimal Graha Subagdja?",
+                        answer: "Graha Subagdja dapat menampung hingga 300 orang untuk acara resepsi pernikahan, 200 orang untuk seminar/rapat kerja, dan 150 orang untuk akad nikah. Kapasitas dapat disesuaikan dengan jenis acara dan arrangement meja.",
+                        isOpen: false
+                    },
+                    {
+                        id: 3,
+                        question: "Apakah UMKM partner ini terpercaya dan sudah diverifikasi?",
+                        answer: "Ya, semua UMKM partner yang tercantung telah melalui proses verifikasi dan seleksi ketat. Mereka memiliki pengalaman, kualitas pelayanan yang baik, dan telah bekerja sama dengan Graha Subagdja dalam berbagai acara.",
+                        isOpen: false
+                    },
+                    {
+                        id: 4,
+                        question: "Berapa lama durasi maksimal penggunaan fasilitas?",
+                        answer: "Durasi penggunaan maksimal adalah 8 jam untuk satu acara. Waktu ini sudah termasuk persiapan dan bersih-bersih. Jika memerlukan waktu tambahan, dapat didiskusikan dengan admin masjid.",
+                        isOpen: false
+                    },
+                    {
+                        id: 5,
+                        question: "Bisakah saya menggunakan jasa di luar UMKM partner yang tercantum?",
+                        answer: "Tentu saja! UMKM partner yang kami tampilkan hanya sebagai rekomendasi. Anda bebas menggunakan jasa dari vendor lain sesuai kebutuhan dan budget Anda. Namun, partner yang tercantum sudah terjamin kualitas dan pengalamannya.",
+                        isOpen: false
+                    }
+                ])
+            }
+        }
+
+        fetchData()
+    }, [])
 
     useEffect(() => {
         const handleScroll = () => {
@@ -317,7 +211,6 @@ export default function GrahaSubagdjaPage() {
             <MasjidHeader />
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8 mt-5">
-                {/* Back Button */}
                 <motion.div
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
