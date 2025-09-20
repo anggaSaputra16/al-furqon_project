@@ -191,7 +191,7 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
             })
         }
 
-        if (userPermissions?.canAccessUsers || (user?.role === 'admin' || user?.role === 'super_admin')) {
+        if (user?.role === 'admin' || user?.role === 'super_admin') {
             baseItems.push({
                 title: 'Pengguna',
                 icon: FaUsers,
@@ -454,7 +454,7 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
                 }
                 return <AdminArticlePage onBack={() => setCurrentPage('dashboard')} />
             case 'users':
-                if (!userPermissions?.canAccessUsers) {
+                if (!(user?.role === 'admin' || user?.role === 'super_admin')) {
                     return <ForbiddenPage
                         requiredRole="Admin atau Super Admin"
                         userRole={userRoleLabel}

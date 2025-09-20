@@ -40,7 +40,6 @@ export default function VideoGalleryPage({ showHeader = true, maxVideos }: Video
             console.log('🎥 Video API Response:', response)
             
             if (response.success && response.data) {
-                // API returns: {success: true, data: {data: videos[], pagination: {}}}
                 let videoList: VideoResponse[] = []
                 
                 if (response.data.data && Array.isArray(response.data.data)) {
@@ -178,93 +177,93 @@ export default function VideoGalleryPage({ showHeader = true, maxVideos }: Video
     return (
         <div className="min-h-screen" style={{ backgroundColor: colors.background }}>
             {/* Header */}
-            <div
-                className="border-b"
-                style={{
-                    backgroundColor: colors.card,
-                    borderColor: colors.border
-                }}
-            >
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6 }}
-                    >
-                        {/* Back Button */}
-                        <div className="mb-6">
-                            <button
-                                onClick={() => router.push('/')}
-                                className="flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 hover:shadow-md group"
-                                style={{ 
-                                    backgroundColor: colors.accent + '10',
-                                    color: colors.accent,
-                                    border: `1px solid ${colors.accent}20`
-                                }}
-                            >
-                                <FaArrowLeft className="transition-transform group-hover:-translate-x-1" size={16} />
-                                <FaHome size={16} />
-                                <span className="font-medium">Kembali ke Beranda</span>
-                            </button>
-                        </div>
-
-                        <div className="flex items-center space-x-4 mb-4">
-                            <div
-                                className="w-12 h-12 rounded-lg flex items-center justify-center"
-                                style={{ backgroundColor: '#f59e0b' + '20' }}
-                            >
-                                <FaVideo size={24} style={{ color: '#f59e0b' }} />
-                            </div>
-                            <div>
-                                <h1
-                                    className="text-3xl font-bold"
-                                    style={{
-                                        color: colors.cardText,
-                                        fontFamily: 'var(--font-header-modern)'
+            {showHeader && (
+                <div
+                    className="border-b"
+                    style={{
+                        backgroundColor: colors.card,
+                        borderColor: colors.border
+                    }}
+                >
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.6 }}
+                        >
+                            {/* Back Button */}
+                            <div className="mb-6">
+                                <button
+                                    onClick={() => router.push('/')}
+                                    className="flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 hover:shadow-md group"
+                                    style={{ 
+                                        backgroundColor: colors.accent + '10',
+                                        color: colors.accent,
+                                        border: `1px solid ${colors.accent}20`
                                     }}
                                 >
-                                    Gallery Video
-                                </h1>
-                                <p
-                                    className="text-lg"
-                                    style={{
-                                        color: colors.detail,
-                                        fontFamily: 'var(--font-body)'
-                                    }}
-                                >
-                                    Koleksi video kajian, ceramah, dan kegiatan Masjid Al-Furqon
-                                </p>
+                                    <FaArrowLeft className="transition-transform group-hover:-translate-x-1" size={16} />
+                                    <FaHome size={16} />
+                                    <span className="font-medium">Kembali ke Beranda</span>
+                                </button>
                             </div>
-                        </div>
 
-                        {/* Stats */}
-                        <div className="flex items-center space-x-6 text-sm">
-                            <div className="flex items-center space-x-2">
-                                <span style={{ color: colors.detail }}>Total Video:</span>
-                                <span
-                                    className="font-semibold"
-                                    style={{ color: colors.cardText }}
+                            <div className="flex items-center space-x-4 mb-4">
+                                <div
+                                    className="w-12 h-12 rounded-lg flex items-center justify-center"
+                                    style={{ backgroundColor: '#f59e0b' + '20' }}
                                 >
-                                    {videos.length}
-                                </span>
+                                    <FaVideo size={24} style={{ color: '#f59e0b' }} />
+                                </div>
+                                <div>
+                                    <h1
+                                        className="text-3xl font-bold"
+                                        style={{
+                                            color: colors.cardText,
+                                            fontFamily: 'var(--font-header-modern)'
+                                        }}
+                                    >
+                                        Gallery Video
+                                    </h1>
+                                    <p
+                                        className="text-lg"
+                                        style={{
+                                            color: colors.detail,
+                                            fontFamily: 'var(--font-body)'
+                                        }}
+                                    >
+                                        Koleksi video kajian, ceramah, dan kegiatan Masjid Al-Furqon
+                                    </p>
+                                </div>
                             </div>
-                            <div className="flex items-center space-x-2">
-                                <span style={{ color: colors.detail }}>Total Views:</span>
-                                <span
-                                    className="font-semibold"
-                                    style={{ color: colors.cardText }}
-                                >
-                                    {videos.reduce((total, video) => total + video.viewCount, 0).toLocaleString()}
-                                </span>
+
+                            {/* Stats */}
+                            <div className="flex items-center space-x-6 text-sm">
+                                <div className="flex items-center space-x-2">
+                                    <span style={{ color: colors.detail }}>Total Video:</span>
+                                    <span
+                                        className="font-semibold"
+                                        style={{ color: colors.cardText }}
+                                    >
+                                        {videos.length}
+                                    </span>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <span style={{ color: colors.detail }}>Total Views:</span>
+                                    <span
+                                        className="font-semibold"
+                                        style={{ color: colors.cardText }}
+                                    >
+                                        {videos.reduce((total, video) => total + video.viewCount, 0).toLocaleString()}
+                                    </span>
+                                </div>
                             </div>
-                        </div>
-                    </motion.div>
+                        </motion.div>
+                    </div>
                 </div>
-            </div>
+            )}
 
-            {/* Content */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-                {/* Filters and View Toggle */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -391,8 +390,7 @@ export default function VideoGalleryPage({ showHeader = true, maxVideos }: Video
                                                         alt={video.title}
                                                         className="w-full h-full object-cover"
                                                         onError={(e) => {
-                                                            const target = e.target as HTMLImageElement
-                                                            target.src = `https://img.youtube.com/vi/${extractYouTubeVideoId(video.youtubeUrl)}/hqdefault.jpg`
+                                                            e.target.src = `https://img.youtube.com/vi/${extractYouTubeVideoId(video.youtubeUrl)}/hqdefault.jpg`
                                                         }}
                                                     />
                                                 )}

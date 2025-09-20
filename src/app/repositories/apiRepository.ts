@@ -108,7 +108,17 @@ class HttpClient {
     }
   }
 
-  private getAuthHeaders(): Record<string, string> {
+  private getAuthHeaders(endpoint?: string): Record<string, string> {
+    // For admin endpoints, use admin_auth token
+    if (endpoint && endpoint.includes('/admin/')) {
+      const adminAuth = localStorage.getItem('admin_auth')
+      if (adminAuth) {
+        const parsedAuth = JSON.parse(adminAuth)
+        return parsedAuth?.token ? { Authorization: `Bearer ${parsedAuth.token}` } : {}
+      }
+    }
+    
+    // For regular endpoints, use alfurqon_token
     const token = localStorage.getItem('alfurqon_token')
     return token ? { Authorization: `Bearer ${token}` } : {}
   }
@@ -136,7 +146,7 @@ class HttpClient {
       ...options,
       headers: {
         ...this.defaultHeaders,
-        ...this.getAuthHeaders(),
+        ...this.getAuthHeaders(endpoint),
         ...options.headers,
       },
       signal: AbortSignal.timeout(this.timeout)
@@ -148,6 +158,12 @@ class HttpClient {
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
+        
+        // Check for invalid token errors and trigger auto logout
+        if (this.isInvalidTokenError(response.status, errorData)) {
+          this.handleInvalidToken(endpoint)
+        }
+        
         this.logError(endpoint, errorData)
         throw new Error(errorData.message || `HTTP error! status: ${response.status}`)
       }
@@ -158,6 +174,63 @@ class HttpClient {
     } catch (error) {
       this.logError(endpoint, error)
       throw error
+    }
+  }
+
+  private isInvalidTokenError(statusCode: number, errorData: any): boolean {
+    // Check for invalid token based on status code and error message
+    const isUnauthorized = statusCode === 401 || errorData?.error === 401
+    const hasInvalidTokenMessage = errorData?.message?.toLowerCase().includes('invalid token') ||
+                                   errorData?.message?.toLowerCase().includes('token expired') ||
+                                   errorData?.message?.toLowerCase().includes('unauthorized') ||
+                                   errorData?.message?.toLowerCase().includes('access token required')
+    
+    return (isUnauthorized || statusCode === 500) && hasInvalidTokenMessage
+  }
+
+  private handleInvalidToken(endpoint: string): void {
+    console.warn('🔒 Invalid token detected, logging out user...')
+    
+    // Clear tokens from localStorage
+    if (typeof window !== 'undefined') {
+      // Clear admin token if it's an admin endpoint
+      if (endpoint.includes('/admin/')) {
+        localStorage.removeItem('admin_auth')
+      } else {
+        // Clear regular user token
+        localStorage.removeItem('alfurqon_token')
+      }
+      
+      // Dispatch auto logout event for AuthHandler to pick up
+      const event = new CustomEvent('autoLogout', {
+        detail: {
+          message: 'Sesi Anda telah berakhir. Silakan login kembali.',
+          type: 'warning',
+          endpoint: endpoint
+        }
+      })
+      window.dispatchEvent(event)
+    }
+  }
+
+  private showLogoutNotification(): void {
+    // Create a simple notification for auto logout
+    if (typeof window !== 'undefined') {
+      // Try to show a toast notification if available
+      const event = new CustomEvent('autoLogout', {
+        detail: {
+          message: 'Sesi Anda telah berakhir. Silakan login kembali.',
+          type: 'warning'
+        }
+      })
+      window.dispatchEvent(event)
+      
+      // Fallback to simple alert if no notification system
+      setTimeout(() => {
+        if (!document.querySelector('[data-notification-shown]')) {
+          alert('Sesi Anda telah berakhir. Silakan login kembali.')
+        }
+      }, 100)
     }
   }
 
