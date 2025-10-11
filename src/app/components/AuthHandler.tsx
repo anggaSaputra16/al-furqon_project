@@ -9,7 +9,7 @@ export default function AuthHandler() {
   const { logout } = useAdminAuthentication()
 
   useEffect(() => {
-    const handleAutoLogout = (event) => {
+    const handleAutoLogout = (event: any) => {
       // Clear all auth tokens immediately
       localStorage.removeItem('admin_auth')
       localStorage.removeItem('alfurqon_token')
@@ -40,7 +40,7 @@ export default function AuthHandler() {
   return null // This component doesn't render anything
 }
 
-function showAutoLogoutNotification(message) {
+function showAutoLogoutNotification(message: any) {
   // Create a simple toast notification
   const notification = document.createElement('div')
   notification.innerHTML = `
