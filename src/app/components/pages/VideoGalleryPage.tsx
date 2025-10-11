@@ -348,7 +348,6 @@ export default function VideoGalleryPage({ showHeader = true, maxVideos }: Video
                     </div>
                 </motion.div>
 
-                {/* Video Content */}
                 {(() => {
                     console.log('🎬 Rendering video content. filteredVideos.length:', filteredVideos.length)
                     return null
@@ -389,8 +388,8 @@ export default function VideoGalleryPage({ showHeader = true, maxVideos }: Video
                                                         src={video.thumbnailUrl || `https://img.youtube.com/vi/${extractYouTubeVideoId(video.youtubeUrl)}/maxresdefault.jpg`}
                                                         alt={video.title}
                                                         className="w-full h-full object-cover"
-                                                        onError={(e) => {
-                                                            e.target.src = `https://img.youtube.com/vi/${extractYouTubeVideoId(video.youtubeUrl)}/hqdefault.jpg`
+                                                        onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+                                                            e.currentTarget.src = `https://img.youtube.com/vi/${extractYouTubeVideoId(video.youtubeUrl)}/hqdefault.jpg`
                                                         }}
                                                     />
                                                 )}
