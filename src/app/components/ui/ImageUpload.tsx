@@ -125,7 +125,7 @@ export default function ImageUpload({
         xhr.onerror = () => reject(new Error('Terjadi kesalahan saat upload'));
       });
 
-      xhr.open('POST', `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/upload/article/image`);
+      xhr.open('POST', `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/v1/upload/article/image`);
       xhr.setRequestHeader('Authorization', `Bearer ${token}`);
       xhr.send(formData);
 

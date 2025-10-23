@@ -1,5 +1,15 @@
-<<<<<<< HEAD
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Al-Furqon Bekasi - CMS Dashboard
+
+Content Management System untuk Masjid Al-Furqon Bekasi.
+
+## Tech Stack
+
+- **Framework**: Next.js 15 (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **State Management**: Zustand
+- **Animation**: Framer Motion
+- **Icons**: React Icons
 
 ## Getting Started
 

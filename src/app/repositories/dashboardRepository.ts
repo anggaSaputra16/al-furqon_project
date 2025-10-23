@@ -10,7 +10,7 @@ import {
 } from '../types/adminResponseTypes'
 
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
 const API_VERSION = '/api/v1'
 
 class DashboardRepository {

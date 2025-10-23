@@ -54,7 +54,7 @@ export const useAdminUsers = () => {
       if (filters.sortOrder) params.append('sortOrder', filters.sortOrder)
 
       const query = params.toString() ? `?${params.toString()}` : ''
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/admin/users${query}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/v1/admin/users${query}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

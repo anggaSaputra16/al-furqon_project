@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "CMS ALFURQON",
-  description: "Dashboard Masjid ALFURQON",
+  title: "Al-Furqon Bekasi",
+  description: "Dashboard Masjid Al-Furqon Bekasi",
 }
 
 export default function RootLayout({
