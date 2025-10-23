@@ -96,9 +96,13 @@ class HttpClient {
   private defaultHeaders: Record<string, string>
   private timeout: number
 
-  constructor(baseUrl: string = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') {
+  constructor(baseUrl: string = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080') {
 
-    this.baseUrl = baseUrl.endsWith('/api/v1') ? baseUrl : `${baseUrl}/api/v1`
+    // Remove trailing /api/v1 if it exists to prevent double /api/v1
+    this.baseUrl = baseUrl.endsWith('/api/v1') 
+      ? baseUrl.slice(0, -7)  // Remove trailing /api/v1
+      : baseUrl
+    this.baseUrl = `${this.baseUrl}/api/v1`
     this.timeout = parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '15000')
     this.defaultHeaders = {
       'Content-Type': 'application/json',

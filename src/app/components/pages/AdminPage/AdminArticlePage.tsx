@@ -684,13 +684,18 @@ export default function AdminArticlePage({ onBack }: AdminArticlePageProps) {
                                     }}
                                 >
                                     {/* Image */}
-                                    <div className="relative h-48 overflow-hidden">
+                                    <div className="relative h-48 overflow-hidden bg-gray-200 flex items-center justify-center">
                                         <img
-                                            src={article.image || '/images/placeholder.jpg'}
+                                            src={article.image || '/images/placeholder.svg'}
                                             alt={article.title}
                                             className="w-full h-full object-cover"
                                             onError={(e) => {
-                                                (e.target as HTMLImageElement).src = '/images/placeholder.jpg'
+                                                const target = e.target as HTMLImageElement
+                                                // Prevent infinite loop
+                                                if (!target.dataset.errorHandled) {
+                                                    target.dataset.errorHandled = 'true'
+                                                    target.src = '/images/placeholder.svg'
+                                                }
                                             }}
                                         />
                                         {article.featured && (
@@ -1065,7 +1070,12 @@ export default function AdminArticlePage({ onBack }: AdminArticlePageProps) {
                                             alt="Preview"
                                             className="w-full h-32 object-cover rounded-lg"
                                             onError={(e) => {
-                                                (e.target as HTMLImageElement).src = '/images/placeholder.jpg'
+                                                const target = e.target as HTMLImageElement
+                                                // Prevent infinite loop
+                                                if (!target.dataset.errorHandled) {
+                                                    target.dataset.errorHandled = 'true'
+                                                    target.src = '/images/placeholder.svg'
+                                                }
                                             }}
                                         />
                                         {/* Clear image button */}

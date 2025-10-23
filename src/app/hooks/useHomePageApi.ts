@@ -437,7 +437,7 @@ export const useLatestNews = (limit = 3) => {
           const controller = new AbortController()
           const timeoutId = setTimeout(() => controller.abort(), 3000)
           
-          const healthCheck = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/health`, {
+          const healthCheck = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/health`, {
             method: 'GET',
             signal: controller.signal
           })

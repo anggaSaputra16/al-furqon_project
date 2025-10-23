@@ -31,7 +31,7 @@ export const useArticleStore = create<ArticleStore>((set) => ({
   fetchArticles: async () => {
     try {
       
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/articles?limit=100`)
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/articles?limit=100`)
       
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`)

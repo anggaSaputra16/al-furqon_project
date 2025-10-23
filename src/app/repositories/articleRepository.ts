@@ -48,7 +48,7 @@ export interface GetArticlesRequest {
 }
 
 class ArticleRepository {
-    private readonly BASE_URL = 'http://localhost:5000/api/v1/admin'
+    private readonly BASE_URL = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/v1/admin`
     private readonly ARTICLE_ENDPOINTS = {
         LIST: `${this.BASE_URL}/articles`,
         CREATE: `${this.BASE_URL}/articles`,
