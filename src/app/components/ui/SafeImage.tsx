@@ -11,14 +11,14 @@ import { useState } from 'react'
  */
 
 export default function SafeImage({ 
-    src, 
-    alt, 
+    src = '', 
+    alt = '', 
     fallbackSrc = '/images/placeholder.svg',
     className = '',
     ...props 
 }) {
-    const [imgSrc, setImgSrc] = useState(src)
-    const [hasError, setHasError] = useState(false)
+    const [imgSrc, setImgSrc] = useState<string>(src)
+    const [hasError, setHasError] = useState<Boolean>(false)
 
     const handleError = () => {
         if (!hasError) {
