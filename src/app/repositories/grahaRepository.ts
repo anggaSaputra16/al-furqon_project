@@ -14,7 +14,7 @@ class HttpClient {
   private timeout: number
 
   constructor(baseUrl: string = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080') {
-    this.baseUrl = baseUrl.endsWith('/api/v1') ? baseUrl : `${baseUrl}/api/v1`
+    this.baseUrl = baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`
     this.timeout = parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '15000')
     this.defaultHeaders = {
       'Content-Type': 'application/json',

@@ -393,7 +393,7 @@ server {
     client_max_body_size 10M;
 
     # Proxy Backend API
-    location /api/ {
+    location /api {
         proxy_pass http://backend_api;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
@@ -470,7 +470,7 @@ server {
     }
 }
 
-# Frontend Server (same as above but without /api/ location)
+# Frontend Server (same as above but without /api location)
 ```
 
 ### 3. Enable Site

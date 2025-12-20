@@ -64,7 +64,8 @@ class BackendAvailabilityManager {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), this.TIMEOUT)
       
-      const healthUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/v1/health`      
+      // Use correct health check endpoint: /api/home/health
+      const healthUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/home/health`      
       const response = await fetch(healthUrl, {
         method: 'GET',
         headers: {
