@@ -310,23 +310,6 @@ export default function AdminLoginPage() {
                     </div>
                 </motion.div>
 
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.6, delay: 0.4 }}
-                    className="mt-4 text-center"
-                >
-                    <p
-                        className="text-xs opacity-60"
-                        style={{
-                            color: colors.detail,
-                            fontFamily: 'var(--font-body)'
-                        }}
-                    >
-                        Demo: admin / admin123
-                    </p>
-                </motion.div>
-
                 <AnimatePresence>
                     {showErrorPopup && error && (
                         <motion.div

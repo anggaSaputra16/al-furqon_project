@@ -168,7 +168,7 @@ export const useAdminAuthentication = () => {
     auth.setLoading(true)
     
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/admin/auth/me`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/v1/admin/auth/me`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

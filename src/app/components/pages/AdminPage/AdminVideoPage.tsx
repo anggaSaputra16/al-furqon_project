@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { FaVideo, FaPlus, FaEdit, FaTrash, FaYoutube, FaEye, FaEyeSlash, FaSave, FaTimes, FaTag, FaStar } from 'react-icons/fa'
+import { FaVideo, FaPlus, FaEdit, FaTrash, FaYoutube, FaEye, FaEyeSlash, FaSave, FaTimes, FaTag, FaStar, FaArrowLeft } from 'react-icons/fa'
 import { useTheme } from '@/context/themeContext'
 import { apiRepository } from '@/app/repositories/apiRepository'
 import { useAdminUI } from '@/app/stores/adminStore'
@@ -247,21 +247,71 @@ export default function AdminVideoPage({ onBack }: AdminVideoPageProps) {
   }
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold flex items-center gap-3" style={{ color: colors.cardText }}>
-          <FaVideo className="text-2xl" style={{ color: colors.accent }} />
-          Manajemen Video
-        </h1>
-        <button
-          onClick={() => setShowForm(true)}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors"
-          style={{ backgroundColor: colors.accent, color: colors.card }}
-        >
-          <FaPlus />
-          Tambah Video
-        </button>
+    <div
+      className="min-h-screen"
+      style={{ backgroundColor: colors.background }}
+    >
+      {/* Header */}
+      <div
+        className="sticky top-0 z-10 border-b"
+        style={{
+          backgroundColor: colors.card,
+          borderColor: colors.border + '30'
+        }}
+      >
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              {onBack && (
+                <button
+                  onClick={onBack}
+                  className="flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 hover:scale-105"
+                  style={{
+                    backgroundColor: colors.background,
+                    color: colors.cardText
+                  }}
+                >
+                  <FaArrowLeft size={16} />
+                  <span>Kembali</span>
+                </button>
+              )}
+              <div>
+                <h1
+                  className="text-2xl font-bold flex items-center gap-3"
+                  style={{
+                    color: colors.cardText,
+                    fontFamily: 'var(--font-header-modern)'
+                  }}
+                >
+                  <FaVideo className="text-2xl" style={{ color: colors.accent }} />
+                  Manajemen Video
+                </h1>
+                <p
+                  className="text-sm"
+                  style={{ color: colors.detail }}
+                >
+                  Kelola video YouTube untuk ditampilkan di website
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowForm(true)}
+              className="flex items-center space-x-2 px-4 py-2 rounded-lg font-semibold transition-all duration-200 hover:scale-105"
+              style={{
+                backgroundColor: colors.accent,
+                color: 'white'
+              }}
+            >
+              <FaPlus size={16} />
+              <span>Tambah Video</span>
+            </button>
+          </div>
+        </div>
       </div>
+
+      {/* Content */}
+      <div className="max-w-7xl mx-auto px-6 py-6">
 
       {showForm && (
         <motion.div
@@ -599,6 +649,7 @@ export default function AdminVideoPage({ onBack }: AdminVideoPageProps) {
           </p>
         </div>
       )}
+      </div>
     </div>
   )
 }
