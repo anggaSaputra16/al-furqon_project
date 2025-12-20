@@ -57,8 +57,6 @@ export default function AdminArticlePage({ onBack }: AdminArticlePageProps) {
             if (response?.data) {
                 currentState.setArticles(response.data)
                 currentState.markDataAsFresh()
-                console.log('✅ Articles refreshed successfully')
-
 
                 ui.addNotification({
                     id: Date.now().toString(),
@@ -684,20 +682,29 @@ export default function AdminArticlePage({ onBack }: AdminArticlePageProps) {
                                     }}
                                 >
                                     {/* Image */}
-                                    <div className="relative h-48 overflow-hidden bg-gray-200 flex items-center justify-center">
-                                        <img
-                                            src={article.image || '/images/placeholder.svg'}
-                                            alt={article.title}
-                                            className="w-full h-full object-cover"
-                                            onError={(e) => {
-                                                const target = e.target as HTMLImageElement
-                                                // Prevent infinite loop
-                                                if (!target.dataset.errorHandled) {
-                                                    target.dataset.errorHandled = 'true'
-                                                    target.src = '/images/placeholder.svg'
-                                                }
-                                            }}
-                                        />
+                                    <div className="relative h-48 overflow-hidden bg-gray-100 flex items-center justify-center">
+                                        {article.image ? (
+                                            <img
+                                                src={article.image}
+                                                alt={article.title}
+                                                className="w-full h-full object-cover"
+                                                crossOrigin="anonymous"
+                                                loading="lazy"
+                                                onError={(e) => {
+                                                    const target = e.target as HTMLImageElement
+                                                    if (!target.dataset.errorHandled) {
+                                                        target.dataset.errorHandled = 'true'
+                                                        target.src = '/images/placeholder.svg'
+                                                        console.error('Failed to load image:', article.image)
+                                                    }
+                                                }}
+                                            />
+                                        ) : (
+                                            <div className="flex flex-col items-center justify-center text-gray-400">
+                                                <FaFileAlt size={32} className="mb-2" />
+                                                <span className="text-xs">No Image</span>
+                                            </div>
+                                        )}
                                         {article.featured && (
                                             <div
                                                 className="absolute top-3 left-3 px-2 py-1 rounded-lg text-xs font-medium flex items-center space-x-1"
@@ -1069,12 +1076,14 @@ export default function AdminArticlePage({ onBack }: AdminArticlePageProps) {
                                             src={formData.image}
                                             alt="Preview"
                                             className="w-full h-32 object-cover rounded-lg"
+                                            crossOrigin="anonymous"
+                                            loading="lazy"
                                             onError={(e) => {
                                                 const target = e.target as HTMLImageElement
-                                                // Prevent infinite loop
                                                 if (!target.dataset.errorHandled) {
                                                     target.dataset.errorHandled = 'true'
                                                     target.src = '/images/placeholder.svg'
+                                                    console.error('Failed to load preview image:', formData.image)
                                                 }
                                             }}
                                         />

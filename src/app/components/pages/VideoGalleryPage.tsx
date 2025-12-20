@@ -35,51 +35,31 @@ export default function VideoGalleryPage({ showHeader = true, maxVideos }: Video
     const loadVideos = async () => {
         setIsLoading(true)
         try {
-            console.log('🔄 Starting to load videos...')
             const response = await apiRepository.videos.getVideos()
-            console.log('🎥 Video API Response:', response)
             
             if (response.success && response.data) {
                 let videoList: VideoResponse[] = []
                 
                 if (response.data.data && Array.isArray(response.data.data)) {
-                    // Standard backend pagination structure (sama seperti admin)
                     videoList = response.data.data
-                    console.log('📹 Using response.data.data:', videoList.length, 'videos')
-                    console.log('📹 First video sample:', videoList[0])
                 } else if (Array.isArray(response.data)) {
-                    // Direct array response (fallback)
                     videoList = response.data
-                    console.log('📹 Using response.data (direct array):', videoList.length, 'videos')
                 } else {
                     console.warn('❌ Unexpected video data structure:', response.data)
                     videoList = []
                 }
                 
-                console.log('📹 Raw video list length:', videoList.length)
-                console.log('📹 Raw video list:', videoList)
-                
-                // PERBAIKAN: Tampilkan semua video seperti di admin, tidak hanya yang aktif
-                // Filter hanya untuk memastikan data valid
                 const validVideos = videoList.filter((video: VideoResponse) => {
                     const isValid = video && video.id && video.title && video.youtubeUrl
-                    console.log(`📹 Checking video "${video?.title}": valid = ${isValid}, isActive = ${video?.isActive}`)
                     return isValid
                 })
-                console.log('✅ Valid videos count:', validVideos.length)
-                console.log('✅ Valid videos:', validVideos)
-                
                 setVideos(validVideos)
                 
-                // Set first video as selected for playlist mode
                 if (validVideos.length > 0 && !selectedVideo) {
                     setSelectedVideo(validVideos[0])
-                    console.log('🎯 Selected first video:', validVideos[0].title)
                 }
                 
-                // Get featured videos (first 6 for grid display)
                 setFeaturedVideos(validVideos.slice(0, 6))
-                console.log('⭐ Featured videos count:', Math.min(validVideos.length, 6))
             } else {
                 console.warn('❌ Failed to load videos:', response)
                 setVideos([])
@@ -93,7 +73,6 @@ export default function VideoGalleryPage({ showHeader = true, maxVideos }: Video
             setSelectedVideo(null)
         } finally {
             setIsLoading(false)
-            console.log('🏁 Video loading finished')
         }
     }
 
@@ -127,16 +106,12 @@ export default function VideoGalleryPage({ showHeader = true, maxVideos }: Video
     }
 
     const handleVideoSelect = (video: any) => {
-        console.log('🎯 handleVideoSelect called with:', video)
-        // Find full video object from our state
         const fullVideo = videos.find(v => v.id === video.id)
         if (fullVideo) {
-            console.log('🎯 Setting selected video:', fullVideo.title)
             setSelectedVideo(fullVideo)
             if (viewMode === 'grid') {
                 setViewMode('playlist')
             }
-            // Scroll to top when video changes
             window.scrollTo({ top: 0, behavior: 'smooth' })
         } else {
             console.warn('❌ Could not find full video for:', video)
@@ -349,7 +324,6 @@ export default function VideoGalleryPage({ showHeader = true, maxVideos }: Video
                 </motion.div>
 
                 {(() => {
-                    console.log('🎬 Rendering video content. filteredVideos.length:', filteredVideos.length)
                     return null
                 })()}
                 {filteredVideos.length > 0 ? (
@@ -359,12 +333,10 @@ export default function VideoGalleryPage({ showHeader = true, maxVideos }: Video
                         transition={{ duration: 0.6, delay: 0.2 }}
                     >
                         {(() => {
-                            console.log('🎯 View mode:', viewMode, 'Selected video:', selectedVideo?.title)
                             return null
                         })()}
                         
                         {viewMode === 'grid' ? (
-                            /* Clean Modern Video Grid Layout */
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
                                 {filteredVideos.map((video, index) => (
                                     <motion.div
@@ -394,10 +366,7 @@ export default function VideoGalleryPage({ showHeader = true, maxVideos }: Video
                                                     />
                                                 )}
                                                 
-                                                {/* Dark Overlay */}
-                                                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                                                
-                                                {/* Video Duration */}
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />                                                
                                                 <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-2 py-1 rounded font-medium">
                                                     {video.duration || '05:30'}
                                                 </div>
@@ -481,10 +450,8 @@ export default function VideoGalleryPage({ showHeader = true, maxVideos }: Video
                                 ))}
                             </div>
                         ) : (
-                            /* Playlist Mode - using the commented out VideoPlaylist */
                             selectedVideo && (
                                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                                    {/* Main video player */}
                                     <div className="lg:col-span-2">
                                         <div className="aspect-video mb-4">
                                             <iframe
@@ -509,7 +476,6 @@ export default function VideoGalleryPage({ showHeader = true, maxVideos }: Video
                                         </div>
                                     </div>
                                     
-                                    {/* Related videos list */}
                                     <div className="space-y-3">
                                         <h3 className="font-semibold text-lg mb-4" style={{ color: colors.cardText }}>Video Lainnya</h3>
                                         <div className="space-y-3 max-h-96 overflow-y-auto">
@@ -660,7 +626,6 @@ export default function VideoGalleryPage({ showHeader = true, maxVideos }: Video
                             </button>
                         </div>
 
-                        {/* Video Player */}
                         <div className="aspect-video">
                             <iframe
                                 src={`https://www.youtube.com/embed/${extractYouTubeVideoId(playingVideo.youtubeUrl)}?autoplay=1&rel=0&modestbranding=1`}

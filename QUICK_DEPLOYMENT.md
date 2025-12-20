@@ -28,8 +28,8 @@ NEXT_PUBLIC_API_URL=https://alfurqon.com
 
 #### Nginx Config:
 ```nginx
-location /api/ {
-    proxy_pass http://localhost:8080/api/v1/;
+location /api {
+    proxy_pass http://localhost:8080/api;
 }
 
 location / {
@@ -277,7 +277,7 @@ npm run build
 curl http://localhost:8080/health
 
 # Test endpoint
-curl http://localhost:8080/api/v1/articles
+curl http://localhost:8080/api/articles
 ```
 
 ### 2. Test Frontend
@@ -294,13 +294,13 @@ ls -la .next
 curl -H "Origin: https://your-frontend.com" \
      -H "Access-Control-Request-Method: GET" \
      -X OPTIONS \
-     https://your-backend.com/api/v1/health -v
+     https://your-backend.com/api/health -v
 ```
 
 ### 4. Test Full Flow
 ```bash
 # From browser console:
-fetch('https://your-backend.com/api/v1/health')
+fetch('https://your-backend.com/api/health')
   .then(res => res.json())
   .then(console.log)
   .catch(console.error)

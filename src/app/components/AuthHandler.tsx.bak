@@ -14,9 +14,7 @@ export default function AuthHandler() {
   const router = useRouter()
 
   useEffect(() => {
-    const handleAutoLogout = (event: AutoLogoutEvent) => {
-      console.log('🔔 Auto logout event received:', event.detail)
-      
+    const handleAutoLogout = (event: AutoLogoutEvent) => {      
       // Mark that notification has been shown
       const notificationElement = document.createElement('div')
       notificationElement.setAttribute('data-notification-shown', 'true')

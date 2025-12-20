@@ -4,10 +4,11 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { FaVideo, FaPlus, FaEdit, FaTrash, FaYoutube, FaEye, FaEyeSlash, FaSave, FaTimes, FaTag, FaStar, FaArrowLeft } from 'react-icons/fa'
 import { useTheme } from '@/context/themeContext'
-import { apiRepository } from '@/app/repositories/apiRepository'
+import { adminRepository } from '@/app/repositories/adminRepository'
 import { useAdminUI } from '@/app/stores/adminStore'
 import { VideoResponse } from '@/app/types/responseTypes'
-import { CreateVideoRequest, UpdateVideoRequest } from '@/app/types/requestTypes'
+import { CreateVideoRequest, UpdateVideoRequest } from '@/app/types/adminRequestTypes'
+import ConfirmationModal from '../../ui/ConfirmationModal'
 
 interface AdminVideoPageProps {
   onBack?: () => void
@@ -21,6 +22,11 @@ export default function AdminVideoPage({ onBack }: AdminVideoPageProps) {
   const [showForm, setShowForm] = useState(false)
   const [editingVideo, setEditingVideo] = useState<VideoResponse | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  
+  // Delete confirmation modal state
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [videoToDelete, setVideoToDelete] = useState<VideoResponse | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
   const [formData, setFormData] = useState<CreateVideoRequest>({
     title: '',
     description: '',
@@ -38,27 +44,20 @@ export default function AdminVideoPage({ onBack }: AdminVideoPageProps) {
   const loadVideos = async () => {
     setIsLoading(true)
     try {
-      const response = await apiRepository.videos.getVideos()
-      console.log('🎥 Admin Video API Response:', response)
+      const response = await adminRepository.getVideos()
       
       if (response.success && response.data) {
-        // API returns: {success: true, data: {data: videos[], pagination: {}}}
         let videoList: VideoResponse[] = []
         
         if (response.data.data && Array.isArray(response.data.data)) {
-          // Standard backend pagination structure
           videoList = response.data.data
-          console.log('📹 Admin using response.data.data:', videoList)
         } else if (Array.isArray(response.data)) {
-          // Direct array response (fallback)
           videoList = response.data as VideoResponse[]
-          console.log('📹 Admin using response.data (direct array):', videoList)
         } else {
           console.warn('❌ Admin - Unexpected video data structure:', response.data)
           videoList = []
         }
         
-        console.log('📹 Admin video list:', videoList)
         setVideos(videoList)
       } else {
         console.warn('❌ Failed to load videos:', response)
@@ -94,7 +93,7 @@ export default function AdminVideoPage({ onBack }: AdminVideoPageProps) {
 
     try {
       if (editingVideo) {
-        const response = await apiRepository.videos.updateVideo({
+        const response = await adminRepository.updateVideo({
           id: editingVideo.id,
           ...formData
         })
@@ -122,7 +121,7 @@ export default function AdminVideoPage({ onBack }: AdminVideoPageProps) {
           })
         }
       } else {
-        const response = await apiRepository.videos.createVideo(formData)
+        const response = await adminRepository.createVideo(formData)
         if (response.success) {
           ui.addNotification({
             id: Date.now().toString(),
@@ -165,6 +164,21 @@ export default function AdminVideoPage({ onBack }: AdminVideoPageProps) {
 
   const handleEdit = (video: VideoResponse) => {
     setEditingVideo(video)
+    
+    // Map backend category to admin category format
+    const mapCategory = (cat: string): 'general' | 'kajian' | 'ceramah' | 'tilawah' | 'tutorial' | 'event' => {
+      switch(cat) {
+        case 'kegiatan': return 'event'
+        case 'lainnya': return 'general'
+        case 'kajian':
+        case 'ceramah':
+        case 'tilawah':
+        case 'tutorial':
+          return cat
+        default: return 'general'
+      }
+    }
+    
     setFormData({
       title: video.title || '',
       description: video.description || '',
@@ -172,50 +186,70 @@ export default function AdminVideoPage({ onBack }: AdminVideoPageProps) {
       isActive: video.isActive ?? true,
       isFeatured: video.isFeatured ?? false,
       tags: Array.isArray(video.tags) ? video.tags.join(', ') : (video.tags || ''),
-      category: video.category || 'general'
+      category: mapCategory(video.category)
     })
     setShowForm(true)
   }
 
-  const handleDelete = async (videoId: string) => {
-    if (confirm('Apakah Anda yakin ingin menghapus video ini?')) {
-      try {
-        const response = await apiRepository.videos.deleteVideo(videoId)
-        if (response.success) {
-          ui.addNotification({
-            id: Date.now().toString(),
-            type: 'success',
-            title: 'Video Dihapus',
-            message: 'Video berhasil dihapus',
-            timestamp: new Date().toISOString(),
-            autoClose: true,
-            duration: 3000
-          })
-          await loadVideos()
-        } else {
-          ui.addNotification({
-            id: Date.now().toString(),
-            type: 'error',
-            title: 'Gagal Menghapus Video',
-            message: response.message || 'Terjadi kesalahan saat menghapus video',
-            timestamp: new Date().toISOString(),
-            autoClose: true,
-            duration: 5000
-          })
-        }
-      } catch (error) {
-        console.error('Failed to delete video:', error)
+  const handleDelete = (video: VideoResponse) => {
+    setVideoToDelete(video)
+    setShowDeleteModal(true)
+  }
+
+  const confirmDelete = async () => {
+    if (!videoToDelete) {
+      console.warn('⚠️ confirmDelete called but no video to delete')
+      return
+    }
+
+    setIsDeleting(true)
+    try {
+      const response = await adminRepository.deleteVideo(videoToDelete.id)
+      
+      if (response.success) {
+        ui.addNotification({
+          id: Date.now().toString(),
+          type: 'success',
+          title: 'Video Dihapus',
+          message: `Video "${videoToDelete.title}" berhasil dihapus`,
+          timestamp: new Date().toISOString(),
+          autoClose: true,
+          duration: 3000
+        })
+        await loadVideos()
+        cancelDelete()
+      } else {
+        console.error('❌ Delete failed:', response.message)
         ui.addNotification({
           id: Date.now().toString(),
           type: 'error',
-          title: 'Error',
-          message: 'Terjadi kesalahan saat menghapus video',
+          title: 'Gagal Menghapus Video',
+          message: response.message || 'Terjadi kesalahan saat menghapus video',
           timestamp: new Date().toISOString(),
           autoClose: true,
           duration: 5000
         })
       }
+    } catch (error) {
+      console.error('❌ Exception during delete:', error)
+      ui.addNotification({
+        id: Date.now().toString(),
+        type: 'error',
+        title: 'Error',
+        message: 'Terjadi kesalahan saat menghapus video',
+        timestamp: new Date().toISOString(),
+        autoClose: true,
+        duration: 5000
+      })
+    } finally {
+      setIsDeleting(false)
     }
+  }
+
+  const cancelDelete = () => {
+    setShowDeleteModal(false)
+    setVideoToDelete(null)
+    setIsDeleting(false)
   }
 
   const handleCloseForm = () => {
@@ -628,7 +662,7 @@ export default function AdminVideoPage({ onBack }: AdminVideoPageProps) {
                     <FaEdit />
                   </button>
                   <button
-                    onClick={() => handleDelete(video.id)}
+                    onClick={() => handleDelete(video)}
                     className="p-2 rounded-lg transition-colors text-red-500 bg-red-50"
                   >
                     <FaTrash />
@@ -649,6 +683,19 @@ export default function AdminVideoPage({ onBack }: AdminVideoPageProps) {
           </p>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={cancelDelete}
+        onConfirm={confirmDelete}
+        title="Hapus Video"
+        message={`Apakah Anda yakin ingin menghapus video "${videoToDelete?.title}"? Tindakan ini tidak dapat dibatalkan.`}
+        confirmText="Hapus"
+        cancelText="Batal"
+        type="danger"
+        isLoading={isDeleting}
+      />
       </div>
     </div>
   )
