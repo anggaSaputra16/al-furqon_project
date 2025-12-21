@@ -507,42 +507,6 @@ export default function HomePage() {
             </div>
           </motion.section>
 
-          {/* Video Kajian & Ceramah Section */}
-          <motion.section
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="py-8"
-          >
-            <div className="max-w-7xl mx-auto">
-              <div className="mb-8">
-                <h2
-                  className="text-2xl md:text-3xl font-bold text-center mb-4"
-                  style={{
-                    color: colors.heading,
-                    fontFamily: 'var(--font-header-masjid)',
-                    letterSpacing: '-0.01em'
-                  }}
-                >
-                  Video Kajian & Ceramah
-                </h2>
-                <p
-                  className="text-center text-lg max-w-2xl mx-auto"
-                  style={{
-                    color: colors.detail,
-                    fontFamily: 'var(--font-body)',
-                    lineHeight: '1.6'
-                  }}
-                >
-                  Koleksi video kajian Islam, ceramah, dan siraman rohani untuk memperkuat iman dan takwa
-                </p>
-              </div>
-              
-              {/* Video Gallery Component */}
-              <VideoGalleryPage showHeader={false} maxVideos={6} />
-            </div>
-          </motion.section>
-
           <section className="space-y-4 sm:space-y-6">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
               <h2
@@ -618,6 +582,57 @@ export default function HomePage() {
               </div>
             )}
           </section>
+
+          <motion.section
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="space-y-4 sm:space-y-6 mt-8 sm:mt-12"
+          >
+            <div className="max-w-7xl mx-auto">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-6 sm:mb-8">
+                <div>
+                  <h2
+                    className="text-2xl sm:text-3xl font-bold mb-2"
+                    style={{
+                      color: colors.cardText,
+                      fontFamily: 'var(--font-header-modern)',
+                      fontSize: 'clamp(26px, 5vw, 32px)',
+                      lineHeight: '1.2',
+                      fontWeight: '700',
+                      letterSpacing: '-0.01em'
+                    }}
+                  >
+                    Video Kajian & Ceramah
+                  </h2>
+                  <p
+                    className="text-sm sm:text-base"
+                    style={{
+                      color: colors.detail,
+                      fontFamily: 'var(--font-sharp-light)',
+                      fontSize: 'clamp(13px, 3vw, 15px)',
+                      lineHeight: '1.6'
+                    }}
+                  >
+                    Koleksi video kajian Islam, ceramah, dan siraman rohani
+                  </p>
+                </div>
+                <a
+                  href="/video"
+                  className="text-sm hover:underline transition-all duration-200 font-sharp-bold self-start sm:self-auto hover:gap-1 flex items-center gap-1"
+                  style={{
+                    color: colors.accent,
+                    fontSize: 'clamp(13px, 3vw, 14px)'
+                  }}
+                >
+                  Lihat Semua Video
+                  <span className="transition-transform duration-200 hover:translate-x-0.5">→</span>
+                </a>
+              </div>
+              
+              <VideoGalleryPage showHeader={false} maxVideos={6} />
+            </div>
+          </motion.section>
 
           <section className="space-y-4 sm:space-y-6 mt-8 sm:mt-12">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-6 sm:mb-8">
@@ -747,160 +762,6 @@ export default function HomePage() {
                   }}
                 >
                   Program donasi akan ditampilkan di sini ketika tersedia. Silakan kembali lagi nanti.
-                </p>
-              </div>
-            )}
-          </section>
-
-          <section className="space-y-4 sm:space-y-6 mt-8 sm:mt-12">
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-6 sm:mb-8">
-              <h2
-                className="text-2xl sm:text-3xl font-bold"
-                style={{
-                  color: colors.cardText,
-                  fontFamily: 'var(--font-header-modern)',
-                  fontSize: 'clamp(26px, 5vw, 32px)',
-                  lineHeight: '1.2',
-                  fontWeight: '700',
-                  letterSpacing: '-0.01em'
-                }}
-              >
-                Berita Utama
-              </h2>
-              <a
-                href="/berita"
-                className="text-sm hover:underline transition-all duration-200 font-sharp-bold self-start sm:self-auto hover:gap-1 flex items-center gap-1"
-                style={{
-                  color: colors.accent,
-                  fontSize: 'clamp(13px, 3vw, 14px)'
-                }}
-              >
-                Lihat Semua Berita
-                <span className="transition-transform duration-200 hover:translate-x-0.5">→</span>
-              </a>
-            </div>
-
-            {newsLoading && !hasBackendNews ? (
-              <div className="flex justify-center items-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: colors.accent }}></div>
-                <span className="ml-3 text-sm" style={{ color: colors.detail }}>
-                  Memuat berita...
-                </span>
-              </div>
-            ) : hasBackendNews && upcomingCards.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                {upcomingCards.map((news: any, idx: number) => (
-                  <motion.div
-                    key={news.title + idx}
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{
-                      duration: 0.5,
-                      delay: idx * 0.1,
-                      ease: 'easeOut'
-                    }}
-                    className="group"
-                  >
-                    <div
-                      className="rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 h-full border"
-                      style={{
-                        backgroundColor: colors.card,
-                        border: `1px solid ${colors.border}20`,
-                        transform: 'translateY(0)',
-                      }}
-                    >
-                      <div className="relative h-48 sm:h-52 overflow-hidden">
-                        <img
-                          src={news.image || '/images/placeholder.jpg'}
-                          alt={news.title}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-                        {news.detail && (
-                          <div
-                            className="absolute top-3 right-3 px-2 py-1 rounded-lg text-xs font-medium backdrop-blur-md"
-                            style={{
-                              backgroundColor: `${colors.accent}90`,
-                              color: colors.card,
-                              fontFamily: 'var(--font-sharp-bold)',
-                              fontSize: 'clamp(10px, 2.5vw, 11px)'
-                            }}
-                          >
-                            {news.detail}
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="p-4 sm:p-5">
-                        <h3
-                          className="font-bold text-lg mb-3 line-clamp-2 leading-tight"
-                          style={{
-                            color: colors.cardText,
-                            fontFamily: 'var(--font-header-modern)',
-                            fontSize: 'clamp(16px, 3vw, 18px)'
-                          }}
-                        >
-                          {news.title}
-                        </h3>
-
-                        <p
-                          className="text-sm line-clamp-3 mb-4 leading-relaxed"
-                          style={{
-                            color: colors.detail,
-                            fontFamily: 'var(--font-sharp-light)',
-                            fontSize: 'clamp(13px, 2.5vw, 14px)'
-                          }}
-                        >
-                          {news.description}
-                        </p>
-
-                        <button
-                          onClick={() => setSelectedNews(news)}
-                          className="w-full py-3 px-4 rounded-lg font-semibold transition-all duration-200 hover:transform hover:scale-[1.02] active:scale-[0.98] touch-manipulation group/btn border-2 border-transparent hover:border-current"
-                          style={{
-                            backgroundColor: 'transparent',
-                            color: colors.accent,
-                            border: `2px solid ${colors.accent}`,
-                            fontFamily: 'var(--font-sharp-bold)',
-                            fontSize: 'clamp(14px, 3vw, 15px)'
-                          }}
-                        >
-                          <span className="flex items-center justify-center gap-2">
-                            Baca Selengkapnya
-                            <span className="transition-transform duration-200 group-hover/btn:translate-x-1">📖</span>
-                          </span>
-                        </button>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-16 space-y-4">
-                <div
-                  className="text-6xl mb-4"
-                  style={{ color: colors.detail }}
-                >
-                  📰
-                </div>
-                <h3
-                  className="text-xl font-semibold"
-                  style={{
-                    color: colors.cardText,
-                    fontFamily: 'var(--font-header-modern)'
-                  }}
-                >
-                  Belum Ada Berita
-                </h3>
-                <p
-                  className="text-sm text-center max-w-md"
-                  style={{
-                    color: colors.detail,
-                    fontFamily: 'var(--font-sharp-light)'
-                  }}
-                >
-                  Berita terbaru akan ditampilkan di sini. Silakan kembali lagi nanti.
                 </p>
               </div>
             )}
