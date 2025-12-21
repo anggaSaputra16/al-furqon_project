@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import {
     FaHome,
@@ -110,27 +110,37 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
         )
     }
 
-    const realArticleCount = Math.max(
+    const apiData = (dashboardStats as any)?.data || dashboardStats
+     const apiArticleCount = apiData?.totalArticles ?? 0
+    const apiUserCount = apiData?.totalUsers ?? 0
+    const apiActiveDonations = apiData?.activeDonations ?? 0
+    const apiTotalBalance = apiData?.totalBalance ?? 0
+    
+    const localArticleCount = Math.max(
         articleStore.articles?.length || 0,
         featuredArticles?.length || 0
     )
-
-    const realUserCount = Math.max(
+    const localUserCount = Math.max(
         users?.length || 0,
         userPagination?.total || 0
     )
 
-    const stats = {
-        totalArticles: realArticleCount > 0 ? realArticleCount : (dashboardStats?.totalArticles ?? 0),
-        totalDonations: dashboardStats?.totalDonations ?? 0,
-        totalGallery: dashboardStats?.totalGallery ?? 0,
-        totalUsers: realUserCount > 0 ? realUserCount : (dashboardStats?.totalUsers ?? 0),
-        monthlyViews: dashboardStats?.monthlyViews ?? 0,
-        activeDonations: dashboardStats?.activeDonations ?? 0,
-        monthlyIncome: dashboardStats?.monthlyIncome ?? 0,
-        monthlyExpense: dashboardStats?.monthlyExpense ?? 0,
-        totalBalance: dashboardStats?.totalBalance ?? 0
-    }
+    // Gunakan useMemo untuk memastikan stats selalu update ketika dependencies berubah
+    const stats = useMemo(() => {
+        const computed = {
+            totalArticles: apiArticleCount > 0 ? apiArticleCount : localArticleCount,
+            totalDonations: apiData?.totalDonations ?? 0,
+            totalGallery: apiData?.totalGallery ?? 0,
+            totalUsers: apiUserCount > 0 ? apiUserCount : localUserCount,
+            monthlyViews: apiData?.monthlyViews ?? 0,
+            activeDonations: apiActiveDonations,
+            monthlyIncome: apiData?.monthlyIncome ?? 0,
+            monthlyExpense: apiData?.monthlyExpense ?? 0,
+            totalBalance: apiTotalBalance
+        }
+        
+        return computed
+    }, [dashboardStats, apiData, apiArticleCount, apiUserCount, apiActiveDonations, apiTotalBalance, localArticleCount, localUserCount])
 
     const recentActivities = dashboardStats?.recentActivities || []
 
@@ -147,7 +157,6 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
             loadArticles()
         }
 
-        // Handle responsive behavior
         const handleResize = () => {
             if (window.innerWidth >= 1024) {
                 setIsMobileMenuOpen(false)
@@ -186,7 +195,7 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
                 title: 'Artikel',
                 icon: FaFileAlt,
                 page: 'articles' as const,
-                count: realArticleCount,
+                count: stats.totalArticles,
                 active: currentPage === 'articles'
             })
         }
@@ -296,9 +305,11 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
                 value: stats.totalArticles,
                 icon: FaFileAlt,
                 color: colors.accent,
-                description: realArticleCount > 0 ?
-                    `${realArticleCount} artikel dari database` :
-                    'Artikel yang telah dipublikasi',
+                description: apiArticleCount > 0 ?
+                    `${apiArticleCount} artikel dipublikasi` :
+                    localArticleCount > 0 ?
+                    `${localArticleCount} artikel (data lokal)` :
+                    'Memuat data artikel...',
                 formatter: (value: number) => (value ?? 0).toString()
             })
         }
@@ -309,9 +320,11 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
                 value: stats.totalUsers,
                 icon: FaUsers,
                 color: '#6366f1',
-                description: realUserCount > 0 ?
-                    `${realUserCount} pengguna dari database` :
-                    'Pengguna terdaftar',
+                description: apiUserCount > 0 ?
+                    `${apiUserCount} pengguna terdaftar` :
+                    localUserCount > 0 ?
+                    `${localUserCount} pengguna (data lokal)` :
+                    'Memuat data pengguna...',
                 formatter: (value: number) => (value ?? 0).toString()
             })
         }
@@ -904,16 +917,19 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
                                 <div
                                     className="w-2 h-2 rounded-full"
                                     style={{
-                                        backgroundColor: realArticleCount > 0 ? '#10b981' : '#f59e0b'
+                                        backgroundColor: apiArticleCount > 0 ? '#10b981' : 
+                                                       localArticleCount > 0 ? '#f59e0b' : '#ef4444'
                                     }}
                                 />
                                 <span
                                     className="text-sm"
                                     style={{ color: colors.detail }}
                                 >
-                                    {realArticleCount > 0 ?
-                                        `${realArticleCount} artikel dari database` :
-                                        'Data artikel simulasi'
+                                    {apiArticleCount > 0 ?
+                                        `${apiArticleCount} artikel dari API` :
+                                        localArticleCount > 0 ?
+                                        `${localArticleCount} artikel (local)` :
+                                        'Memuat artikel...'
                                     }
                                 </span>
                             </div>
@@ -922,26 +938,30 @@ export default function AdminHomePage({ adminName = 'Administrator' }: AdminHome
                                 <div
                                     className="w-2 h-2 rounded-full"
                                     style={{
-                                        backgroundColor: realUserCount > 0 ? '#10b981' : '#f59e0b'
+                                        backgroundColor: apiUserCount > 0 ? '#10b981' : 
+                                                       localUserCount > 0 ? '#f59e0b' : '#ef4444'
                                     }}
                                 />
                                 <span
                                     className="text-sm"
                                     style={{ color: colors.detail }}
                                 >
-                                    {realUserCount > 0 ?
-                                        `${realUserCount} pengguna dari database` :
-                                        'Data pengguna simulasi'
+                                    {apiUserCount > 0 ?
+                                        `${apiUserCount} pengguna dari API` :
+                                        localUserCount > 0 ?
+                                        `${localUserCount} pengguna (local)` :
+                                        'Memuat pengguna...'
                                     }
                                 </span>
                             </div>
 
                             {(isStatsLoading || usersLoading) && (
                                 <span
-                                    className="text-sm"
+                                    className="text-sm flex items-center space-x-1"
                                     style={{ color: colors.accent }}
                                 >
-                                    • Memperbarui...
+                                    <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                                    <span>Memperbarui...</span>
                                 </span>
                             )}
                         </div>

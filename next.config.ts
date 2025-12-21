@@ -18,10 +18,15 @@ const nextConfig: NextConfig = {
       {
         protocol: 'http',
         hostname: 'localhost',
+        port: '5001',
+        pathname: '/uploads/**',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
         port: '',
         pathname: '/**',
       },
-      // Allow common image hosting domains
       {
         protocol: 'https',
         hostname: '*.googleusercontent.com',
@@ -41,8 +46,7 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
     ],
-    // Atau gunakan ini untuk allow semua domain (less secure, tapi lebih fleksibel)
-    unoptimized: false, // Set true jika ingin bypass image optimization
+    unoptimized: false, 
   },
 };
 

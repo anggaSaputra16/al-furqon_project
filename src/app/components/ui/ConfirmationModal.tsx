@@ -27,19 +27,27 @@ export default function ConfirmationModal({
   type = 'danger',
   isLoading = false
 }: ConfirmationModalProps) {
-  const { colors } = useTheme()
+  const { colors, theme } = useTheme()
+  
+  // Theme-aware colors untuk setiap type
   const typeConfig = {
     danger: {
-      icon: 'text-red-500',
-      button: 'bg-red-500 hover:bg-red-600'
+      iconColor: '#ef4444', // red-500
+      bgColor: '#ef4444',
+      bgHoverColor: '#dc2626', // red-600
+      bgLightColor: theme === 'dark' ? '#7f1d1d' : '#fee2e2', // red-950 : red-100
     },
     warning: {
-      icon: 'text-yellow-500',
-      button: 'bg-yellow-500 hover:bg-yellow-600'
+      iconColor: '#f59e0b', // yellow-500
+      bgColor: '#f59e0b',
+      bgHoverColor: '#d97706', // yellow-600
+      bgLightColor: theme === 'dark' ? '#78350f' : '#fef3c7', // yellow-950 : yellow-100
     },
     info: {
-      icon: 'text-blue-500',
-      button: 'bg-blue-500 hover:bg-blue-600'
+      iconColor: '#3b82f6', // blue-500
+      bgColor: '#3b82f6',
+      bgHoverColor: '#2563eb', // blue-600
+      bgLightColor: theme === 'dark' ? '#1e3a8a' : '#dbeafe', // blue-950 : blue-100
     }
   }
 
@@ -81,7 +89,7 @@ export default function ConfirmationModal({
               <div 
                 className="border-b p-6 flex justify-center"
                 style={{ 
-                  backgroundColor: colors.muted,
+                  backgroundColor: currentConfig.bgLightColor,
                   borderColor: colors.border
                 }}
               >
@@ -90,9 +98,9 @@ export default function ConfirmationModal({
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
                   className="w-16 h-16 rounded-full flex items-center justify-center"
-                  style={{ backgroundColor: colors.background }}
+                  style={{ backgroundColor: colors.card }}
                 >
-                  <FaExclamationTriangle className={`${currentConfig.icon} text-3xl`} />
+                  <FaExclamationTriangle style={{ color: currentConfig.iconColor }} className="text-3xl" />
                 </motion.div>
               </div>
 
@@ -137,9 +145,20 @@ export default function ConfirmationModal({
                       onConfirm()
                     }}
                     disabled={isLoading}
-                    className={`flex-1 px-6 py-3 rounded-xl font-semibold text-white transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed ${currentConfig.button}`}
+                    className="flex-1 px-6 py-3 rounded-xl font-semibold text-white transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{
+                      backgroundColor: isLoading ? colors.detail : currentConfig.bgColor,
                       fontFamily: 'var(--font-sharp-bold)'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isLoading) {
+                        e.currentTarget.style.backgroundColor = currentConfig.bgHoverColor
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isLoading) {
+                        e.currentTarget.style.backgroundColor = currentConfig.bgColor
+                      }
                     }}
                   >
                     {isLoading ? (
@@ -159,11 +178,14 @@ export default function ConfirmationModal({
                 <div 
                   className="border-t px-6 py-3"
                   style={{ 
-                    backgroundColor: colors.muted,
+                    backgroundColor: currentConfig.bgLightColor,
                     borderColor: colors.border
                   }}
                 >
-                  <p className="text-xs text-center text-red-500">
+                  <p 
+                    className="text-xs text-center font-medium"
+                    style={{ color: currentConfig.iconColor }}
+                  >
                     ⚠️ Tindakan ini tidak dapat dibatalkan
                   </p>
                 </div>
