@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/context/themeContext"
+import AuthHandler from "@/app/components/AuthHandler"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,8 +15,8 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "CMS ALFURQON",
-  description: "Dashboard Masjid ALFURQON",
+  title: "Al-Furqon Bekasi",
+  description: "Dashboard Masjid Al-Furqon Bekasi",
 }
 
 export default function RootLayout({
@@ -78,7 +79,10 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased transition-colors`}
         suppressHydrationWarning
       >
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <AuthHandler />
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   )

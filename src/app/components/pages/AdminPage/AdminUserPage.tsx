@@ -178,6 +178,12 @@ export default function AdminUserPage({ onBack }: AdminUserPageProps) {
                 role: 'viewer'
             })
             setShowAddModal(false)
+            // Refresh data setelah berhasil menambah user
+            await fetchUsers({ 
+                page: 1, 
+                limit: 10,
+                search: searchQuery || undefined 
+            })
         }
     }
 
@@ -208,6 +214,12 @@ export default function AdminUserPage({ onBack }: AdminUserPageProps) {
                 name: '',
                 role: 'viewer'
             })
+            // Refresh data setelah berhasil mengedit user
+            await fetchUsers({ 
+                page: 1, 
+                limit: 10,
+                search: searchQuery || undefined 
+            })
         }
     }
 
@@ -233,8 +245,16 @@ export default function AdminUserPage({ onBack }: AdminUserPageProps) {
 
         if (confirm(`Yakin ingin menghapus user ${username}?`)) {
             setActionLoading(userId)
-            await deleteUser(userId)
+            const result = await deleteUser(userId)
             setActionLoading(null)
+            
+            if (result) {
+                await fetchUsers({ 
+                    page: 1, 
+                    limit: 10,
+                    search: searchQuery || undefined 
+                })
+            }
         }
     }
 
@@ -248,8 +268,16 @@ export default function AdminUserPage({ onBack }: AdminUserPageProps) {
 
         setActionLoading(userId)
         const status = newStatus ? 'active' : 'inactive'
-        await updateUserStatus(userId, status)
+        const result = await updateUserStatus(userId, status)
         setActionLoading(null)
+        
+        if (result) {
+            await fetchUsers({ 
+                page: 1, 
+                limit: 10,
+                search: searchQuery || undefined 
+            })
+        }
     }
 
     const formatLastLogin = (lastLogin: string) => {

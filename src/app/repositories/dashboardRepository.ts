@@ -10,8 +10,8 @@ import {
 } from '../types/adminResponseTypes'
 
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
-const API_VERSION = '/api/v1'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
+const API_VERSION = '/api'
 
 class DashboardRepository {
     private baseUrl: string
@@ -56,6 +56,12 @@ class DashboardRepository {
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}))
+                
+                // Check for invalid token errors and trigger auto logout
+                if (this.isInvalidTokenError(response.status, errorData)) {
+                    this.handleInvalidToken(endpoint)
+                }
+                
                 throw new Error(errorData.message || `HTTP error! status: ${response.status}`)
             }
 
@@ -68,6 +74,39 @@ class DashboardRepository {
             }
             console.error('Dashboard API request failed:', error.message)
             throw error
+        }
+    }
+
+    private isInvalidTokenError(statusCode: number, errorData: any): boolean {
+        // Check for invalid token based on status code and error message
+        const isUnauthorized = statusCode === 401 || errorData?.error === 401
+        const hasInvalidTokenMessage = errorData?.message?.toLowerCase().includes('invalid token') ||
+                                       errorData?.message?.toLowerCase().includes('token expired') ||
+                                       errorData?.message?.toLowerCase().includes('unauthorized') ||
+                                       errorData?.message?.toLowerCase().includes('access token required')
+        
+        return (isUnauthorized || statusCode === 500) && hasInvalidTokenMessage
+    }
+
+    private handleInvalidToken(endpoint: string): void {
+        console.warn('🔒 Invalid token detected in dashboard, logging out user...')
+        
+        // Clear tokens from localStorage
+        if (typeof window !== 'undefined') {
+            // Clear admin token since dashboard is admin functionality
+            localStorage.removeItem('admin_auth')
+            localStorage.removeItem('alfurqon_token')
+            
+            // Dispatch auto logout event for AuthHandler to pick up
+            const event = new CustomEvent('autoLogout', {
+                detail: {
+                    message: 'Sesi Anda telah berakhir. Silakan login kembali.',
+                    type: 'warning',
+                    endpoint: endpoint,
+                    source: 'dashboard'
+                }
+            })
+            window.dispatchEvent(event)
         }
     }
     private readonly DASHBOARD_ENDPOINTS = {

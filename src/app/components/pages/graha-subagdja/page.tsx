@@ -21,6 +21,7 @@ import {
     FaInfoCircle
 } from 'react-icons/fa'
 import { useTheme } from '@/context/themeContext'
+import { useGraha } from '../../../hooks/useGraha'
 import MasjidHeader from '../../path/MasjidHeader'
 import Footer from '../../path/Footer'
 import ThemeToggle from '../../path/ThemeToggle'
@@ -28,27 +29,53 @@ import FacilityInfoModal from '../../path/FacilityInfoModal'
 import { grahaSubagdjaUseCases } from '@/app/useCases/grahaSubagdjaUseCases'
 import type { GalleryImage as BackendGalleryImage, UMKMPartner, FAQ as BackendFAQ } from '@/app/repositories/grahaSubagdjaRepository'
 
-interface GalleryImage extends BackendGalleryImage {
+interface GalleryImage {
+    id: string
     src: string
     alt: string
+    category: 'interior' | 'exterior' | 'event' | 'facility' | 'ceremony'
 }
 
-interface FAQ extends BackendFAQ {
+interface FAQLocal {
+    id: string
+    question: string
+    answer: string
     isOpen: boolean
+}
+
+interface UMKMPartner {
+    id: string
+    name: string
+    category: string
+    description: string
+    services: string[]
+    contact: {
+        phone: string
+        whatsapp: string
+        instagram?: string
+    }
+    image?: string
 }
 
 export default function GrahaSubagdjaPage() {
     const { colors } = useTheme()
+
+    const {
+        umkmPartners: backendUmkmPartners,
+        gallery: backendGallery,
+        faqs: backendFaqs,
+        facilityInfo,
+        loading,
+        error,
+        fetchAllData,
+        getGalleryByCategory,
+        getUMKMPartnersByCategory
+    } = useGraha()
+
     const [showScrollToTop, setShowScrollToTop] = useState(false)
     const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null)
     const [activeTab, setActiveTab] = useState<'overview' | 'gallery' | 'umkm' | 'contact'>('overview')
-
-    // Dynamic data states
-    const [umkmPartners, setUmkmPartners] = useState<UMKMPartner[]>([])
-    const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([])
-    const [facilityInfo, setFacilityInfo] = useState<any>(null)
-
-    const [faqs, setFaqs] = useState<FAQ[]>([])
+    const [faqs, setFaqs] = useState<FAQLocal[]>([])
 
     const [modalInfo, setModalInfo] = useState<{
         isOpen: boolean
@@ -59,6 +86,44 @@ export default function GrahaSubagdjaPage() {
         type: 'tata-tertib',
         facilityName: 'Graha Subagdja'
     })
+
+    const galleryImages: GalleryImage[] = [
+        { id: "1", src: '/images/gambar1.jpg', alt: 'Interior Graha Subagdja', category: 'interior' },
+        { id: "2", src: '/images/gambar2.jpg', alt: 'Setup Resepsi Pernikahan', category: 'event' },
+        { id: "3", src: '/images/gambar3.jpg', alt: 'Area Panggung', category: 'interior' },
+        { id: "4", src: '/images/gambar4.jpg', alt: 'Setup Seminar', category: 'event' },
+        { id: "5", src: '/images/gambar5.jpg', alt: 'Fasilitas Sound System', category: 'facility' },
+        { id: "6", src: '/images/gambar6.jpg', alt: 'Area Parkir', category: 'exterior' },
+        { id: "7", src: '/images/gambar7.jpg', alt: 'Ruang Persiapan', category: 'interior' },
+        { id: "8", src: '/images/gambar8.jpg', alt: 'Setup Kajian', category: 'event' }
+    ]
+
+    const umkmPartners = backendUmkmPartners || []
+
+    useEffect(() => {
+        fetchAllData()
+    }, [fetchAllData])
+
+    useEffect(() => {
+        if (backendFaqs.length > 0) {
+            const formattedFaqs = backendFaqs.map(faq => ({
+                id: faq.id,
+                question: faq.question,
+                answer: faq.answer,
+                isOpen: false
+            }))
+            setFaqs(formattedFaqs)
+        }
+    }, [backendFaqs])
+
+    const galleryImagesFromBackend: GalleryImage[] = backendGallery.map(item => ({
+        id: item.id,
+        src: item.image,
+        alt: item.title,
+        category: item.category
+    }))
+
+    const allGalleryImages = galleryImagesFromBackend.length > 0 ? galleryImagesFromBackend : galleryImages
 
     const facilities = [
         {
@@ -181,7 +246,7 @@ export default function GrahaSubagdjaPage() {
         window.scrollTo({ top: 0, behavior: 'smooth' })
     }
 
-    const toggleFAQ = (id: number) => {
+    const toggleFAQ = (id: string) => {
         setFaqs(faqs.map(faq =>
             faq.id === id ? { ...faq, isOpen: !faq.isOpen } : { ...faq, isOpen: false }
         ))
@@ -569,7 +634,7 @@ export default function GrahaSubagdjaPage() {
                             </h2>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                                {galleryImages.map((image, index) => (
+                                {allGalleryImages.map((image, index) => (
                                     <motion.div
                                         key={image.id}
                                         initial={{ opacity: 0, scale: 0.8 }}

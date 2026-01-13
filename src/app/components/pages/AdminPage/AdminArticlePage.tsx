@@ -11,6 +11,7 @@ import { useArticles } from '../../../hooks/useArticles'
 import { useArticleStore, useArticles as useArticleSelectors, usePagination, useSelectedArticle, useArticleLoading } from '../../../stores/adminArticleStore'
 import { useAdminUIStore } from '../../../stores/adminStore'
 import { AdminArticle, articleRepository } from '../../../repositories/articleRepository'
+import ImageUpload from '../../ui/ImageUpload'
 
 interface AdminArticlePageProps {
     onBack: () => void
@@ -56,8 +57,6 @@ export default function AdminArticlePage({ onBack }: AdminArticlePageProps) {
             if (response?.data) {
                 currentState.setArticles(response.data)
                 currentState.markDataAsFresh()
-                console.log('✅ Articles refreshed successfully')
-
 
                 ui.addNotification({
                     id: Date.now().toString(),
@@ -683,15 +682,29 @@ export default function AdminArticlePage({ onBack }: AdminArticlePageProps) {
                                     }}
                                 >
                                     {/* Image */}
-                                    <div className="relative h-48 overflow-hidden">
-                                        <img
-                                            src={article.image || '/images/placeholder.jpg'}
-                                            alt={article.title}
-                                            className="w-full h-full object-cover"
-                                            onError={(e) => {
-                                                (e.target as HTMLImageElement).src = '/images/placeholder.jpg'
-                                            }}
-                                        />
+                                    <div className="relative h-48 overflow-hidden bg-gray-100 flex items-center justify-center">
+                                        {article.image ? (
+                                            <img
+                                                src={article.image}
+                                                alt={article.title}
+                                                className="w-full h-full object-cover"
+                                                crossOrigin="anonymous"
+                                                loading="lazy"
+                                                onError={(e) => {
+                                                    const target = e.target as HTMLImageElement
+                                                    if (!target.dataset.errorHandled) {
+                                                        target.dataset.errorHandled = 'true'
+                                                        target.src = '/images/placeholder.svg'
+                                                        console.error('Failed to load image:', article.image)
+                                                    }
+                                                }}
+                                            />
+                                        ) : (
+                                            <div className="flex flex-col items-center justify-center text-gray-400">
+                                                <FaFileAlt size={32} className="mb-2" />
+                                                <span className="text-xs">No Image</span>
+                                            </div>
+                                        )}
                                         {article.featured && (
                                             <div
                                                 className="absolute top-3 left-3 px-2 py-1 rounded-lg text-xs font-medium flex items-center space-x-1"
@@ -1025,7 +1038,26 @@ export default function AdminArticlePage({ onBack }: AdminArticlePageProps) {
                             <h3 className="font-medium mb-3" style={{ color: colors.cardText }}>
                                 Gambar Utama
                             </h3>
+                            
+                            {/* Image Upload Component */}
+                            <div className="mb-4">
+                                <ImageUpload
+                                    allowMultiple={false}
+                                    maxFiles={1}
+                                    maxFileSize={5}
+                                    showPreview={false}
+                                    onImageSelected={(imageUrl) => {
+                                        setFormData(prev => ({ ...prev, image: imageUrl }))
+                                    }}
+                                    className="mb-4"
+                                />
+                            </div>
+
+                            {/* Or manual URL input */}
                             <div className="space-y-3">
+                                <div className="text-xs" style={{ color: colors.detail }}>
+                                    Atau masukkan URL gambar manual:
+                                </div>
                                 <input
                                     type="url"
                                     value={formData.image || ''}
@@ -1044,10 +1076,25 @@ export default function AdminArticlePage({ onBack }: AdminArticlePageProps) {
                                             src={formData.image}
                                             alt="Preview"
                                             className="w-full h-32 object-cover rounded-lg"
+                                            crossOrigin="anonymous"
+                                            loading="lazy"
                                             onError={(e) => {
-                                                (e.target as HTMLImageElement).src = '/images/placeholder.jpg'
+                                                const target = e.target as HTMLImageElement
+                                                if (!target.dataset.errorHandled) {
+                                                    target.dataset.errorHandled = 'true'
+                                                    target.src = '/images/placeholder.svg'
+                                                    console.error('Failed to load preview image:', formData.image)
+                                                }
                                             }}
                                         />
+                                        {/* Clear image button */}
+                                        <button
+                                            onClick={() => setFormData(prev => ({ ...prev, image: '' }))}
+                                            className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                                            title="Hapus gambar"
+                                        >
+                                            <span className="text-xs">×</span>
+                                        </button>
                                     </div>
                                 )}
                             </div>

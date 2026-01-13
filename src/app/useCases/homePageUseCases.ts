@@ -93,6 +93,48 @@ export class HomePageUseCases {
     }
   }
 
+  // Get all published articles (not just featured)
+  async getPublishedArticles(limit = 6): Promise<{
+    success: boolean
+    data?: ArticleResponse[]
+    error?: string
+  }> {
+    try {
+      const response = await this.apiRepository.articles.getArticles({
+        page: 1,
+        limit,
+        status: 'published'
+      })
+      
+      if (response.success) {
+        return {
+          success: true,
+          data: response.data?.data || response.data
+        }
+      } else {
+        return {
+          success: false,
+          error: response.message
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch published articles:', error)
+      
+
+      if (error instanceof Error && error.message === 'Backend not available') {
+        return {
+          success: false,
+          error: 'Backend not available'
+        }
+      }
+      
+      return {
+        success: false,
+        error: 'Failed to load published articles'
+      }
+    }
+  }
+
 
   async getActiveDonations(limit = 3): Promise<{
     success: boolean

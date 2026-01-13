@@ -62,8 +62,8 @@ class BackendChecker {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 3000)
       
-      // Use the configured external API URL for health check
-      const healthUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/health`
+      // Use the correct health check endpoint: /api/home/health
+      const healthUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/home/health`
 
       const response = await fetch(healthUrl, {
         method: 'GET',
@@ -96,9 +96,13 @@ export class HttpClient {
   private defaultHeaders: Record<string, string>
   private timeout: number
 
-  constructor(baseUrl: string = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') {
+  constructor(baseUrl: string = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080') {
 
-    this.baseUrl = baseUrl.endsWith('/api/v1') ? baseUrl : `${baseUrl}/api/v1`
+    // Remove trailing /api if it exists to prevent double /api 
+    this.baseUrl = baseUrl.endsWith('/api')
+      ? baseUrl.slice(0, -4)  // Remove trailing /api
+      : baseUrl
+    this.baseUrl = `${this.baseUrl}/api`
     this.timeout = parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '15000')
     this.defaultHeaders = {
       'Content-Type': 'application/json',
@@ -108,7 +112,15 @@ export class HttpClient {
     }
   }
 
-  private getAuthHeaders(): Record<string, string> {
+  private getAuthHeaders(endpoint?: string): Record<string, string> {
+    if (endpoint && endpoint.includes('/admin/')) {
+      const adminAuth = localStorage.getItem('admin_auth')
+      if (adminAuth) {
+        const parsedAuth = JSON.parse(adminAuth)
+        return parsedAuth?.token ? { Authorization: `Bearer ${parsedAuth.token}` } : {}
+      }
+    }
+    
     const token = localStorage.getItem('alfurqon_token')
     return token ? { Authorization: `Bearer ${token}` } : {}
   }
@@ -118,10 +130,7 @@ export class HttpClient {
     options: RequestInit = {}
   ): Promise<T> {
 
-    // Skip backend check for development when no external API is configured
     if (!endpoint.includes('/health') && !process.env.NEXT_PUBLIC_API_URL) {
-      // In development mode without external API, proceed without checking
-      console.log('📍 Development mode: skipping backend availability check')
     } else if (!endpoint.includes('/health')) {
       const isBackendAvailable = await BackendChecker.checkAvailability()
       if (!isBackendAvailable) {
@@ -136,7 +145,7 @@ export class HttpClient {
       ...options,
       headers: {
         ...this.defaultHeaders,
-        ...this.getAuthHeaders(),
+        ...this.getAuthHeaders(endpoint),
         ...options.headers,
       },
       signal: AbortSignal.timeout(this.timeout)
@@ -148,6 +157,12 @@ export class HttpClient {
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
+        
+        // Check for invalid token errors and trigger auto logout
+        if (this.isInvalidTokenError(response.status, errorData)) {
+          this.handleInvalidToken(endpoint)
+        }
+        
         this.logError(endpoint, errorData)
         throw new Error(errorData.message || `HTTP error! status: ${response.status}`)
       }
@@ -158,6 +173,63 @@ export class HttpClient {
     } catch (error) {
       this.logError(endpoint, error)
       throw error
+    }
+  }
+
+  private isInvalidTokenError(statusCode: number, errorData: any): boolean {
+    // Check for invalid token based on status code and error message
+    const isUnauthorized = statusCode === 401 || errorData?.error === 401
+    const hasInvalidTokenMessage = errorData?.message?.toLowerCase().includes('invalid token') ||
+                                   errorData?.message?.toLowerCase().includes('token expired') ||
+                                   errorData?.message?.toLowerCase().includes('unauthorized') ||
+                                   errorData?.message?.toLowerCase().includes('access token required')
+    
+    return (isUnauthorized || statusCode === 500) && hasInvalidTokenMessage
+  }
+
+  private handleInvalidToken(endpoint: string): void {
+    console.warn('🔒 Invalid token detected, logging out user...')
+    
+    // Clear tokens from localStorage
+    if (typeof window !== 'undefined') {
+      // Clear admin token if it's an admin endpoint
+      if (endpoint.includes('/admin/')) {
+        localStorage.removeItem('admin_auth')
+      } else {
+        // Clear regular user token
+        localStorage.removeItem('alfurqon_token')
+      }
+      
+      // Dispatch auto logout event for AuthHandler to pick up
+      const event = new CustomEvent('autoLogout', {
+        detail: {
+          message: 'Sesi Anda telah berakhir. Silakan login kembali.',
+          type: 'warning',
+          endpoint: endpoint
+        }
+      })
+      window.dispatchEvent(event)
+    }
+  }
+
+  private showLogoutNotification(): void {
+    // Create a simple notification for auto logout
+    if (typeof window !== 'undefined') {
+      // Try to show a toast notification if available
+      const event = new CustomEvent('autoLogout', {
+        detail: {
+          message: 'Sesi Anda telah berakhir. Silakan login kembali.',
+          type: 'warning'
+        }
+      })
+      window.dispatchEvent(event)
+      
+      // Fallback to simple alert if no notification system
+      setTimeout(() => {
+        if (!document.querySelector('[data-notification-shown]')) {
+          alert('Sesi Anda telah berakhir. Silakan login kembali.')
+        }
+      }, 100)
     }
   }
 
@@ -210,32 +282,38 @@ export class ArticleRepository implements IArticleRepository {
   constructor(private httpClient: HttpClient) {}
 
   async getArticles(params?: ArticleRequest): Promise<ApiResponse<PaginatedResponse<ArticleResponse>>> {
+    // Public articles endpoint - handled by mainRoutes
     return this.httpClient.get('/articles', params)
   }
 
   async getArticleById(id: string): Promise<ApiResponse<ArticleResponse>> {
+    // Public article by ID - handled by mainRoutes
     return this.httpClient.get(`/articles/${id}`)
   }
 
   async getArticleBySlug(slug: string): Promise<ApiResponse<ArticleResponse>> {
+    // Public article by slug - handled by mainRoutes
     return this.httpClient.get(`/articles/slug/${slug}`)
   }
 
   async getFeaturedArticles(limit = 6): Promise<ApiResponse<ArticleResponse[]>> {
-
-    return this.httpClient.get('/articles', { limit, featured: true })
+    // Featured articles - handled by homeRoutes
+    return this.httpClient.get('/home/articles/featured', { limit })
   }
 
   async getRelatedArticles(articleId: string, limit = 3): Promise<ApiResponse<ArticleResponse[]>> {
-    return this.httpClient.get(`/articles/${articleId}/related`, { limit })
+    // Related articles - handled by homeRoutes
+    return this.httpClient.get(`/home/articles/${articleId}/related`, { limit })
   }
 
   async incrementViews(id: string): Promise<ApiResponse<{ views: number }>> {
-    return this.httpClient.post(`/articles/${id}/view`)
+    // Increment views - handled by homeRoutes
+    return this.httpClient.post(`/home/articles/${id}/view`)
   }
 
   async likeArticle(id: string): Promise<ApiResponse<{ likes: number }>> {
-    return this.httpClient.post(`/articles/${id}/like`)
+    // Like article - handled by homeRoutes
+    return this.httpClient.post(`/home/articles/${id}/like`)
   }
 }
 
@@ -243,31 +321,38 @@ export class DonationRepository implements IDonationRepository {
   constructor(private httpClient: HttpClient) {}
 
   async getDonations(params?: DonationRequest): Promise<ApiResponse<PaginatedResponse<DonationResponse>>> {
+    // Public donations endpoint - handled by mainRoutes
     return this.httpClient.get('/donations', params)
   }
 
   async getDonationById(id: string): Promise<ApiResponse<DonationResponse>> {
+    // Public donation by ID - handled by mainRoutes
     return this.httpClient.get(`/donations/${id}`)
   }
 
   async getDonationBySlug(slug: string): Promise<ApiResponse<DonationResponse>> {
+    // Public donation by slug - handled by mainRoutes
     return this.httpClient.get(`/donations/slug/${slug}`)
   }
 
   async getActiveDonations(limit = 3): Promise<ApiResponse<DonationResponse[]>> {
-    return this.httpClient.get('/donations/active', { limit })
+    // Active donations - handled by homeRoutes
+    return this.httpClient.get('/home/donations/active', { limit })
   }
 
   async submitDonation(data: DonationSubmissionRequest): Promise<ApiResponse<{ transactionId: string; paymentUrl?: string }>> {
-    return this.httpClient.post('/donations/submit', data)
+    // Submit donation - handled by homeRoutes
+    return this.httpClient.post('/home/donations/submit', data)
   }
 
   async getDonationStatus(transactionId: string): Promise<ApiResponse<{ status: string; amount: number }>> {
-    return this.httpClient.get(`/donations/${transactionId}/status`)
+    // Donation status - handled by homeRoutes
+    return this.httpClient.get(`/home/donations/${transactionId}/status`)
   }
 
   async getDonationStats(): Promise<ApiResponse<{ totalAmount: number; totalPrograms: number; totalDonors: number; thisMonthAmount: number }>> {
-    return this.httpClient.get('/donations/stats')
+    // Donation statistics - handled by homeRoutes
+    return this.httpClient.get('/home/donations/stats')
   }
 }
 
@@ -275,27 +360,33 @@ export class NewsRepository implements INewsRepository {
   constructor(private httpClient: HttpClient) {}
 
   async getNews(params?: NewsRequest): Promise<ApiResponse<PaginatedResponse<NewsResponse>>> {
+    // Public news endpoint - handled by mainRoutes
     return this.httpClient.get('/news', params)
   }
 
   async getNewsById(id: string): Promise<ApiResponse<NewsResponse>> {
+    // Public news by ID - handled by mainRoutes
     return this.httpClient.get(`/news/${id}`)
   }
 
   async getNewsBySlug(slug: string): Promise<ApiResponse<NewsResponse>> {
+    // Public news by slug - handled by mainRoutes
     return this.httpClient.get(`/news/slug/${slug}`)
   }
 
   async getLatestNews(limit = 3): Promise<ApiResponse<NewsResponse[]>> {
-    return this.httpClient.get('/news/latest', { limit })
+    // Latest news - handled by homeRoutes
+    return this.httpClient.get('/home/news/latest', { limit })
   }
 
   async getTopNews(limit = 3): Promise<ApiResponse<NewsResponse[]>> {
-    return this.httpClient.get('/news/top', { limit })
+    // Top news - handled by homeRoutes
+    return this.httpClient.get('/home/news/top', { limit })
   }
 
   async incrementViews(id: string): Promise<ApiResponse<{ views: number }>> {
-    return this.httpClient.patch(`/news/${id}/views`)
+    // Increment news views - handled by homeRoutes
+    return this.httpClient.patch(`/home/news/${id}/views`)
   }
 }
 
@@ -303,15 +394,18 @@ export class MenuRepository implements IMenuRepository {
   constructor(private httpClient: HttpClient) {}
 
   async getMenus(params?: MenuRequest): Promise<ApiResponse<MenuResponse[]>> {
-    return this.httpClient.get('/menus/navigation', params)
+    // Navigation menus - handled by homeRoutes
+    return this.httpClient.get('/home/menus/navigation', params)
   }
 
   async getMenuById(id: string): Promise<ApiResponse<MenuResponse>> {
-    return this.httpClient.get(`/menus/${id}`)
+    // Menu by ID - handled by homeRoutes
+    return this.httpClient.get(`/home/menus/${id}`)
   }
 
   async getActiveMenus(): Promise<ApiResponse<MenuResponse[]>> {
-    return this.httpClient.get('/menus/navigation', { active: true })
+    // Active menus - handled by homeRoutes
+    return this.httpClient.get('/home/menus/navigation', { active: true })
   }
 }
 
@@ -319,23 +413,28 @@ export class HomeRepository implements IHomeRepository {
   constructor(private httpClient: HttpClient) {}
 
   async getHomePageData(): Promise<ApiResponse<HomePageData>> {
+    // Home page dashboard data - handled by homeRoutes
     return this.httpClient.get('/home/dashboard')
   }
 
   async getHomeStats(): Promise<ApiResponse<HomeStatsResponse>> {
+    // Public statistics - handled by statisticsRoutes
     return this.httpClient.get('/statistics/public')
   }
 
   async subscribeNewsletter(data: NewsletterRequest): Promise<ApiResponse<{ message: string }>> {
-    return this.httpClient.post('/newsletter/subscribe', data)
+    // Newsletter subscription - handled by homeRoutes
+    return this.httpClient.post('/home/newsletter/subscribe', data)
   }
 
   async submitContact(data: ContactRequest): Promise<ApiResponse<{ message: string }>> {
-    return this.httpClient.post('/contact/submit', data)
+    // Contact form submission - handled by homeRoutes
+    return this.httpClient.post('/home/contact/submit', data)
   }
 
   async search(params: SearchRequest): Promise<ApiResponse<{ articles: ArticleResponse[]; donations: DonationResponse[]; news: NewsResponse[]; total: number }>> {
-    return this.httpClient.get('/search', params)
+    // Global search - handled by homeRoutes
+    return this.httpClient.get('/home/search', params)
   }
 }
 
@@ -343,11 +442,13 @@ export class AnalyticsRepository implements IAnalyticsRepository {
   constructor(private httpClient: HttpClient) {}
 
   async trackEvent(data: AnalyticsRequest): Promise<ApiResponse<{ tracked: boolean }>> {
-    return this.httpClient.post('/analytics/track', data)
+    // Track analytics event - handled by homeRoutes
+    return this.httpClient.post('/home/analytics/track', data)
   }
 
   async getPageViews(resourceId?: string): Promise<ApiResponse<{ views: number }>> {
-    return this.httpClient.get('/analytics/views', resourceId ? { resourceId } : undefined)
+    // Get page views - handled by homeRoutes
+    return this.httpClient.get('/home/analytics/views', resourceId ? { resourceId } : undefined)
   }
 }
 
@@ -355,11 +456,13 @@ export class FeedbackRepository implements IFeedbackRepository {
   constructor(private httpClient: HttpClient) {}
 
   async submitFeedback(data: FeedbackRequest): Promise<ApiResponse<{ message: string }>> {
-    return this.httpClient.post('/feedback', data)
+    // Submit feedback - handled by homeRoutes
+    return this.httpClient.post('/home/feedback', data)
   }
 
   async getFeedback(resourceType: string, resourceId?: string): Promise<ApiResponse<{ averageRating: number; totalComments: number; feedback: Array<{ type: string; rating?: number; comment?: string; createdAt: string }> }>> {
-    return this.httpClient.get('/feedback', { resourceType, resourceId })
+    // Get feedback - handled by homeRoutes
+    return this.httpClient.get('/home/feedback', { resourceType, resourceId })
   }
 }
 
@@ -367,35 +470,43 @@ export class VideoRepository implements IVideoRepository {
   constructor(private httpClient: HttpClient) {}
 
   async getVideos(params?: VideoRequest): Promise<ApiResponse<PaginatedResponse<VideoResponse>>> {
-    return this.httpClient.get('/videos', params)
+    // Public videos endpoint - handled by homeRoutes
+    return this.httpClient.get('/home/videos', params)
   }
 
   async getVideoById(id: string): Promise<ApiResponse<VideoResponse>> {
-    return this.httpClient.get(`/videos/${id}`)
+    // Public video by ID - handled by homeRoutes
+    return this.httpClient.get(`/home/videos/${id}`)
   }
 
   async getFeaturedVideos(limit = 6): Promise<ApiResponse<VideoResponse[]>> {
-    return this.httpClient.get('/videos', { limit, isFeatured: true })
+    // Featured videos - handled by homeRoutes
+    return this.httpClient.get('/home/videos/featured', { limit })
   }
 
   async getVideosByCategory(category: string, limit = 10): Promise<ApiResponse<VideoResponse[]>> {
-    return this.httpClient.get('/videos', { category, limit })
+    // Videos by category - handled by homeRoutes
+    return this.httpClient.get('/home/videos', { category, limit })
   }
 
   async incrementViews(id: string): Promise<ApiResponse<{ views: number }>> {
-    return this.httpClient.post(`/videos/${id}/view`)
+    // Increment video views - handled by homeRoutes
+    return this.httpClient.post(`/home/videos/${id}/view`)
   }
 
   async createVideo(data: CreateVideoRequest): Promise<ApiResponse<VideoResponse>> {
+    // Admin create video - handled by adminRoutes
     return this.httpClient.post('/admin/videos', data)
   }
 
   async updateVideo(data: UpdateVideoRequest): Promise<ApiResponse<VideoResponse>> {
+    // Admin update video - handled by adminRoutes
     const { id, ...updateData } = data
     return this.httpClient.put(`/admin/videos/${id}`, updateData)
   }
 
   async deleteVideo(id: string): Promise<ApiResponse<{ message: string }>> {
+    // Admin delete video - handled by adminRoutes
     return this.httpClient.delete(`/admin/videos/${id}`)
   }
 }

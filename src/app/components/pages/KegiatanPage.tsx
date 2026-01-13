@@ -9,7 +9,7 @@ import { useMenuStore } from '../../stores/useMenuStore'
 import { useArticleStore } from '../../stores/adminArticleStore'
 import { useTheme } from '@/context/themeContext'
 import { iconMap } from '@/app/utils/iconMapper'
-import { useFeaturedArticles } from '../../hooks/useHomePageApi'
+import { useFeaturedArticles, usePublishedArticles } from '../../hooks/useHomePageApi'
 
 import MasjidHeader from '../path/MasjidHeader'
 import Footer from '../path/Footer'
@@ -18,7 +18,7 @@ import UniversalNavGrid, { NavItem } from '../path/UniversalNavGrid'
 
 export default function KegiatanPage() {
   const { colors } = useTheme()
-  const { articles: apiArticles, loading: articlesLoading, error: articlesError } = useFeaturedArticles(100)
+  const { articles: apiArticles, loading: articlesLoading, error: articlesError } = usePublishedArticles(100)
   const { menus, fetchMenus } = useMenuStore()
   const categories = useArticleStore(state => state.categories)
   const searchParams = useSearchParams()
