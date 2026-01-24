@@ -26,6 +26,8 @@ import MasjidHeader from '../../path/MasjidHeader'
 import Footer from '../../path/Footer'
 import ThemeToggle from '../../path/ThemeToggle'
 import FacilityInfoModal from '../../path/FacilityInfoModal'
+import { grahaSubagdjaUseCases } from '@/app/useCases/grahaSubagdjaUseCases'
+import type { GalleryImage as BackendGalleryImage, UMKMPartner, FAQ as BackendFAQ } from '@/app/repositories/grahaSubagdjaRepository'
 
 interface GalleryImage {
     id: string
@@ -41,23 +43,9 @@ interface FAQLocal {
     isOpen: boolean
 }
 
-interface UMKMPartner {
-    id: string
-    name: string
-    category: string
-    description: string
-    services: string[]
-    contact: {
-        phone: string
-        whatsapp: string
-        instagram?: string
-    }
-    image?: string
-}
-
 export default function GrahaSubagdjaPage() {
     const { colors } = useTheme()
-    
+
     const {
         umkmPartners: backendUmkmPartners,
         gallery: backendGallery,
@@ -69,11 +57,12 @@ export default function GrahaSubagdjaPage() {
         getGalleryByCategory,
         getUMKMPartnersByCategory
     } = useGraha()
-    
+
     const [showScrollToTop, setShowScrollToTop] = useState(false)
     const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null)
     const [activeTab, setActiveTab] = useState<'overview' | 'gallery' | 'umkm' | 'contact'>('overview')
     const [faqs, setFaqs] = useState<FAQLocal[]>([])
+    const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
     const [modalInfo, setModalInfo] = useState<{
         isOpen: boolean
@@ -127,37 +116,37 @@ export default function GrahaSubagdjaPage() {
         {
             icon: FaUsers,
             title: "Kapasitas Besar",
-            description: "Hingga 300 orang",
+            description: "1000 orang (resepsi), 800 orang (seminar), 1200 orang (PHBI)",
             color: colors.accent
         },
         {
             icon: FaMicrophone,
-            title: "Sound System Pro",
-            description: "Audio jernih & wireless mic",
+            title: "Sound System Profesional",
+            description: "Audio berkualitas tinggi dengan wireless microphone & mixer digital",
             color: colors.accent
         },
         {
             icon: FaSnowflake,
-            title: "Full AC",
-            description: "Udara sejuk & nyaman",
+            title: "AC Standing",
+            description: "Sistem pendingin berkapasitas besar untuk kenyamanan maksimal",
             color: colors.accent
         },
         {
             icon: FaCar,
-            title: "Parkir Luas",
-            description: "100+ kendaraan",
+            title: "Area Parkir Luas",
+            description: "100+ mobil dan 200+ motor dengan akses mudah",
             color: colors.accent
         },
         {
             icon: FaWifi,
-            title: "WiFi Gratis",
-            description: "Internet berkecepatan tinggi",
+            title: "Panggung Pelaminan",
+            description: "Ukuran 4M × 12M dengan backdrop profesional",
             color: colors.accent
         },
         {
             icon: FaShieldAlt,
             title: "Keamanan 24/7",
-            description: "CCTV & security",
+            description: "Sistem CCTV dan petugas terlatih",
             color: colors.accent
         }
     ]
@@ -194,9 +183,9 @@ export default function GrahaSubagdjaPage() {
 
     const tabs = [
         { id: 'overview', label: 'Overview', icon: FaInfoCircle },
-        { id: 'gallery', label: 'Galeri', icon: FaMapMarkedAlt },
         { id: 'umkm', label: 'UMKM Partner', icon: FaCalendarAlt },
-        { id: 'contact', label: 'Kontak', icon: FaPhone }
+        { id: 'contact', label: 'Reservasi', icon: FaPhone },
+        { id: 'gallery', label: 'Galeri', icon: FaMapMarkedAlt },
     ]
 
     return (
@@ -204,7 +193,6 @@ export default function GrahaSubagdjaPage() {
             <MasjidHeader />
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8 mt-5">
-                {/* Back Button */}
                 <motion.div
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -254,19 +242,18 @@ export default function GrahaSubagdjaPage() {
                         style={{
                             color: colors.detail,
                             fontFamily: 'var(--font-body)',
-                            lineHeight: '1.6'
+                            lineHeight: '1.7'
                         }}
                     >
-                        Aula serbaguna modern di lingkungan Masjid Al-Furqon yang menjadi pilihan utama untuk berbagai acara penting seperti pernikahan, seminar, kajian, dan event komunitas lainnya.
+                        Ruang serbaguna dengan fasilitas modern untuk berbagai kebutuhan acara Anda. Graha Subagdja menyediakan ruang indoor modern dengan luas 20M × 30M (total 600M²) tanpa tiang di tengah, dilengkapi AC Standing, sound system profesional, dan berbagai fasilitas pendukung.
                     </p>
 
-                    {/* Quick Stats */}
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-3xl mx-auto mt-8">
                         {[
-                            { number: '300', label: 'Kapasitas Orang' },
-                            { number: '100+', label: 'Parkir Mobil' },
-                            { number: '8', label: 'Jam Maksimal' },
-                            { number: '24/7', label: 'Keamanan' }
+                            { number: '1200', label: 'Kapasitas Maksimal' },
+                            { number: '600 M²', label: 'Luas Ruangan' },
+                            { number: '100+', label: 'Area Parkir' },
+                            { number: 'AC Full', label: 'Sistem Pendingin' }
                         ].map((stat, index) => (
                             <motion.div
                                 key={index}
@@ -342,6 +329,779 @@ export default function GrahaSubagdjaPage() {
                             exit={{ opacity: 0, x: -20 }}
                             className="space-y-12"
                         >
+                            {/* Showcase Graha Images - Carousel Style */}
+                            <section className="relative -mx-4 sm:-mx-6">
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    className="relative h-[400px] sm:h-[500px] lg:h-[600px] overflow-hidden"
+                                >
+                                    <AnimatePresence mode="wait">
+                                        <motion.div
+                                            key={currentImageIndex}
+                                            initial={{ opacity: 0, scale: 1.1 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            exit={{ opacity: 0, scale: 0.95 }}
+                                            transition={{ duration: 0.7 }}
+                                            className="absolute inset-0"
+                                        >
+                                            <img
+                                                src={[
+                                                    '/images/aulagraha1.jpeg',
+                                                    '/images/aulagraha2.jpeg'
+                                                ][currentImageIndex]}
+                                                alt={[
+                                                    'Setup Acara Graha Subagdja',
+                                                    'Panggung Pelaminan Graha Subagdja'
+                                                ][currentImageIndex]}
+                                                className="w-full h-full object-cover"
+                                            />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+
+                                            <div className="absolute bottom-0 left-0 right-0 p-8 sm:p-12">
+                                                <div className="max-w-7xl mx-auto">
+                                                    <motion.div
+                                                        initial={{ y: 30, opacity: 0 }}
+                                                        animate={{ y: 0, opacity: 1 }}
+                                                        transition={{ delay: 0.3 }}
+                                                    >
+                                                        <h3
+                                                            className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 text-white"
+                                                            style={{ fontFamily: 'var(--font-header-modern)' }}
+                                                        >
+                                                            {[
+                                                                'Dekorasi Elegan & Mewah',
+                                                                'Panggung Pelaminan Indah'
+                                                            ][currentImageIndex]}
+                                                        </h3>
+                                                        <p
+                                                            className="text-base sm:text-lg text-white/90 max-w-2xl"
+                                                            style={{ fontFamily: 'var(--font-body)' }}
+                                                        >
+                                                            {[
+                                                                'Tata ruang elegan dengan dekorasi bunga dan pencahayaan profesional untuk acara spesial Anda',
+                                                                'Backdrop indah dengan rangkaian bunga dan pencahayaan dramatis yang menciptakan momen tak terlupakan'
+                                                            ][currentImageIndex]}
+                                                        </p>
+                                                    </motion.div>
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                    </AnimatePresence>
+
+                                    <button
+                                        onClick={() => setCurrentImageIndex((prev) => (prev === 0 ? 1 : 0))}
+                                        className="absolute left-4 sm:left-8 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/20 backdrop-blur-md hover:bg-white/30 transition-all duration-300 flex items-center justify-center text-white group z-10"
+                                    >
+                                        <svg className="w-6 h-6 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                        </svg>
+                                    </button>
+
+                                    <button
+                                        onClick={() => setCurrentImageIndex((prev) => (prev === 0 ? 1 : 0))}
+                                        className="absolute right-4 sm:right-8 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/20 backdrop-blur-md hover:bg-white/30 transition-all duration-300 flex items-center justify-center text-white group z-10"
+                                    >
+                                        <svg className="w-6 h-6 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                        </svg>
+                                    </button>
+
+                                    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-3 z-10">
+                                        {[0, 1].map((index) => (
+                                            <button
+                                                key={index}
+                                                onClick={() => setCurrentImageIndex(index)}
+                                                className={`transition-all duration-300 rounded-full ${currentImageIndex === index
+                                                    ? 'w-8 h-2 bg-white'
+                                                    : 'w-2 h-2 bg-white/50 hover:bg-white/70'
+                                                    }`}
+                                            />
+                                        ))}
+                                    </div>
+
+                                    <button
+                                        onClick={() => setSelectedImage({
+                                            id: 'showcase',
+                                            src: ['/images/aulagraha1.jpeg', '/images/aulagraha2.jpeg'][currentImageIndex],
+                                            alt: ['Setup Acara Graha Subagdja', 'Panggung Pelaminan'][currentImageIndex],
+                                            category: 'interior'
+                                        })}
+                                        className="absolute top-4 right-4 sm:top-8 sm:right-8 px-6 py-3 rounded-full bg-white/10 backdrop-blur-md hover:bg-white/20 transition-all duration-300 text-white font-semibold flex items-center gap-2 z-10"
+                                        style={{ fontFamily: 'var(--font-sharp-bold)' }}
+                                    >
+                                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                                            <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                                        </svg>
+                                        Perbesar
+                                    </button>
+                                </motion.div>
+                            </section>
+
+                            <section>
+                                <div className="text-center mb-12">
+                                    <h2
+                                        className="text-3xl font-bold mb-4"
+                                        style={{
+                                            color: colors.heading,
+                                            fontFamily: 'var(--font-header-modern)'
+                                        }}
+                                    >
+                                        Paket Layanan
+                                    </h2>
+                                    <p
+                                        className="text-lg max-w-2xl mx-auto"
+                                        style={{
+                                            color: colors.detail,
+                                            fontFamily: 'var(--font-body)',
+                                            lineHeight: '1.7'
+                                        }}
+                                    >
+                                        Pilih paket yang sesuai dengan kebutuhan acara Anda dengan harga yang kompetitif
+                                    </p>
+                                </div>
+
+                                {/* Paket 1: Akad Nikah & Resepsi */}
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    className="mb-8 rounded-2xl overflow-hidden border"
+                                    style={{
+                                        backgroundColor: colors.card,
+                                        border: `2px solid ${colors.accent}30`
+                                    }}
+                                >
+                                    <div
+                                        className="px-6 py-4"
+                                        style={{
+                                            background: `linear-gradient(135deg, ${colors.accent}15 0%, ${colors.accent}05 100%)`,
+                                            borderBottom: `1px solid ${colors.border}`
+                                        }}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-3xl">💒</span>
+                                            <div>
+                                                <h3
+                                                    className="text-xl font-bold"
+                                                    style={{
+                                                        color: colors.heading,
+                                                        fontFamily: 'var(--font-header-modern)'
+                                                    }}
+                                                >
+                                                    Akad Nikah & Resepsi Pernikahan
+                                                </h3>
+                                                <p
+                                                    className="text-sm mt-1"
+                                                    style={{
+                                                        color: colors.detail,
+                                                        fontFamily: 'var(--font-body)'
+                                                    }}
+                                                >
+                                                    Paket lengkap untuk acara sakral pernikahan Anda
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full">
+                                            <thead>
+                                                <tr style={{ backgroundColor: colors.background + '80' }}>
+                                                    <th
+                                                        className="px-6 py-4 text-left text-sm font-bold"
+                                                        style={{
+                                                            color: colors.cardText,
+                                                            fontFamily: 'var(--font-sharp-bold)',
+                                                            borderBottom: `1px solid ${colors.border}`
+                                                        }}
+                                                    >
+                                                        Hari
+                                                    </th>
+                                                    <th
+                                                        className="px-6 py-4 text-center text-sm font-bold"
+                                                        style={{
+                                                            color: colors.cardText,
+                                                            fontFamily: 'var(--font-sharp-bold)',
+                                                            borderBottom: `1px solid ${colors.border}`
+                                                        }}
+                                                    >
+                                                        Durasi
+                                                    </th>
+                                                    <th
+                                                        className="px-6 py-4 text-right text-sm font-bold"
+                                                        style={{
+                                                            color: colors.cardText,
+                                                            fontFamily: 'var(--font-sharp-bold)',
+                                                            borderBottom: `1px solid ${colors.border}`
+                                                        }}
+                                                    >
+                                                        Harga
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr className="hover:bg-opacity-50 transition-colors" style={{ backgroundColor: 'transparent' }}>
+                                                    <td
+                                                        className="px-6 py-4"
+                                                        style={{
+                                                            color: colors.cardText,
+                                                            fontFamily: 'var(--font-body)',
+                                                            borderBottom: `1px solid ${colors.border}30`
+                                                        }}
+                                                    >
+                                                        <span className="flex items-center gap-2">
+                                                            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: colors.accent }}></span>
+                                                            Sabtu & Minggu
+                                                        </span>
+                                                    </td>
+                                                    <td
+                                                        className="px-6 py-4 text-center font-medium"
+                                                        style={{
+                                                            color: colors.detail,
+                                                            fontFamily: 'var(--font-body)',
+                                                            borderBottom: `1px solid ${colors.border}30`
+                                                        }}
+                                                    >
+                                                        8 Jam
+                                                    </td>
+                                                    <td
+                                                        className="px-6 py-4 text-right font-bold text-lg"
+                                                        style={{
+                                                            color: colors.accent,
+                                                            fontFamily: 'var(--font-sharp-bold)',
+                                                            borderBottom: `1px solid ${colors.border}30`
+                                                        }}
+                                                    >
+                                                        Rp 8.000.000
+                                                    </td>
+                                                </tr>
+                                                <tr className="hover:bg-opacity-50 transition-colors" style={{ backgroundColor: 'transparent' }}>
+                                                    <td
+                                                        className="px-6 py-4"
+                                                        style={{
+                                                            color: colors.cardText,
+                                                            fontFamily: 'var(--font-body)'
+                                                        }}
+                                                    >
+                                                        <span className="flex items-center gap-2">
+                                                            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: colors.accent }}></span>
+                                                            Senin - Jumat
+                                                        </span>
+                                                    </td>
+                                                    <td
+                                                        className="px-6 py-4 text-center font-medium"
+                                                        style={{
+                                                            color: colors.detail,
+                                                            fontFamily: 'var(--font-body)'
+                                                        }}
+                                                    >
+                                                        8 Jam
+                                                    </td>
+                                                    <td
+                                                        className="px-6 py-4 text-right font-bold text-lg"
+                                                        style={{
+                                                            color: colors.accent,
+                                                            fontFamily: 'var(--font-sharp-bold)'
+                                                        }}
+                                                    >
+                                                        Rp 6.550.000
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </motion.div>
+
+                                {/* Paket 2: Resepsi Pernikahan */}
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ delay: 0.1 }}
+                                    className="mb-8 rounded-2xl overflow-hidden border"
+                                    style={{
+                                        backgroundColor: colors.card,
+                                        border: `2px solid ${colors.accent}30`
+                                    }}
+                                >
+                                    <div
+                                        className="px-6 py-4"
+                                        style={{
+                                            background: `linear-gradient(135deg, ${colors.accent}15 0%, ${colors.accent}05 100%)`,
+                                            borderBottom: `1px solid ${colors.border}`
+                                        }}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-3xl">🎉</span>
+                                            <div>
+                                                <h3
+                                                    className="text-xl font-bold"
+                                                    style={{
+                                                        color: colors.heading,
+                                                        fontFamily: 'var(--font-header-modern)'
+                                                    }}
+                                                >
+                                                    Resepsi Pernikahan
+                                                </h3>
+                                                <p
+                                                    className="text-sm mt-1"
+                                                    style={{
+                                                        color: colors.detail,
+                                                        fontFamily: 'var(--font-body)'
+                                                    }}
+                                                >
+                                                    Khusus untuk acara resepsi pernikahan
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full">
+                                            <thead>
+                                                <tr style={{ backgroundColor: colors.background + '80' }}>
+                                                    <th
+                                                        className="px-6 py-4 text-left text-sm font-bold"
+                                                        style={{
+                                                            color: colors.cardText,
+                                                            fontFamily: 'var(--font-sharp-bold)',
+                                                            borderBottom: `1px solid ${colors.border}`
+                                                        }}
+                                                    >
+                                                        Hari
+                                                    </th>
+                                                    <th
+                                                        className="px-6 py-4 text-center text-sm font-bold"
+                                                        style={{
+                                                            color: colors.cardText,
+                                                            fontFamily: 'var(--font-sharp-bold)',
+                                                            borderBottom: `1px solid ${colors.border}`
+                                                        }}
+                                                    >
+                                                        Durasi
+                                                    </th>
+                                                    <th
+                                                        className="px-6 py-4 text-right text-sm font-bold"
+                                                        style={{
+                                                            color: colors.cardText,
+                                                            fontFamily: 'var(--font-sharp-bold)',
+                                                            borderBottom: `1px solid ${colors.border}`
+                                                        }}
+                                                    >
+                                                        Harga
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr className="hover:bg-opacity-50 transition-colors" style={{ backgroundColor: 'transparent' }}>
+                                                    <td
+                                                        className="px-6 py-4"
+                                                        style={{
+                                                            color: colors.cardText,
+                                                            fontFamily: 'var(--font-body)',
+                                                            borderBottom: `1px solid ${colors.border}30`
+                                                        }}
+                                                    >
+                                                        <span className="flex items-center gap-2">
+                                                            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: colors.accent }}></span>
+                                                            Sabtu & Minggu
+                                                        </span>
+                                                    </td>
+                                                    <td
+                                                        className="px-6 py-4 text-center font-medium"
+                                                        style={{
+                                                            color: colors.detail,
+                                                            fontFamily: 'var(--font-body)',
+                                                            borderBottom: `1px solid ${colors.border}30`
+                                                        }}
+                                                    >
+                                                        8 Jam
+                                                    </td>
+                                                    <td
+                                                        className="px-6 py-4 text-right font-bold text-lg"
+                                                        style={{
+                                                            color: colors.accent,
+                                                            fontFamily: 'var(--font-sharp-bold)',
+                                                            borderBottom: `1px solid ${colors.border}30`
+                                                        }}
+                                                    >
+                                                        Rp 7.450.000
+                                                    </td>
+                                                </tr>
+                                                <tr className="hover:bg-opacity-50 transition-colors" style={{ backgroundColor: 'transparent' }}>
+                                                    <td
+                                                        className="px-6 py-4"
+                                                        style={{
+                                                            color: colors.cardText,
+                                                            fontFamily: 'var(--font-body)'
+                                                        }}
+                                                    >
+                                                        <span className="flex items-center gap-2">
+                                                            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: colors.accent }}></span>
+                                                            Senin - Jumat
+                                                        </span>
+                                                    </td>
+                                                    <td
+                                                        className="px-6 py-4 text-center font-medium"
+                                                        style={{
+                                                            color: colors.detail,
+                                                            fontFamily: 'var(--font-body)'
+                                                        }}
+                                                    >
+                                                        8 Jam
+                                                    </td>
+                                                    <td
+                                                        className="px-6 py-4 text-right font-bold text-lg"
+                                                        style={{
+                                                            color: colors.accent,
+                                                            fontFamily: 'var(--font-sharp-bold)'
+                                                        }}
+                                                    >
+                                                        Rp 5.960.000
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </motion.div>
+
+                                {/* Paket 3: Seminar / Rapat Kerja */}
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ delay: 0.2 }}
+                                    className="mb-8 rounded-2xl overflow-hidden border"
+                                    style={{
+                                        backgroundColor: colors.card,
+                                        border: `2px solid ${colors.accent}30`
+                                    }}
+                                >
+                                    <div
+                                        className="px-6 py-4"
+                                        style={{
+                                            background: `linear-gradient(135deg, ${colors.accent}15 0%, ${colors.accent}05 100%)`,
+                                            borderBottom: `1px solid ${colors.border}`
+                                        }}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-3xl">📊</span>
+                                            <div>
+                                                <h3
+                                                    className="text-xl font-bold"
+                                                    style={{
+                                                        color: colors.heading,
+                                                        fontFamily: 'var(--font-header-modern)'
+                                                    }}
+                                                >
+                                                    Seminar / Rapat Kerja
+                                                </h3>
+                                                <p
+                                                    className="text-sm mt-1"
+                                                    style={{
+                                                        color: colors.detail,
+                                                        fontFamily: 'var(--font-body)'
+                                                    }}
+                                                >
+                                                    Ideal untuk acara formal dan korporat
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full">
+                                            <thead>
+                                                <tr style={{ backgroundColor: colors.background + '80' }}>
+                                                    <th
+                                                        className="px-6 py-4 text-left text-sm font-bold"
+                                                        style={{
+                                                            color: colors.cardText,
+                                                            fontFamily: 'var(--font-sharp-bold)',
+                                                            borderBottom: `1px solid ${colors.border}`
+                                                        }}
+                                                    >
+                                                        Hari
+                                                    </th>
+                                                    <th
+                                                        className="px-6 py-4 text-center text-sm font-bold"
+                                                        style={{
+                                                            color: colors.cardText,
+                                                            fontFamily: 'var(--font-sharp-bold)',
+                                                            borderBottom: `1px solid ${colors.border}`
+                                                        }}
+                                                    >
+                                                        Durasi
+                                                    </th>
+                                                    <th
+                                                        className="px-6 py-4 text-right text-sm font-bold"
+                                                        style={{
+                                                            color: colors.cardText,
+                                                            fontFamily: 'var(--font-sharp-bold)',
+                                                            borderBottom: `1px solid ${colors.border}`
+                                                        }}
+                                                    >
+                                                        Harga
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr className="hover:bg-opacity-50 transition-colors" style={{ backgroundColor: 'transparent' }}>
+                                                    <td
+                                                        className="px-6 py-4"
+                                                        style={{
+                                                            color: colors.cardText,
+                                                            fontFamily: 'var(--font-body)',
+                                                            borderBottom: `1px solid ${colors.border}30`
+                                                        }}
+                                                        rowSpan={2}
+                                                    >
+                                                        <span className="flex items-center gap-2">
+                                                            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: colors.accent }}></span>
+                                                            Sabtu & Minggu
+                                                        </span>
+                                                    </td>
+                                                    <td
+                                                        className="px-6 py-4 text-center font-medium"
+                                                        style={{
+                                                            color: colors.detail,
+                                                            fontFamily: 'var(--font-body)',
+                                                            borderBottom: `1px solid ${colors.border}30`
+                                                        }}
+                                                    >
+                                                        4 Jam
+                                                    </td>
+                                                    <td
+                                                        className="px-6 py-4 text-right font-bold text-lg"
+                                                        style={{
+                                                            color: colors.accent,
+                                                            fontFamily: 'var(--font-sharp-bold)',
+                                                            borderBottom: `1px solid ${colors.border}30`
+                                                        }}
+                                                    >
+                                                        Rp 3.000.000
+                                                    </td>
+                                                </tr>
+                                                <tr className="hover:bg-opacity-50 transition-colors" style={{ backgroundColor: 'transparent' }}>
+                                                    <td
+                                                        className="px-6 py-4 text-center font-medium"
+                                                        style={{
+                                                            color: colors.detail,
+                                                            fontFamily: 'var(--font-body)',
+                                                            borderBottom: `1px solid ${colors.border}30`
+                                                        }}
+                                                    >
+                                                        8 Jam
+                                                    </td>
+                                                    <td
+                                                        className="px-6 py-4 text-right font-bold text-lg"
+                                                        style={{
+                                                            color: colors.accent,
+                                                            fontFamily: 'var(--font-sharp-bold)',
+                                                            borderBottom: `1px solid ${colors.border}30`
+                                                        }}
+                                                    >
+                                                        Rp 6.000.000
+                                                    </td>
+                                                </tr>
+                                                <tr className="hover:bg-opacity-50 transition-colors" style={{ backgroundColor: 'transparent' }}>
+                                                    <td
+                                                        className="px-6 py-4"
+                                                        style={{
+                                                            color: colors.cardText,
+                                                            fontFamily: 'var(--font-body)',
+                                                            borderBottom: `1px solid ${colors.border}30`
+                                                        }}
+                                                        rowSpan={2}
+                                                    >
+                                                        <span className="flex items-center gap-2">
+                                                            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: colors.accent }}></span>
+                                                            Senin - Jumat
+                                                        </span>
+                                                    </td>
+                                                    <td
+                                                        className="px-6 py-4 text-center font-medium"
+                                                        style={{
+                                                            color: colors.detail,
+                                                            fontFamily: 'var(--font-body)',
+                                                            borderBottom: `1px solid ${colors.border}30`
+                                                        }}
+                                                    >
+                                                        4 Jam
+                                                    </td>
+                                                    <td
+                                                        className="px-6 py-4 text-right font-bold text-lg"
+                                                        style={{
+                                                            color: colors.accent,
+                                                            fontFamily: 'var(--font-sharp-bold)',
+                                                            borderBottom: `1px solid ${colors.border}30`
+                                                        }}
+                                                    >
+                                                        Rp 2.500.000
+                                                    </td>
+                                                </tr>
+                                                <tr className="hover:bg-opacity-50 transition-colors" style={{ backgroundColor: 'transparent' }}>
+                                                    <td
+                                                        className="px-6 py-4 text-center font-medium"
+                                                        style={{
+                                                            color: colors.detail,
+                                                            fontFamily: 'var(--font-body)'
+                                                        }}
+                                                    >
+                                                        8 Jam
+                                                    </td>
+                                                    <td
+                                                        className="px-6 py-4 text-right font-bold text-lg"
+                                                        style={{
+                                                            color: colors.accent,
+                                                            fontFamily: 'var(--font-sharp-bold)'
+                                                        }}
+                                                    >
+                                                        Rp 5.000.000
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </motion.div>
+
+                                {/* Info Tambahan & Fasilitas Optional */}
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ delay: 0.3 }}
+                                    className="grid md:grid-cols-2 gap-6"
+                                >
+                                    {/* Syarat & Ketentuan */}
+                                    <div
+                                        className="p-6 rounded-2xl border"
+                                        style={{
+                                            backgroundColor: colors.card,
+                                            border: `1px solid ${colors.accent}20`
+                                        }}
+                                    >
+                                        <div className="flex items-center gap-3 mb-4">
+                                            <div
+                                                className="w-10 h-10 rounded-full flex items-center justify-center"
+                                                style={{ backgroundColor: colors.accent + '20' }}
+                                            >
+                                                <span className="text-xl">📋</span>
+                                            </div>
+                                            <h4
+                                                className="font-bold text-lg"
+                                                style={{
+                                                    color: colors.heading,
+                                                    fontFamily: 'var(--font-header-modern)'
+                                                }}
+                                            >
+                                                Catatan Penting
+                                            </h4>
+                                        </div>
+                                        <ul className="space-y-2">
+                                            <li
+                                                className="flex items-start gap-2 text-sm"
+                                                style={{
+                                                    color: colors.detail,
+                                                    fontFamily: 'var(--font-body)'
+                                                }}
+                                            >
+                                                <span style={{ color: colors.accent }}>•</span>
+                                                <span>Syarat serta ketentuan lainnya yang berlaku</span>
+                                            </li>
+                                            <li
+                                                className="flex items-start gap-2 text-sm"
+                                                style={{
+                                                    color: colors.detail,
+                                                    fontFamily: 'var(--font-body)'
+                                                }}
+                                            >
+                                                <span style={{ color: colors.accent }}>•</span>
+                                                <span>Harga dapat berubah sewaktu-waktu</span>
+                                            </li>
+                                            <li
+                                                className="flex items-start gap-2 text-sm"
+                                                style={{
+                                                    color: colors.detail,
+                                                    fontFamily: 'var(--font-body)'
+                                                }}
+                                            >
+                                                <span style={{ color: colors.accent }}>•</span>
+                                                <span>Reservasi minimal 2 minggu sebelum acara</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+
+                                    {/* Fasilitas Optional */}
+                                    <div
+                                        className="p-6 rounded-2xl border"
+                                        style={{
+                                            backgroundColor: colors.card,
+                                            border: `1px solid ${colors.accent}20`
+                                        }}
+                                    >
+                                        <div className="flex items-center gap-3 mb-4">
+                                            <div
+                                                className="w-10 h-10 rounded-full flex items-center justify-center"
+                                                style={{ backgroundColor: colors.accent + '20' }}
+                                            >
+                                                <span className="text-xl">✨</span>
+                                            </div>
+                                            <h4
+                                                className="font-bold text-lg"
+                                                style={{
+                                                    color: colors.heading,
+                                                    fontFamily: 'var(--font-header-modern)'
+                                                }}
+                                            >
+                                                Fasilitas Optional
+                                            </h4>
+                                        </div>
+                                        <ul className="space-y-2">
+                                            <li
+                                                className="flex items-start gap-2 text-sm"
+                                                style={{
+                                                    color: colors.detail,
+                                                    fontFamily: 'var(--font-body)'
+                                                }}
+                                            >
+                                                <span style={{ color: colors.accent }}>📸</span>
+                                                <span>Foto & Video Dokumentasi</span>
+                                            </li>
+                                            <li
+                                                className="flex items-start gap-2 text-sm"
+                                                style={{
+                                                    color: colors.detail,
+                                                    fontFamily: 'var(--font-body)'
+                                                }}
+                                            >
+                                                <span style={{ color: colors.accent }}>📽️</span>
+                                                <span>Multimedia Infocus & Video Streaming</span>
+                                            </li>
+                                            <li
+                                                className="flex items-start gap-2 text-sm"
+                                                style={{
+                                                    color: colors.detail,
+                                                    fontFamily: 'var(--font-body)'
+                                                }}
+                                            >
+                                                <span style={{ color: colors.accent }}>🏠</span>
+                                                <span>Ruang Menginap</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </motion.div>
+
+                                {/* CTA Button */}
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ delay: 0.4 }}
+                                    className="text-center mt-10"
+                                >
+                                </motion.div>
+                            </section>
+
                             <section>
                                 <h2
                                     className="text-3xl font-bold text-center mb-8"
@@ -797,258 +1557,403 @@ export default function GrahaSubagdjaPage() {
                             exit={{ opacity: 0, x: -20 }}
                             className="space-y-8"
                         >
-                            <h2
-                                className="text-3xl font-bold text-center"
-                                style={{
-                                    color: colors.heading,
-                                    fontFamily: 'var(--font-header-modern)'
-                                }}
-                            >
-                                Kontak & Booking
-                            </h2>
-
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
-                                <div className="space-y-6">
-                                    <h3
-                                        className="text-2xl font-bold mb-6"
-                                        style={{
-                                            color: colors.heading,
-                                            fontFamily: 'var(--font-header-modern)'
-                                        }}
-                                    >
-                                        Informasi Kontak
-                                    </h3>
-
-                                    {[
-                                        {
-                                            icon: FaPhone,
-                                            title: "Telepon/WhatsApp",
-                                            info: "+62 821-1234-5678",
-                                            action: "tel:+6282112345678"
-                                        },
-                                        {
-                                            icon: FaEnvelope,
-                                            title: "Email",
-                                            info: "info@alfurqon-bekasi.com",
-                                            action: "mailto:info@alfurqon-bekasi.com"
-                                        },
-                                        {
-                                            icon: FaMapMarkedAlt,
-                                            title: "Alamat",
-                                            info: "Jl. Raya Bekasi Barat, Bekasi, Jawa Barat",
-                                            action: "#"
-                                        },
-                                        {
-                                            icon: FaClock,
-                                            title: "Jam Operasional",
-                                            info: "Senin - Minggu: 08.00 - 21.00 WIB",
-                                            action: "#"
-                                        }
-                                    ].map((contact, index) => {
-                                        const Icon = contact.icon
-                                        return (
-                                            <motion.div
-                                                key={index}
-                                                initial={{ opacity: 0, x: -20 }}
-                                                animate={{ opacity: 1, x: 0 }}
-                                                transition={{ delay: index * 0.1 }}
-                                                className="flex items-start gap-4 p-6 rounded-xl"
-                                                style={{
-                                                    backgroundColor: colors.card,
-                                                    border: `1px solid ${colors.border}`
-                                                }}
-                                            >
-                                                <div
-                                                    className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
-                                                    style={{
-                                                        backgroundColor: colors.accent + '20',
-                                                        color: colors.accent
-                                                    }}
-                                                >
-                                                    <Icon size={20} />
-                                                </div>
-                                                <div>
-                                                    <h4
-                                                        className="font-bold mb-1"
-                                                        style={{
-                                                            color: colors.cardText,
-                                                            fontFamily: 'var(--font-header-modern)'
-                                                        }}
-                                                    >
-                                                        {contact.title}
-                                                    </h4>
-                                                    {contact.action.startsWith('#') ? (
-                                                        <p
-                                                            className="text-sm"
-                                                            style={{
-                                                                color: colors.detail,
-                                                                fontFamily: 'var(--font-body)'
-                                                            }}
-                                                        >
-                                                            {contact.info}
-                                                        </p>
-                                                    ) : (
-                                                        <a
-                                                            href={contact.action}
-                                                            className="text-sm hover:underline transition-colors"
-                                                            style={{
-                                                                color: colors.accent,
-                                                                fontFamily: 'var(--font-body)'
-                                                            }}
-                                                        >
-                                                            {contact.info}
-                                                        </a>
-                                                    )}
-                                                </div>
-                                            </motion.div>
-                                        )
-                                    })}
-                                </div>
-
-                                <div
-                                    className="p-8 rounded-2xl"
+                            {/* Header Section */}
+                            <div className="text-center mb-12">
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full mb-6"
                                     style={{
-                                        backgroundColor: colors.card,
-                                        border: `1px solid ${colors.border}`
+                                        backgroundColor: colors.accent + '10',
+                                        border: `1.5px solid ${colors.accent}40`
                                     }}
                                 >
-                                    <h3
-                                        className="text-2xl font-bold mb-6"
+                                    <span className="text-xl">📅</span>
+                                    <span
+                                        className="text-xs font-bold uppercase tracking-widest"
                                         style={{
-                                            color: colors.heading,
-                                            fontFamily: 'var(--font-header-modern)'
+                                            color: colors.accent,
+                                            fontFamily: 'var(--font-sharp-bold)',
+                                            letterSpacing: '0.1em'
                                         }}
                                     >
-                                        Prosedur Booking
-                                    </h3>
+                                        Reservasi Mudah & Cepat
+                                    </span>
+                                </motion.div>
 
-                                    <div className="space-y-6">
-                                        {[
-                                            {
-                                                step: 1,
-                                                title: "Konsultasi Awal",
-                                                description: "Hubungi admin untuk diskusi kebutuhan acara, tanggal, dan estimasi tamu"
-                                            },
-                                            {
-                                                step: 2,
-                                                title: "Survey Lokasi",
-                                                description: "Kunjungi langsung Graha Subagdja untuk melihat fasilitas dan layout ruangan"
-                                            },
-                                            {
-                                                step: 3,
-                                                title: "Booking & DP",
-                                                description: "Lakukan booking dengan membayar uang muka sesuai ketentuan yang berlaku"
-                                            },
-                                            {
-                                                step: 4,
-                                                title: "Koordinasi Partner",
-                                                description: "Pilih dan koordinasi dengan UMKM partner untuk kebutuhan catering, dekorasi, dll"
-                                            },
-                                            {
-                                                step: 5,
-                                                title: "Pelaksanaan Acara",
-                                                description: "Tim akan membantu koordinasi selama acara berlangsung"
-                                            }
-                                        ].map((item, index) => (
-                                            <motion.div
-                                                key={index}
-                                                initial={{ opacity: 0, x: -20 }}
-                                                animate={{ opacity: 1, x: 0 }}
-                                                transition={{ delay: index * 0.1 }}
-                                                className="flex gap-4"
+                                <h2
+                                    className="text-3xl font-bold mb-4"
+                                    style={{
+                                        color: colors.heading,
+                                        fontFamily: 'var(--font-header-modern)'
+                                    }}
+                                >
+                                    Reservasi Graha Subagdja
+                                </h2>
+                                <p
+                                    className="text-lg max-w-2xl mx-auto"
+                                    style={{
+                                        color: colors.detail,
+                                        fontFamily: 'var(--font-body)',
+                                        lineHeight: '1.7'
+                                    }}
+                                >
+                                    Ikuti langkah mudah di bawah ini untuk mereservasi Graha Subagdja untuk acara Anda
+                                </p>
+                            </div>
+
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
+                                {/* Prosedur Reservasi */}
+                                <div className="space-y-6">
+                                    <div
+                                        className="p-6 rounded-2xl border"
+                                        style={{
+                                            backgroundColor: colors.card,
+                                            border: `2px solid ${colors.accent}30`
+                                        }}
+                                    >
+                                        <div className="flex items-center gap-3 mb-6">
+                                            <div
+                                                className="w-12 h-12 rounded-full flex items-center justify-center"
+                                                style={{
+                                                    backgroundColor: colors.accent + '20',
+                                                    color: colors.accent
+                                                }}
                                             >
-                                                <div
-                                                    className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-sm"
+                                                <FaCalendarAlt size={20} />
+                                            </div>
+                                            <h3
+                                                className="text-2xl font-bold"
+                                                style={{
+                                                    color: colors.heading,
+                                                    fontFamily: 'var(--font-header-modern)'
+                                                }}
+                                            >
+                                                Langkah Reservasi
+                                            </h3>
+                                        </div>
+
+                                        <div className="space-y-5">
+                                            {[
+                                                {
+                                                    step: 1,
+                                                    icon: '📞',
+                                                    title: "Konsultasi Awal",
+                                                    description: "Hubungi admin via WhatsApp untuk diskusi kebutuhan acara, tanggal, dan estimasi jumlah tamu"
+                                                },
+                                                {
+                                                    step: 2,
+                                                    icon: '🏛️',
+                                                    title: "Survey Lokasi",
+                                                    description: "Kunjungi Graha Subagdja untuk melihat langsung fasilitas, layout ruangan, dan diskusi detail teknis"
+                                                },
+                                                {
+                                                    step: 3,
+                                                    icon: '💳',
+                                                    title: "Booking & DP",
+                                                    description: "Lakukan reservasi dengan membayar uang muka (DP) sesuai paket yang dipilih"
+                                                },
+                                                {
+                                                    step: 4,
+                                                    icon: '🤝',
+                                                    title: "Koordinasi Partner",
+                                                    description: "Pilih UMKM partner untuk catering, dekorasi, dokumentasi, dan kebutuhan lainnya"
+                                                },
+                                                {
+                                                    step: 5,
+                                                    icon: '✅',
+                                                    title: "Konfirmasi Final",
+                                                    description: "Review dan finalisasi semua detail acara 1 minggu sebelum hari-H"
+                                                },
+                                                {
+                                                    step: 6,
+                                                    icon: '🎉',
+                                                    title: "Pelaksanaan Acara",
+                                                    description: "Tim kami siap membantu koordinasi selama acara berlangsung"
+                                                }
+                                            ].map((item, index) => (
+                                                <motion.div
+                                                    key={index}
+                                                    initial={{ opacity: 0, x: -20 }}
+                                                    whileInView={{ opacity: 1, x: 0 }}
+                                                    viewport={{ once: true }}
+                                                    transition={{ delay: index * 0.08 }}
+                                                    className="flex gap-4 p-4 rounded-xl transition-all duration-300 hover:shadow-md"
                                                     style={{
-                                                        backgroundColor: colors.accent,
-                                                        color: 'white',
-                                                        fontFamily: 'var(--font-sharp-bold)'
+                                                        backgroundColor: colors.background + '40',
+                                                        border: `1px solid ${colors.border}15`
                                                     }}
                                                 >
-                                                    {item.step}
-                                                </div>
-                                                <div>
-                                                    <h4
-                                                        className="font-bold mb-1"
+                                                    <div className="flex flex-col items-center gap-2">
+                                                        <div
+                                                            className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-sm"
+                                                            style={{
+                                                                backgroundColor: colors.accent,
+                                                                color: 'white',
+                                                                fontFamily: 'var(--font-sharp-bold)'
+                                                            }}
+                                                        >
+                                                            {item.step}
+                                                        </div>
+                                                        <span className="text-2xl">{item.icon}</span>
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <h4
+                                                            className="font-bold mb-2 text-base"
+                                                            style={{
+                                                                color: colors.cardText,
+                                                                fontFamily: 'var(--font-header-modern)'
+                                                            }}
+                                                        >
+                                                            {item.title}
+                                                        </h4>
+                                                        <p
+                                                            className="text-sm leading-relaxed"
+                                                            style={{
+                                                                color: colors.detail,
+                                                                fontFamily: 'var(--font-body)',
+                                                                lineHeight: '1.6'
+                                                            }}
+                                                        >
+                                                            {item.description}
+                                                        </p>
+                                                    </div>
+                                                </motion.div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Contact Info & CTA */}
+                                <div className="space-y-6">
+                                    {/* Info Kontak */}
+                                    <div
+                                        className="p-6 rounded-2xl border"
+                                        style={{
+                                            backgroundColor: colors.card,
+                                            border: `2px solid ${colors.accent}30`
+                                        }}
+                                    >
+                                        <div className="flex items-center gap-3 mb-6">
+                                            <div
+                                                className="w-12 h-12 rounded-full flex items-center justify-center"
+                                                style={{
+                                                    backgroundColor: colors.accent + '20',
+                                                    color: colors.accent
+                                                }}
+                                            >
+                                                <FaPhone size={20} />
+                                            </div>
+                                            <h3
+                                                className="text-2xl font-bold"
+                                                style={{
+                                                    color: colors.heading,
+                                                    fontFamily: 'var(--font-header-modern)'
+                                                }}
+                                            >
+                                                Hubungi Kami
+                                            </h3>
+                                        </div>
+
+                                        <div className="space-y-4">
+                                            {[
+                                                {
+                                                    icon: FaPhone,
+                                                    label: "Telepon/WhatsApp",
+                                                    value: "+62 821-1234-5678",
+                                                    action: "https://wa.me/6282112345678"
+                                                },
+                                                {
+                                                    icon: FaEnvelope,
+                                                    label: "Email",
+                                                    value: "graha@alfurqon-bekasi.com",
+                                                    action: "mailto:graha@alfurqon-bekasi.com"
+                                                },
+                                                {
+                                                    icon: FaClock,
+                                                    label: "Jam Operasional",
+                                                    value: "Senin - Minggu: 08.00 - 21.00 WIB",
+                                                    action: null
+                                                },
+                                                {
+                                                    icon: FaMapMarkedAlt,
+                                                    label: "Lokasi",
+                                                    value: "Masjid Al-Furqon, Jl. Jambu Air VIII No.1, Bekasi Barat",
+                                                    action: null
+                                                }
+                                            ].map((contact, index) => {
+                                                const Icon = contact.icon
+                                                return (
+                                                    <motion.div
+                                                        key={index}
+                                                        initial={{ opacity: 0, y: 20 }}
+                                                        whileInView={{ opacity: 1, y: 0 }}
+                                                        viewport={{ once: true }}
+                                                        transition={{ delay: index * 0.1 }}
+                                                        className="flex items-start gap-3 p-4 rounded-xl"
                                                         style={{
-                                                            color: colors.cardText,
-                                                            fontFamily: 'var(--font-header-modern)'
+                                                            backgroundColor: colors.background + '40'
                                                         }}
                                                     >
-                                                        {item.title}
-                                                    </h4>
-                                                    <p
-                                                        className="text-sm leading-relaxed"
-                                                        style={{
-                                                            color: colors.detail,
-                                                            fontFamily: 'var(--font-body)'
-                                                        }}
-                                                    >
-                                                        {item.description}
-                                                    </p>
-                                                </div>
-                                            </motion.div>
-                                        ))}
+                                                        <div
+                                                            className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+                                                            style={{
+                                                                backgroundColor: colors.accent + '15',
+                                                                color: colors.accent
+                                                            }}
+                                                        >
+                                                            <Icon size={16} />
+                                                        </div>
+                                                        <div className="flex-1">
+                                                            <h4
+                                                                className="font-semibold text-sm mb-1"
+                                                                style={{
+                                                                    color: colors.cardText,
+                                                                    fontFamily: 'var(--font-sharp-bold)'
+                                                                }}
+                                                            >
+                                                                {contact.label}
+                                                            </h4>
+                                                            {contact.action ? (
+                                                                <a
+                                                                    href={contact.action}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="text-sm hover:underline transition-colors"
+                                                                    style={{
+                                                                        color: colors.accent,
+                                                                        fontFamily: 'var(--font-body)'
+                                                                    }}
+                                                                >
+                                                                    {contact.value}
+                                                                </a>
+                                                            ) : (
+                                                                <p
+                                                                    className="text-sm"
+                                                                    style={{
+                                                                        color: colors.detail,
+                                                                        fontFamily: 'var(--font-body)',
+                                                                        lineHeight: '1.5'
+                                                                    }}
+                                                                >
+                                                                    {contact.value}
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                    </motion.div>
+                                                )
+                                            })}
+                                        </div>
                                     </div>
 
+                                    {/* Tips & Persyaratan */}
                                     <div
-                                        className="mt-8 p-4 rounded-lg"
+                                        className="p-6 rounded-2xl border"
                                         style={{
-                                            backgroundColor: colors.accent + '10',
+                                            backgroundColor: colors.card,
                                             border: `1px solid ${colors.accent}20`
                                         }}
                                     >
-                                        <h4
-                                            className="font-bold mb-2"
-                                            style={{
-                                                color: colors.cardText,
-                                                fontFamily: 'var(--font-header-modern)'
-                                            }}
-                                        >
-                                            💡 Tips Booking
-                                        </h4>
-                                        <ul className="text-sm space-y-1">
-                                            <li
+                                        <div className="flex items-center gap-3 mb-4">
+                                            <span className="text-2xl">💡</span>
+                                            <h4
+                                                className="font-bold text-lg"
                                                 style={{
-                                                    color: colors.detail,
-                                                    fontFamily: 'var(--font-body)'
+                                                    color: colors.heading,
+                                                    fontFamily: 'var(--font-header-modern)'
                                                 }}
                                             >
-                                                • Booking minimal 2 minggu sebelum acara
-                                            </li>
-                                            <li
-                                                style={{
-                                                    color: colors.detail,
-                                                    fontFamily: 'var(--font-body)'
-                                                }}
-                                            >
-                                                • Siapkan alternatif tanggal untuk fleksibilitas
-                                            </li>
-                                            <li
-                                                style={{
-                                                    color: colors.detail,
-                                                    fontFamily: 'var(--font-body)'
-                                                }}
-                                            >
-                                                • Konsultasikan kebutuhan khusus terlebih dahulu
-                                            </li>
+                                                Tips & Persyaratan Booking
+                                            </h4>
+                                        </div>
+                                        <ul className="space-y-2">
+                                            {[
+                                                "Reservasi minimal 2 minggu sebelum tanggal acara",
+                                                "Siapkan 2-3 alternatif tanggal untuk fleksibilitas",
+                                                "DP sebesar 30% dari total biaya saat booking",
+                                                "Pelunasan maksimal H-7 sebelum acara",
+                                                "Konsultasikan kebutuhan khusus terlebih dahulu",
+                                                "Tersedia paket bundling dengan UMKM partner"
+                                            ].map((tip, idx) => (
+                                                <li
+                                                    key={idx}
+                                                    className="flex items-start gap-2 text-sm"
+                                                    style={{
+                                                        color: colors.detail,
+                                                        fontFamily: 'var(--font-body)'
+                                                    }}
+                                                >
+                                                    <span style={{ color: colors.accent }}>•</span>
+                                                    <span>{tip}</span>
+                                                </li>
+                                            ))}
                                         </ul>
                                     </div>
 
-                                    <div className="mt-6 text-center">
-                                        <a
-                                            href="https://wa.me/6282112345678"
+                                    {/* CTA WhatsApp */}
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 20 }}
+                                        whileInView={{ opacity: 1, y: 0 }}
+                                        viewport={{ once: true }}
+                                        className="text-center"
+                                    >
+                                        <motion.a
+                                            href="https://wa.me/6282112345678?text=Assalamu'alaikum,%20saya%20ingin%20reservasi%20Graha%20Subagdja"
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="inline-block py-4 px-8 rounded-xl font-bold text-lg transition-all duration-300 hover:scale-105"
+                                            whileHover={{ scale: 1.05, y: -2 }}
+                                            whileTap={{ scale: 0.95 }}
+                                            className="inline-flex items-center gap-3 px-10 py-5 rounded-xl font-bold text-lg shadow-2xl transition-all duration-300"
                                             style={{
                                                 backgroundColor: '#25D366',
                                                 color: 'white',
-                                                fontFamily: 'var(--font-sharp-bold)'
+                                                fontFamily: 'var(--font-header-modern)',
+                                                boxShadow: '0 10px 30px rgba(37, 211, 102, 0.4)'
                                             }}
                                         >
-                                            💬 Mulai Konsultasi via WhatsApp
-                                        </a>
+                                            <span className="text-2xl">💬</span>
+                                            Reservasi via WhatsApp
+                                            <motion.span
+                                                animate={{ x: [0, 4, 0] }}
+                                                transition={{
+                                                    duration: 1.5,
+                                                    repeat: Infinity,
+                                                    ease: "easeInOut"
+                                                }}
+                                            >
+                                                →
+                                            </motion.span>
+                                        </motion.a>
+                                        <p
+                                            className="text-sm mt-4"
+                                            style={{
+                                                color: colors.detail,
+                                                fontFamily: 'var(--font-body)'
+                                            }}
+                                        >
+                                            ⌛ Respon cepat dalam 1-2 jam kerja
+                                        </p>
+                                    </motion.div>
+
+                                    {/* Info Tambahan */}
+                                    <div
+                                        className="p-5 rounded-xl text-center"
+                                        style={{
+                                            background: `linear-gradient(135deg, ${colors.accent}08 0%, ${colors.accent}03 100%)`,
+                                            border: `1px solid ${colors.accent}15`
+                                        }}
+                                    >
+                                        <p
+                                            className="text-sm"
+                                            style={{
+                                                color: colors.detail,
+                                                fontFamily: 'var(--font-body)',
+                                                lineHeight: '1.6'
+                                            }}
+                                        >
+                                            <strong style={{ color: colors.accent }}>🎁 Promo Spesial:</strong> Dapatkan diskon 10% untuk booking di hari Senin-Jumat dan gratis tambahan 1 jam untuk booking 2 bulan sebelum acara!
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -1064,29 +1969,29 @@ export default function GrahaSubagdjaPage() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm"
                         onClick={() => setSelectedImage(null)}
                     >
                         <motion.div
                             initial={{ scale: 0.8, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.8, opacity: 0 }}
-                            className="relative max-w-4xl max-h-[90vh] rounded-2xl overflow-hidden"
+                            className="relative w-full max-w-7xl aspect-video rounded-2xl overflow-hidden"
                             onClick={(e) => e.stopPropagation()}
                         >
                             <img
                                 src={selectedImage.src}
                                 alt={selectedImage.alt}
-                                className="w-full h-full object-contain"
+                                className="w-full h-full object-cover"
                             />
                             <button
                                 onClick={() => setSelectedImage(null)}
-                                className="absolute top-4 right-4 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+                                className="absolute top-4 right-4 p-3 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
                             >
-                                <FaTimes />
+                                <FaTimes size={20} />
                             </button>
                             <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent">
-                                <h3 className="text-white font-bold text-lg">
+                                <h3 className="text-white font-bold text-xl">
                                     {selectedImage.alt}
                                 </h3>
                             </div>

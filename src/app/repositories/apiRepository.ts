@@ -91,7 +91,7 @@ class BackendChecker {
 }
 
 
-class HttpClient {
+export class HttpClient {
   private baseUrl: string
   private defaultHeaders: Record<string, string>
   private timeout: number
@@ -512,7 +512,7 @@ export class VideoRepository implements IVideoRepository {
 }
 
 export class ApiRepository implements IApiRepository {
-  private httpClient: HttpClient
+  public httpClient: HttpClient
 
   public articles: IArticleRepository
   public donations: IDonationRepository

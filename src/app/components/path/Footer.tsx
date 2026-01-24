@@ -27,7 +27,7 @@ const Footer: React.FC = () => {
       />
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
           <div>
             <h3
               className="text-lg font-bold mb-4"
@@ -36,7 +36,7 @@ const Footer: React.FC = () => {
                 fontFamily: 'var(--font-header-modern)'
               }}
             >
-              Masjid Besar Al - Furqon
+              Masjid Besar Al Furqon
             </h3>
             <div
               className="space-y-1 text-sm leading-relaxed"
@@ -45,10 +45,11 @@ const Footer: React.FC = () => {
                 fontFamily: 'var(--font-sharp-light)'
               }}
             >
-              <p>Bekasi Barat</p>
-              <p>Jalan Jambu Air VIII No.1</p>
-              <p>RT.001/RW.016, Kelurahan Kotabaru</p>
-              <p>Kecamatan Bekasi Barat</p>
+              <p className="font-semibold mb-2">Sekretariat DKM:</p>
+              <p>Jl. Jambu Air VIII No. 1 RW.016</p>
+              <p>Perumahan Harapanbaru I</p>
+              <p>Kelurahan Kotabaru</p>
+              <p>Kec. Bekasi Barat</p>
               <p>Kota Bekasi, Jawa Barat 17133</p>
             </div>
           </div>
@@ -70,26 +71,75 @@ const Footer: React.FC = () => {
                 fontFamily: 'var(--font-sharp-light)'
               }}
             >
-              <p>+62 888 8888 8888</p>
-              <p>+62 888 8888 8888</p>
-              <p>alfurqonhrb@mail.com</p>
+              <p className="flex items-center gap-2">
+                <span>📞</span>
+                <span>021 886 3677</span>
+              </p>
+              <p className="flex items-center gap-2 mt-2">
+                <span>📧</span>
+                <span>alfurqonhrb@mail.com</span>
+              </p>
             </div>
           </div>
 
-          <div className="md:text-right">
-            <a
-              href="https://www.nuiiapp.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm mt-4 md:mt-0 hover:underline transition-colors duration-200 inline-block"
+          <div className="md:col-span-2 lg:col-span-1">
+            <h3
+              className="text-lg font-bold mb-4"
               style={{
-                color: `${footerTextColor}B3`,
+                color: footerTextColor,
+                fontFamily: 'var(--font-header-modern)'
+              }}
+            >
+              Layanan & Sarana Fasilitas
+            </h3>
+            <div
+              className="space-y-1.5 text-sm"
+              style={{
+                color: `${footerTextColor}E6`,
                 fontFamily: 'var(--font-sharp-light)'
               }}
             >
-              Powered by - NUII
-            </a>
+              <p className="flex items-start gap-2">
+                <span className="mt-0.5">•</span>
+                <span>Tempat Ibadah</span>
+              </p>
+              <p className="flex items-start gap-2">
+                <span className="mt-0.5">•</span>
+                <span>Aula Graha Subagdja</span>
+              </p>
+              <p className="flex items-start gap-2">
+                <span className="mt-0.5">•</span>
+                <span>Taman Pendidikan Qur&apos;an</span>
+              </p>
+              <p className="flex items-start gap-2">
+                <span className="mt-0.5">•</span>
+                <span>Yayasan Anak Yatim & Dhuafa</span>
+              </p>
+              <p className="flex items-start gap-2">
+                <span className="mt-0.5">•</span>
+                <span>Unit Pengumpulan Zakat (UPZ)</span>
+              </p>
+              <p className="flex items-start gap-2">
+                <span className="mt-0.5">•</span>
+                <span>Unit Koperasi Usaha Bersama (UBM)</span>
+              </p>
+            </div>
           </div>
+        </div>
+
+        <div className="flex justify-center md:justify-end">
+          <a
+            href="https://www.nuiiapp.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm hover:underline transition-colors duration-200 inline-block"
+            style={{
+              color: `${footerTextColor}B3`,
+              fontFamily: 'var(--font-sharp-light)'
+            }}
+          >
+            Powered by - NUII
+          </a>
         </div>
 
         <div

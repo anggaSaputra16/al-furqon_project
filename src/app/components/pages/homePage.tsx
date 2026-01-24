@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import UniversalNavGrid, { NavItem } from '../path/UniversalNavGrid'
-import { FaRoute, FaChevronUp, FaHeart } from 'react-icons/fa'
+import { FaRoute, FaChevronUp, FaHeart, FaInfoCircle, FaMapMarkedAlt, FaCalendarAlt, FaPhone, FaUsers, FaMicrophone, FaSnowflake, FaCar, FaWifi, FaShieldAlt, FaTimes, FaClock, FaEnvelope, FaChevronDown } from 'react-icons/fa'
 import { AnimatePresence, motion } from 'framer-motion'
 import Footer from '../path/Footer'
 import { CardData } from '../../layouts/CardLayout'
@@ -33,7 +33,7 @@ export default function HomePage() {
   const { menus, fetchMenus } = useMenuStore()
 
   const { error: homeError, refetch: refetchHome } = useHomePageData()
-  const { articles: publishedArticles, loading: articlesLoading, error: articlesError } = usePublishedArticles()
+  const { articles: publishedArticles, loading: articlesLoading, error: articlesError } = usePublishedArticles(20)
   const { donations: donationPrograms, loading: donationsLoading } = useActiveDonations()
   const { news: latestNews, loading: newsLoading } = useLatestNews()
   const { submitDonation, submitting: donationSubmitting } = useDonationSubmission()
@@ -192,6 +192,8 @@ export default function HomePage() {
   } | null>(null)
 
   const [selectedArticle, setSelectedArticle] = useState<string | null>(null)
+  const [grahaActiveTab, setGrahaActiveTab] = useState<'overview' | 'gallery' | 'umkm' | 'contact'>('overview')
+  const [selectedGrahaImage, setSelectedGrahaImage] = useState<{ id: string, src: string, alt: string } | null>(null)
 
   const hasAnyData = hasBackendArticles || hasBackendDonations || hasBackendNews
 
@@ -355,152 +357,323 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="py-8"
+            className="py-16 sm:py-20"
           >
-            <div className="max-w-4xl mx-auto">
+            <div className="max-w-7xl mx-auto">
+              {/* Header Section */}
+              <div className="text-center mb-12 sm:mb-16">
+                <motion.h2
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.1 }}
+                  className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-5"
+                  style={{
+                    color: colors.heading,
+                    fontFamily: 'var(--font-header-masjid)',
+                    lineHeight: '1.15',
+                    letterSpacing: '-0.025em',
+                    fontSize: 'clamp(32px, 6vw, 56px)'
+                  }}
+                >
+                  Aula Graha Subagdja
+                </motion.h2>
+              </div>
+
+              {/* Main Content */}
               <motion.div
-                whileHover={{ scale: 1.02, y: -5 }}
-                transition={{ duration: 0.3, ease: 'easeOut' }}
-                className="rounded-2xl shadow-xl overflow-hidden border group cursor-pointer"
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="rounded-3xl overflow-hidden shadow-2xl group cursor-pointer"
                 style={{
                   backgroundColor: colors.card,
-                  border: `1px solid ${colors.border}`
+                  border: `1px solid ${colors.border}30`
                 }}
                 onClick={() => window.location.href = '/graha-subagdja'}
               >
-                <div className="flex flex-col md:flex-row">
-                  <div className="relative w-full md:w-2/5 h-64 md:h-80 overflow-hidden">
-                    <img
-                      src="/images/gambar1.jpg"
-                      alt="Graha Subagdja"
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="relative h-[350px] sm:h-[450px] lg:h-[550px] overflow-hidden">
+                  <img
+                    src="/images/aulagraha2.jpeg"
+                    alt="Graha Subagdja"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
 
-                    <div
-                      className="absolute top-4 left-4 px-3 py-1 rounded-full text-xs font-bold backdrop-blur-md"
-                      style={{
-                        backgroundColor: colors.accent + '90',
-                        color: 'white',
-                        fontFamily: 'var(--font-sharp-bold)'
-                      }}
-                    >
-                      FASILITAS UNGGULAN
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+
+                  <div className="absolute bottom-8 left-6 right-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    {[
+                      { value: '1200', label: 'Orang', subtitle: 'Kapasitas Maksimal' },
+                      { value: '600', label: 'M²', subtitle: 'Luas Ruangan' },
+                      { value: '100+', label: 'Unit', subtitle: 'Area Parkir' },
+                      { value: 'AC', label: 'Full', subtitle: 'Sistem Pendingin' }
+                    ].map((stat, idx) => (
+                      <motion.div
+                        key={idx}
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: idx * 0.1 }}
+                        className="backdrop-blur-lg rounded-2xl p-4 text-center"
+                        style={{
+                          backgroundColor: 'rgba(255, 255, 255, 0.12)',
+                          border: '1px solid rgba(255, 255, 255, 0.25)',
+                          backdropFilter: 'blur(12px)'
+                        }}
+                      >
+                        <div className="flex items-baseline justify-center gap-1 mb-1">
+                          <span
+                            className="text-2xl sm:text-3xl font-bold text-white"
+                            style={{
+                              fontFamily: 'var(--font-header-modern)',
+                              letterSpacing: '-0.02em'
+                            }}
+                          >
+                            {stat.value}
+                          </span>
+                          <span
+                            className="text-sm text-white/90"
+                            style={{ fontFamily: 'var(--font-body)' }}
+                          >
+                            {stat.label}
+                          </span>
+                        </div>
+                        <div
+                          className="text-xs text-white/70"
+                          style={{
+                            fontFamily: 'var(--font-body)',
+                            fontSize: '11px'
+                          }}
+                        >
+                          {stat.subtitle}
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Content Section - Improved Typography */}
+                <div className="p-8 sm:p-12 lg:p-14">
+                  <div className="grid lg:grid-cols-2 gap-10 lg:gap-12 mb-10">
+                    {/* Left Column - Better Spacing */}
+                    <div className="space-y-7">
+                      <h3
+                        className="text-2xl sm:text-3xl font-bold"
+                        style={{
+                          color: colors.heading,
+                          fontFamily: 'var(--font-header-modern)',
+                          lineHeight: '1.3',
+                          letterSpacing: '-0.015em',
+                          fontSize: 'clamp(24px, 4vw, 30px)'
+                        }}
+                      >
+                        Fasilitas Lengkap untuk Acara Anda
+                      </h3>
+
+                      <div className="space-y-5">
+                        <p
+                          className="text-base sm:text-lg"
+                          style={{
+                            color: colors.detail,
+                            fontFamily: 'var(--font-body)',
+                            lineHeight: '1.8',
+                            fontSize: 'clamp(16px, 2.5vw, 18px)',
+                            fontWeight: '400'
+                          }}
+                        >
+                          Graha Subagdja menyediakan ruang indoor modern dengan luas 20M × 30M (total 600M²) tanpa tiang di tengah,
+                          memberikan fleksibilitas maksimal untuk berbagai tata letak acara. Ruangan dilengkapiAC Standing berkapasitas
+                          besar yang menjamin kenyamanan tamu Anda dalam berbagai kondisi cuaca.
+                        </p>
+
+                        <p
+                          className="text-base sm:text-lg"
+                          style={{
+                            color: colors.detail,
+                            fontFamily: 'var(--font-body)',
+                            lineHeight: '1.8',
+                            fontSize: 'clamp(16px, 2.5vw, 18px)',
+                            fontWeight: '400'
+                          }}
+                        >
+                          Sound system profesional dengan wireless microphone dan mixer digital memastikan
+                          audio berkualitas tinggi untuk presentasi, ceramah, atau hiburan. Sistem pencahayaan yang dapat disesuaikan menciptakan
+                          suasana yang tepat untuk setiap momen acara Anda.
+                        </p>
+
+                        <p
+                          className="text-base sm:text-lg"
+                          style={{
+                            color: colors.detail,
+                            fontFamily: 'var(--font-body)',
+                            lineHeight: '1.8',
+                            fontSize: 'clamp(16px, 2.5vw, 18px)',
+                            fontWeight: '400'
+                          }}
+                        >
+                          Area parkir luas dapat menampung100+ mobil dan 200+ motor,
+                          dengan akses mudah dari jalan utama. Keamanan 24/7 dengan sistem CCTV dan petugas terlatih memastikan ketenangan pikiran selama
+                          acara berlangsung.
+                        </p>
+                      </div>
+
+                      {/* Event Types - More Professional */}
+                      <div>
+                        <h4
+                          className="text-sm font-bold mb-4 uppercase"
+                          style={{
+                            color: colors.accent,
+                            fontFamily: 'var(--font-sharp-bold)',
+                            letterSpacing: '0.08em',
+                            fontSize: '12px'
+                          }}
+                        >
+                          Cocok Untuk Berbagai Acara
+                        </h4>
+                        <div className="flex flex-wrap gap-2.5">
+                          {['Resepsi Pernikahan', 'Wisuda', 'Seminar', 'Rapat Kerja', 'PHBI', 'Acara Keluarga'].map((item, idx) => (
+                            <span
+                              key={idx}
+                              className="px-4 py-2.5 rounded-lg text-sm font-medium transition-all hover:shadow-md"
+                              style={{
+                                backgroundColor: colors.accent + '12',
+                                color: colors.accent,
+                                fontFamily: 'var(--font-body)',
+                                border: `1px solid ${colors.accent}25`,
+                                fontSize: '14px',
+                                fontWeight: '500'
+                              }}
+                            >
+                              {item}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right Column - Professional Feature List */}
+                    <div className="space-y-4">
+                      <h4
+                        className="text-sm font-bold mb-5 uppercase"
+                        style={{
+                          color: colors.accent,
+                          fontFamily: 'var(--font-sharp-bold)',
+                          letterSpacing: '0.08em',
+                          fontSize: '12px'
+                        }}
+                      >
+                        Fasilitas Utama
+                      </h4>
+
+                      {[
+                        { icon: '🎭', title: 'Panggung Pelaminan', desc: 'Ukuran 4M × 12M dengan backdrop profesional' },
+                        { icon: '🎤', title: 'Sound System', desc: 'Audio profesional berkualitas tinggi' },
+                        { icon: '💒', title: 'Ruang Rias', desc: '2 Ruangan terpisah (Pria & Wanita)' },
+                        { icon: '🍽️', title: 'Ruang Catering', desc: 'Dapur bersih dengan meja buffet lengkap' },
+                        { icon: '🪑', title: '100 Kursi Eterna', desc: 'Cover putih premium siap pakai' },
+                        { icon: '🔒', title: 'Keamanan 24/7', desc: 'Sistem CCTV dan petugas terlatih' }
+                      ].map((feature, idx) => (
+                        <motion.div
+                          key={idx}
+                          initial={{ opacity: 0, x: 20 }}
+                          whileInView={{ opacity: 1, x: 0 }}
+                          viewport={{ once: true }}
+                          transition={{ delay: idx * 0.08 }}
+                          className="flex items-start gap-4 p-4 rounded-xl transition-all duration-300 hover:shadow-md hover:translate-x-1"
+                          style={{
+                            backgroundColor: colors.background + '40',
+                            border: `1px solid ${colors.border}15`
+                          }}
+                        >
+                          <span className="text-3xl flex-shrink-0 mt-0.5">{feature.icon}</span>
+                          <div className="flex-1">
+                            <h5
+                              className="font-bold text-base mb-1.5"
+                              style={{
+                                color: colors.cardText,
+                                fontFamily: 'var(--font-header-modern)',
+                                fontSize: '15px',
+                                letterSpacing: '-0.01em'
+                              }}
+                            >
+                              {feature.title}
+                            </h5>
+                            <p
+                              className="text-sm"
+                              style={{
+                                color: colors.detail,
+                                fontFamily: 'var(--font-body)',
+                                lineHeight: '1.6',
+                                fontSize: '13px'
+                              }}
+                            >
+                              {feature.desc}
+                            </p>
+                          </div>
+                        </motion.div>
+                      ))}
                     </div>
                   </div>
 
-                  <div className="flex-1 p-6 md:p-8 flex flex-col justify-center">
-                    <div className="space-y-4">
-                      <h2
-                        className="text-2xl md:text-3xl font-bold leading-tight"
-                        style={{
-                          color: colors.heading,
-                          fontFamily: 'var(--font-header-masjid)',
-                          letterSpacing: '-0.01em'
+                  {/* CTA Section - Professional Design */}
+                  <div
+                    className="rounded-2xl p-8 sm:p-10 text-center"
+                    style={{
+                      background: `linear-gradient(135deg, ${colors.accent}08 0%, ${colors.accent}03 100%)`,
+                      border: `1.5px solid ${colors.accent}20`
+                    }}
+                  >
+                    <p
+                      className="text-base sm:text-lg mb-7 max-w-2xl mx-auto"
+                      style={{
+                        color: colors.cardText,
+                        fontFamily: 'var(--font-body)',
+                        lineHeight: '1.7',
+                        fontSize: 'clamp(15px, 2.5vw, 17px)',
+                        fontWeight: '400'
+                      }}
+                    >
+                      Setiap penggunaan fasilitas menggunakan <strong style={{ color: colors.accent, fontFamily: 'var(--font-sharp-bold)' }}>sistem INFAQ</strong> yang membantu pemeliharaan masjid.
+                      Kontribusi Anda adalah amal jariah yang berkelanjutan.
+                    </p>
+
+                    <motion.button
+                      whileHover={{ scale: 1.03, y: -2 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="inline-flex items-center gap-3 px-10 py-4 rounded-xl font-bold text-lg shadow-lg"
+                      style={{
+                        backgroundColor: colors.accent,
+                        color: 'white',
+                        fontFamily: 'var(--font-header-modern)',
+                        boxShadow: `0 8px 24px ${colors.accent}35`,
+                        fontSize: 'clamp(16px, 2.5vw, 18px)',
+                        letterSpacing: '-0.01em'
+                      }}
+                    >
+                      Lihat Detail & Reservasi Sekarang
+                      <motion.span
+                        animate={{ x: [0, 4, 0] }}
+                        transition={{
+                          duration: 1.5,
+                          repeat: Infinity,
+                          ease: "easeInOut"
                         }}
+                        className="text-xl"
                       >
-                        Graha Subagdja
-                      </h2>
+                        →
+                      </motion.span>
+                    </motion.button>
 
-                      <p
-                        className="text-base md:text-lg leading-relaxed"
-                        style={{
-                          color: colors.detail,
-                          fontFamily: 'var(--font-body)',
-                          lineHeight: '1.6'
-                        }}
-                      >
-                        Aula serbaguna modern dengan kapasitas hingga 300 orang, dilengkapi fasilitas sound system profesional, AC, dan area parkir luas. Cocok untuk resepsi pernikahan, seminar, kajian, dan berbagai acara komunitas.
-                      </p>
-
-                      <div className="grid grid-cols-2 gap-3 mt-4">
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="w-2 h-2 rounded-full"
-                            style={{ backgroundColor: colors.accent }}
-                          />
-                          <span
-                            className="text-sm font-medium"
-                            style={{
-                              color: colors.cardText,
-                              fontFamily: 'var(--font-sharp-bold)'
-                            }}
-                          >
-                            Kapasitas 300 Orang
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="w-2 h-2 rounded-full"
-                            style={{ backgroundColor: colors.accent }}
-                          />
-                          <span
-                            className="text-sm font-medium"
-                            style={{
-                              color: colors.cardText,
-                              fontFamily: 'var(--font-sharp-bold)'
-                            }}
-                          >
-                            Sound System Pro
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="w-2 h-2 rounded-full"
-                            style={{ backgroundColor: colors.accent }}
-                          />
-                          <span
-                            className="text-sm font-medium"
-                            style={{
-                              color: colors.cardText,
-                              fontFamily: 'var(--font-sharp-bold)'
-                            }}
-                          >
-                            Area Parkir Luas
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="w-2 h-2 rounded-full"
-                            style={{ backgroundColor: colors.accent }}
-                          />
-                          <span
-                            className="text-sm font-medium"
-                            style={{
-                              color: colors.cardText,
-                              fontFamily: 'var(--font-sharp-bold)'
-                            }}
-                          >
-                            Full AC
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="mt-6">
-                        <motion.div
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          className="inline-flex items-center gap-3 px-6 py-3 rounded-lg font-semibold transition-all duration-300"
-                          style={{
-                            backgroundColor: colors.accent,
-                            color: 'white',
-                            fontFamily: 'var(--font-sharp-bold)'
-                          }}
-                        >
-                          Lihat Detail & Reservasi
-                          <motion.span
-                            animate={{ x: [0, 4, 0] }}
-                            transition={{
-                              duration: 1.5,
-                              repeat: Infinity,
-                              ease: "easeInOut"
-                            }}
-                          >
-                            →
-                          </motion.span>
-                        </motion.div>
-                      </div>
-                    </div>
+                    <p
+                      className="text-xs mt-5"
+                      style={{
+                        color: colors.detail,
+                        fontFamily: 'var(--font-body)',
+                        fontSize: '12px'
+                      }}
+                    >
+                      💡 Reservasi minimal 2 minggu sebelum tanggal acara
+                    </p>
                   </div>
                 </div>
               </motion.div>
@@ -629,7 +802,7 @@ export default function HomePage() {
                   <span className="transition-transform duration-200 hover:translate-x-0.5">→</span>
                 </a>
               </div>
-              
+
               <VideoGalleryPage showHeader={false} maxVideos={6} />
             </div>
           </motion.section>
