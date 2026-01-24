@@ -60,6 +60,7 @@ export const useHomePageData = () => {
     if (backendAvailable !== null) {
       fetchData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [backendAvailable]);
 
   useEffect(() => {
@@ -205,6 +206,7 @@ export const useFeaturedArticles = (limit = 6) => {
     if (backendAvailable !== null) {
       fetchArticles();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [backendAvailable]);
 
   const trackArticleView = useCallback(async (articleId: string) => {
@@ -229,8 +231,6 @@ export const usePublishedArticles = (limit = 6) => {
     useBackendAvailability();
 
   const fetchArticles = useCallback(async () => {
-    if (isChecking) return;
-
     if (backendAvailable === null) {
       return;
     }
@@ -349,6 +349,7 @@ export const usePublishedArticles = (limit = 6) => {
     if (backendAvailable !== null) {
       fetchArticles();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [backendAvailable]);
 
   const trackArticleView = useCallback(async (articleId: string) => {
@@ -443,6 +444,7 @@ export const useActiveDonations = (limit = 3) => {
     if (backendAvailable !== null) {
       fetchDonations();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [backendAvailable]);
 
   return {
@@ -547,6 +549,7 @@ export const useLatestNews = (limit = 3) => {
     if (backendAvailable !== null) {
       fetchNews();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [backendAvailable]);
 
   return {

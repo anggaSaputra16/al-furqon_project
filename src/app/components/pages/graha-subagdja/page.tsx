@@ -62,6 +62,7 @@ export default function GrahaSubagdjaPage() {
     const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null)
     const [activeTab, setActiveTab] = useState<'overview' | 'gallery' | 'umkm' | 'contact'>('overview')
     const [faqs, setFaqs] = useState<FAQLocal[]>([])
+    const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
     const [modalInfo, setModalInfo] = useState<{
         isOpen: boolean
@@ -328,6 +329,115 @@ export default function GrahaSubagdjaPage() {
                             exit={{ opacity: 0, x: -20 }}
                             className="space-y-12"
                         >
+                            {/* Showcase Graha Images - Carousel Style */}
+                            <section className="relative -mx-4 sm:-mx-6">
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    className="relative h-[400px] sm:h-[500px] lg:h-[600px] overflow-hidden"
+                                >
+                                    <AnimatePresence mode="wait">
+                                        <motion.div
+                                            key={currentImageIndex}
+                                            initial={{ opacity: 0, scale: 1.1 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            exit={{ opacity: 0, scale: 0.95 }}
+                                            transition={{ duration: 0.7 }}
+                                            className="absolute inset-0"
+                                        >
+                                            <img
+                                                src={[
+                                                    '/images/aulagraha1.jpeg',
+                                                    '/images/aulagraha2.jpeg'
+                                                ][currentImageIndex]}
+                                                alt={[
+                                                    'Setup Acara Graha Subagdja',
+                                                    'Panggung Pelaminan Graha Subagdja'
+                                                ][currentImageIndex]}
+                                                className="w-full h-full object-cover"
+                                            />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+
+                                            <div className="absolute bottom-0 left-0 right-0 p-8 sm:p-12">
+                                                <div className="max-w-7xl mx-auto">
+                                                    <motion.div
+                                                        initial={{ y: 30, opacity: 0 }}
+                                                        animate={{ y: 0, opacity: 1 }}
+                                                        transition={{ delay: 0.3 }}
+                                                    >
+                                                        <h3
+                                                            className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 text-white"
+                                                            style={{ fontFamily: 'var(--font-header-modern)' }}
+                                                        >
+                                                            {[
+                                                                'Dekorasi Elegan & Mewah',
+                                                                'Panggung Pelaminan Indah'
+                                                            ][currentImageIndex]}
+                                                        </h3>
+                                                        <p
+                                                            className="text-base sm:text-lg text-white/90 max-w-2xl"
+                                                            style={{ fontFamily: 'var(--font-body)' }}
+                                                        >
+                                                            {[
+                                                                'Tata ruang elegan dengan dekorasi bunga dan pencahayaan profesional untuk acara spesial Anda',
+                                                                'Backdrop indah dengan rangkaian bunga dan pencahayaan dramatis yang menciptakan momen tak terlupakan'
+                                                            ][currentImageIndex]}
+                                                        </p>
+                                                    </motion.div>
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                    </AnimatePresence>
+
+                                    <button
+                                        onClick={() => setCurrentImageIndex((prev) => (prev === 0 ? 1 : 0))}
+                                        className="absolute left-4 sm:left-8 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/20 backdrop-blur-md hover:bg-white/30 transition-all duration-300 flex items-center justify-center text-white group z-10"
+                                    >
+                                        <svg className="w-6 h-6 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                        </svg>
+                                    </button>
+
+                                    <button
+                                        onClick={() => setCurrentImageIndex((prev) => (prev === 0 ? 1 : 0))}
+                                        className="absolute right-4 sm:right-8 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/20 backdrop-blur-md hover:bg-white/30 transition-all duration-300 flex items-center justify-center text-white group z-10"
+                                    >
+                                        <svg className="w-6 h-6 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                        </svg>
+                                    </button>
+
+                                    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-3 z-10">
+                                        {[0, 1].map((index) => (
+                                            <button
+                                                key={index}
+                                                onClick={() => setCurrentImageIndex(index)}
+                                                className={`transition-all duration-300 rounded-full ${currentImageIndex === index
+                                                    ? 'w-8 h-2 bg-white'
+                                                    : 'w-2 h-2 bg-white/50 hover:bg-white/70'
+                                                    }`}
+                                            />
+                                        ))}
+                                    </div>
+
+                                    <button
+                                        onClick={() => setSelectedImage({
+                                            id: 'showcase',
+                                            src: ['/images/aulagraha1.jpeg', '/images/aulagraha2.jpeg'][currentImageIndex],
+                                            alt: ['Setup Acara Graha Subagdja', 'Panggung Pelaminan'][currentImageIndex],
+                                            category: 'interior'
+                                        })}
+                                        className="absolute top-4 right-4 sm:top-8 sm:right-8 px-6 py-3 rounded-full bg-white/10 backdrop-blur-md hover:bg-white/20 transition-all duration-300 text-white font-semibold flex items-center gap-2 z-10"
+                                        style={{ fontFamily: 'var(--font-sharp-bold)' }}
+                                    >
+                                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                                            <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                                        </svg>
+                                        Perbesar
+                                    </button>
+                                </motion.div>
+                            </section>
 
                             <section>
                                 <div className="text-center mb-12">
@@ -1859,29 +1969,29 @@ export default function GrahaSubagdjaPage() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm"
                         onClick={() => setSelectedImage(null)}
                     >
                         <motion.div
                             initial={{ scale: 0.8, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.8, opacity: 0 }}
-                            className="relative max-w-4xl max-h-[90vh] rounded-2xl overflow-hidden"
+                            className="relative w-full max-w-7xl aspect-video rounded-2xl overflow-hidden"
                             onClick={(e) => e.stopPropagation()}
                         >
                             <img
                                 src={selectedImage.src}
                                 alt={selectedImage.alt}
-                                className="w-full h-full object-contain"
+                                className="w-full h-full object-cover"
                             />
                             <button
                                 onClick={() => setSelectedImage(null)}
-                                className="absolute top-4 right-4 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+                                className="absolute top-4 right-4 p-3 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
                             >
-                                <FaTimes />
+                                <FaTimes size={20} />
                             </button>
                             <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent">
-                                <h3 className="text-white font-bold text-lg">
+                                <h3 className="text-white font-bold text-xl">
                                     {selectedImage.alt}
                                 </h3>
                             </div>

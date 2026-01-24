@@ -33,7 +33,7 @@ export default function HomePage() {
   const { menus, fetchMenus } = useMenuStore()
 
   const { error: homeError, refetch: refetchHome } = useHomePageData()
-  const { articles: publishedArticles, loading: articlesLoading, error: articlesError } = usePublishedArticles()
+  const { articles: publishedArticles, loading: articlesLoading, error: articlesError } = usePublishedArticles(20)
   const { donations: donationPrograms, loading: donationsLoading } = useActiveDonations()
   const { news: latestNews, loading: newsLoading } = useLatestNews()
   const { submitDonation, submitting: donationSubmitting } = useDonationSubmission()
@@ -394,7 +394,7 @@ export default function HomePage() {
               >
                 <div className="relative h-[350px] sm:h-[450px] lg:h-[550px] overflow-hidden">
                   <img
-                    src="/images/aulagraha2.jp3g"
+                    src="/images/aulagraha2.jpeg"
                     alt="Graha Subagdja"
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
