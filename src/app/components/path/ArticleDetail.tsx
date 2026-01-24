@@ -4,7 +4,7 @@ import Image from 'next/image'
 import clsx from 'clsx'
 import { useState, useEffect } from 'react'
 import { useArticleStore } from '../../stores/useArticleStore'
-import { useFeaturedArticles } from '../../hooks/useHomePageApi'
+import { useFeaturedArticles, useLatestNews, usePublishedArticles } from '../../hooks/useHomePageApi'
 import RelatedArticles from './RelatedArticles'
 import { useTheme } from '@/context/themeContext'
 
@@ -16,47 +16,54 @@ interface Props {
 export default function ArticleDetail({ articleId, showRelated = true }: Props) {
   const { articles: storeArticles, fetchArticles } = useArticleStore()
   const { articles: featuredArticles, loading: featuredLoading } = useFeaturedArticles()
+  const { articles: publishedArticles, loading: publishedLoading } = usePublishedArticles(100)
+  const { news: latestNews, loading: newsLoading } = useLatestNews(100)
   const { colors } = useTheme()
   const [imageError, setImageError] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
-
-  const allArticles = featuredArticles.length > 0 ? featuredArticles : storeArticles
-
+  const allContent = [
+    ...featuredArticles,
+    ...publishedArticles,
+    ...latestNews,
+    ...storeArticles
+  ]
 
   useEffect(() => {
     const loadArticles = async () => {
-      if (featuredArticles.length === 0 && storeArticles.length === 0) {
+      if (featuredArticles.length === 0 && storeArticles.length === 0 && publishedArticles.length === 0 && latestNews.length === 0) {
         await fetchArticles()
       }
       setIsLoading(false)
     }
     loadArticles()
-  }, [featuredArticles.length, storeArticles.length, fetchArticles])
+  }, [featuredArticles.length, storeArticles.length, publishedArticles.length, latestNews.length, fetchArticles])
 
+  const article = allContent.find((a: any) => a.id === articleId || a.slug === articleId)
 
-  if (isLoading || featuredLoading) {
+  if (isLoading || featuredLoading || publishedLoading || newsLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-16 space-y-4">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: colors.accent }}></div>
         <p className="text-lg" style={{ color: colors.cardText }}>
-          Memuat artikel...
+          Memuat konten...
         </p>
       </div>
     )
   }
-
-  const article = allArticles.find((a: any) => a.id === articleId)
 
   if (!article) {
     return (
       <div className="flex flex-col items-center justify-center py-16 space-y-4">
         <div className="text-6xl mb-4" style={{ color: colors.detail }}>📝</div>
         <p className="text-lg" style={{ color: colors.cardText }}>
-          Artikel tidak ditemukan.
+          Konten tidak ditemukan.
         </p>
         <p className="text-sm" style={{ color: colors.detail }}>
           ID: {articleId}
+        </p>
+        <p className="text-xs mt-2" style={{ color: colors.subheading }}>
+          Total konten tersedia: {allContent.length}
         </p>
       </div>
     )
@@ -147,9 +154,7 @@ export default function ArticleDetail({ articleId, showRelated = true }: Props) 
         )}
       </header>
 
-      {/* Content Section */}
       <div className="grid gap-6 lg:gap-8">
-        {/* Mobile: Stack vertically */}
         <div className="block lg:hidden space-y-6">
           <div className={imageClasses}>
             {!imageError ? (

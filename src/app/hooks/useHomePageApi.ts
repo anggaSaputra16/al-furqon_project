@@ -1,850 +1,843 @@
-import { useState, useEffect, useCallback } from 'react'
-import { HomePageUseCases } from '../useCases/homePageUseCases'
-import { apiRepository } from '../repositories/apiRepository'
+import { useState, useEffect, useCallback } from "react";
+import { HomePageUseCases } from "../useCases/homePageUseCases";
+import { apiRepository } from "../repositories/apiRepository";
 import {
   ArticleResponse,
   DonationResponse,
   NewsResponse,
   MenuResponse,
   HomePageData,
-  HomeStatsResponse
-} from '../types/responseTypes'
+  HomeStatsResponse,
+} from "../types/responseTypes";
 import {
   DonationSubmissionRequest,
-  ContactRequest
-} from '../types/requestTypes'
-import { activityCards, donationCards, newsCards } from '../utils/staticData'
-import useBackendAvailability from './useBackendAvailability'
+  ContactRequest,
+} from "../types/requestTypes";
+import { activityCards, donationCards, newsCards } from "../utils/staticData";
+import useBackendAvailability from "./useBackendAvailability";
 
-const homePageUseCases = new HomePageUseCases(apiRepository)
+const homePageUseCases = new HomePageUseCases(apiRepository);
 
 export const useHomePageData = () => {
-  const [data, setData] = useState<HomePageData | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [articlesUploaded, setArticlesUploaded] = useState(false)
-  
-  const { isAvailable: backendAvailable, isChecking } = useBackendAvailability()
+  const [data, setData] = useState<HomePageData | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const { isAvailable: backendAvailable, isChecking } =
+    useBackendAvailability();
 
   const fetchData = useCallback(async () => {
-    if (backendAvailable === null || isChecking) {
-      return
+    if (isChecking) return;
+
+    if (backendAvailable === null) {
+      return;
     }
 
-    setLoading(true)
-    setError(null)
-    
+    setLoading(true);
+    setError(null);
+
     try {
       if (!backendAvailable) {
-        setLoading(false)
-        return
+        setLoading(false);
+        return;
       }
 
-      const result = await homePageUseCases.getHomePageData()
-      
+      const result = await homePageUseCases.getHomePageData();
+
       if (result.success) {
-        setData(result.data || null)
+        setData(result.data || null);
       } else {
-        setError(result.error || 'Failed to load data')
+        setError(result.error || "Failed to load data");
       }
     } catch (err) {
-      console.error('❌ Error fetching home page data:', err)
-      setError('An unexpected error occurred')
+      setError("An unexpected error occurred");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [articlesUploaded, backendAvailable, isChecking])
+  }, [backendAvailable]);
 
   useEffect(() => {
-    fetchData()
-    if (backendAvailable) {
-      homePageUseCases.trackPageView('home').catch(console.warn)
+    if (backendAvailable !== null) {
+      fetchData();
     }
-  }, [fetchData, backendAvailable])
+  }, [backendAvailable]);
+
+  useEffect(() => {
+    if (backendAvailable) {
+      homePageUseCases.trackPageView("home").catch(() => {});
+    }
+  }, [backendAvailable]);
 
   return {
     data,
     loading,
     error,
-    refetch: fetchData
-  }
-}
+    refetch: fetchData,
+  };
+};
 
 export const useFeaturedArticles = (limit = 6) => {
-  const [articles, setArticles] = useState<ArticleResponse[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [articlesUploaded, setArticlesUploaded] = useState(false)
-  
-  const { isAvailable: backendAvailable, isChecking } = useBackendAvailability()
+  const [articles, setArticles] = useState<ArticleResponse[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const { isAvailable: backendAvailable, isChecking } =
+    useBackendAvailability();
 
   const fetchArticles = useCallback(async () => {
-    
-    if (backendAvailable === null || isChecking) {
-      return
+    if (isChecking) return;
+
+    if (backendAvailable === null) {
+      return;
     }
 
-    setLoading(true)
-    setError(null)
-    
-    try {
-      if (!backendAvailable) {        
+    setLoading(true);
+    setError(null);
 
-        const staticArticles: ArticleResponse[] = activityCards.slice(0, limit).map((card, index) => ({
-          id: card.id,
-          title: card.title,
-          slug: card.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-          description: card.description,
-          content: card.detail,
-          image: card.image,
-          category: 'kegiatan' as const,
-          status: 'published' as const,
-          author: { 
-            id: 'admin',
-            name: 'Admin Al-Furqon',
-            avatar: undefined
-          },
-          publishedAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          views: Math.floor(Math.random() * 100) + 50,
-          likes: Math.floor(Math.random() * 20) + 5,
-          tags: ['kegiatan', 'masjid'],
-          featured: true
-        }))
-        
-        setArticles(staticArticles)
-        setLoading(false)
-        return
+    try {
+      if (!backendAvailable) {
+        const staticArticles: ArticleResponse[] = activityCards
+          .slice(0, limit)
+          .map((card, index) => ({
+            id: card.id,
+            title: card.title,
+            slug: card.title.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+            description: card.description,
+            content: card.detail,
+            image: card.image,
+            category: "kegiatan" as const,
+            status: "published" as const,
+            author: {
+              id: "admin",
+              name: "Admin Al-Furqon",
+              avatar: undefined,
+            },
+            publishedAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            views: Math.floor(Math.random() * 100) + 50,
+            likes: Math.floor(Math.random() * 20) + 5,
+            tags: ["kegiatan", "masjid"],
+            featured: true,
+          }));
+
+        setArticles(staticArticles);
+        setLoading(false);
+        return;
       }
 
-      const result = await homePageUseCases.getFeaturedArticles(limit)      
+      const result = await homePageUseCases.getFeaturedArticles(limit);
       if (result.success) {
-        let articleData = result.data
+        let articleData = result.data;
 
-        if (articleData && typeof articleData === 'object' && 'data' in articleData) {
-          articleData = (articleData as any).data
+        if (
+          articleData &&
+          typeof articleData === "object" &&
+          "data" in articleData
+        ) {
+          articleData = (articleData as any).data;
         }
-        
+
         const transformedArticles = (articleData || [])
-          .filter((article: any) => article.status === 'published')
+          .filter((article: any) => article.status === "published")
           .map((article: any) => ({
             id: article.id,
             title: article.title,
-            slug: article.slug || article.title.toLowerCase().replace(/ /g, '-'),
+            slug:
+              article.slug || article.title.toLowerCase().replace(/ /g, "-"),
             description: article.description,
             content: article.content,
             image: article.image,
             category: article.category,
             status: article.status,
-            author: article.author || { 
-              id: article.authorId || 'admin',
-              name: article.authorName || 'Admin',
-              avatar: article.authorAvatar
+            author: article.author || {
+              id: article.authorId || "admin",
+              name: article.authorName || "Admin",
+              avatar: article.authorAvatar,
             },
             publishedAt: article.publishedAt,
             updatedAt: article.updatedAt,
             views: article.views || 0,
             likes: article.likes || 0,
             tags: article.tags || [],
-            featured: article.featured
-          }))
-        
-        setArticles(transformedArticles)
-      } else {
-        if (result.error === 'Backend not available') {          
+            featured: article.featured,
+          }));
 
-          const staticArticles: ArticleResponse[] = activityCards.slice(0, limit).map((card, index) => ({
-            id: card.id,
-            title: card.title,
-            slug: card.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-            description: card.description,
-            content: card.detail,
-            image: card.image,
-            category: 'kegiatan' as const,
-            status: 'published' as const,
-            author: { 
-              id: 'admin',
-              name: 'Admin Al-Furqon',
-              avatar: undefined
-            },
-            publishedAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            views: Math.floor(Math.random() * 100) + 50,
-            likes: Math.floor(Math.random() * 20) + 5,
-            tags: ['kegiatan', 'masjid'],
-            featured: true
-          }))
-          
-          setArticles(staticArticles)
+        setArticles(transformedArticles);
+      } else {
+        if (result.error === "Backend not available") {
+          const staticArticles: ArticleResponse[] = activityCards
+            .slice(0, limit)
+            .map((card, index) => ({
+              id: card.id,
+              title: card.title,
+              slug: card.title.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+              description: card.description,
+              content: card.detail,
+              image: card.image,
+              category: "kegiatan" as const,
+              status: "published" as const,
+              author: {
+                id: "admin",
+                name: "Admin Al-Furqon",
+                avatar: undefined,
+              },
+              publishedAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+              views: Math.floor(Math.random() * 100) + 50,
+              likes: Math.floor(Math.random() * 20) + 5,
+              tags: ["kegiatan", "masjid"],
+              featured: true,
+            }));
+
+          setArticles(staticArticles);
         } else {
-          setError(result.error || 'Failed to load articles')
+          setError(result.error || "Failed to load articles");
         }
       }
     } catch (err) {
-      console.error('Error fetching featured articles:', err)
-      setError('Failed to load featured articles')
+      setError("Failed to load featured articles");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [limit, backendAvailable, isChecking])
+  }, [limit, backendAvailable]);
 
   useEffect(() => {
-    fetchArticles()
-  }, [fetchArticles])
+    if (backendAvailable !== null) {
+      fetchArticles();
+    }
+  }, [backendAvailable]);
 
   const trackArticleView = useCallback(async (articleId: string) => {
-    await homePageUseCases.trackArticleView(articleId)
-  }, [])
+    await homePageUseCases.trackArticleView(articleId);
+  }, []);
 
   return {
     articles,
     loading,
     error,
     refetch: fetchArticles,
-    trackView: trackArticleView
-  }
-}
+    trackView: trackArticleView,
+  };
+};
 
 export const usePublishedArticles = (limit = 6) => {
-  const [articles, setArticles] = useState<ArticleResponse[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  
-  const { isAvailable: backendAvailable, isChecking } = useBackendAvailability()
+  const [articles, setArticles] = useState<ArticleResponse[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const { isAvailable: backendAvailable, isChecking } =
+    useBackendAvailability();
 
   const fetchArticles = useCallback(async () => {
-    if (backendAvailable === null || isChecking) {
-      return
+    if (isChecking) return;
+
+    if (backendAvailable === null) {
+      return;
     }
 
-    setLoading(true)
-    setError(null)
-    
+    setLoading(true);
+    setError(null);
+
     try {
-      if (!backendAvailable) {        
-        const staticArticles: ArticleResponse[] = activityCards.slice(0, limit).map((card, index) => ({
-          id: card.id,
-          title: card.title,
-          slug: card.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-          description: card.description,
-          content: card.detail,
-          image: card.image,
-          category: 'kegiatan' as const,
-          status: 'published' as const,
-          author: { 
-            id: 'admin',
-            name: 'Admin Al-Furqon',
-            avatar: undefined
-          },
-          publishedAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          views: Math.floor(Math.random() * 100) + 50,
-          likes: Math.floor(Math.random() * 20) + 5,
-          tags: ['kegiatan', 'masjid'],
-          featured: false
-        }))
-        
-        setArticles(staticArticles)
-        setLoading(false)
-        return
+      if (!backendAvailable) {
+        const staticArticles: ArticleResponse[] = activityCards
+          .slice(0, limit)
+          .map((card, index) => ({
+            id: card.id,
+            title: card.title,
+            slug: card.title.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+            description: card.description,
+            content: card.detail,
+            image: card.image,
+            category: "kegiatan" as const,
+            status: "published" as const,
+            author: {
+              id: "admin",
+              name: "Admin Al-Furqon",
+              avatar: undefined,
+            },
+            publishedAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            views: Math.floor(Math.random() * 100) + 50,
+            likes: Math.floor(Math.random() * 20) + 5,
+            tags: ["kegiatan", "masjid"],
+            featured: false,
+          }));
+
+        setArticles(staticArticles);
+        setLoading(false);
+        return;
       }
 
-      const result = await homePageUseCases.getPublishedArticles(limit)      
+      const result = await homePageUseCases.getPublishedArticles(limit);
       if (result.success) {
-        let articleData = result.data
+        let articleData = result.data;
 
-        if (articleData && typeof articleData === 'object' && 'data' in articleData) {
-          articleData = (articleData as any).data
+        if (
+          articleData &&
+          typeof articleData === "object" &&
+          "data" in articleData
+        ) {
+          articleData = (articleData as any).data;
         }
-        
+
         const transformedArticles = (articleData || [])
-          .filter((article: any) => article.status === 'published')
+          .filter((article: any) => article.status === "published")
           .map((article: any) => ({
             id: article.id,
             title: article.title,
-            slug: article.slug || article.title.toLowerCase().replace(/ /g, '-'),
+            slug:
+              article.slug || article.title.toLowerCase().replace(/ /g, "-"),
             description: article.description,
             content: article.content,
             image: article.image,
             category: article.category,
             status: article.status,
-            author: article.author || { 
-              id: article.authorId || 'admin',
-              name: article.authorName || 'Admin',
-              avatar: article.authorAvatar
+            author: article.author || {
+              id: article.authorId || "admin",
+              name: article.authorName || "Admin",
+              avatar: article.authorAvatar,
             },
             publishedAt: article.publishedAt,
             updatedAt: article.updatedAt,
             views: article.views || 0,
             likes: article.likes || 0,
             tags: article.tags || [],
-            featured: article.featured
-          }))
-        
-        setArticles(transformedArticles)
+            featured: article.featured,
+          }));
+
+        setArticles(transformedArticles);
       } else {
-        if (result.error === 'Backend not available') {
-          const staticArticles: ArticleResponse[] = activityCards.slice(0, limit).map((card, index) => ({
-            id: card.id,
-            title: card.title,
-            slug: card.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-            description: card.description,
-            content: card.detail,
-            image: card.image,
-            category: 'kegiatan' as const,
-            status: 'published' as const,
-            author: { 
-              id: 'admin',
-              name: 'Admin Al-Furqon',
-              avatar: undefined
-            },
-            publishedAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            views: Math.floor(Math.random() * 100) + 50,
-            likes: Math.floor(Math.random() * 20) + 5,
-            tags: ['kegiatan', 'masjid'],
-            featured: false
-          }))
-          
-          setArticles(staticArticles)
+        if (result.error === "Backend not available") {
+          const staticArticles: ArticleResponse[] = activityCards
+            .slice(0, limit)
+            .map((card, index) => ({
+              id: card.id,
+              title: card.title,
+              slug: card.title.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+              description: card.description,
+              content: card.detail,
+              image: card.image,
+              category: "kegiatan" as const,
+              status: "published" as const,
+              author: {
+                id: "admin",
+                name: "Admin Al-Furqon",
+                avatar: undefined,
+              },
+              publishedAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+              views: Math.floor(Math.random() * 100) + 50,
+              likes: Math.floor(Math.random() * 20) + 5,
+              tags: ["kegiatan", "masjid"],
+              featured: false,
+            }));
+
+          setArticles(staticArticles);
         } else {
-          setError(result.error || 'Failed to load articles')
+          setError(result.error || "Failed to load articles");
         }
       }
     } catch (err) {
-      console.error('Error fetching published articles:', err)
-      setError('Failed to load published articles')
+      setError("Failed to load published articles");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [limit, backendAvailable, isChecking])
+  }, [limit, backendAvailable]);
 
   useEffect(() => {
-    fetchArticles()
-  }, [fetchArticles])
+    if (backendAvailable !== null) {
+      fetchArticles();
+    }
+  }, [backendAvailable]);
 
   const trackArticleView = useCallback(async (articleId: string) => {
-    await homePageUseCases.trackArticleView(articleId)
-  }, [])
+    await homePageUseCases.trackArticleView(articleId);
+  }, []);
 
   return {
     articles,
     loading,
     error,
     refetch: fetchArticles,
-    trackView: trackArticleView
-  }
-}
-
+    trackView: trackArticleView,
+  };
+};
 
 export const useActiveDonations = (limit = 3) => {
-  const [donations, setDonations] = useState<DonationResponse[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  
-  const { isAvailable: backendAvailable, isChecking } = useBackendAvailability()
+  const [donations, setDonations] = useState<DonationResponse[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const { isAvailable: backendAvailable, isChecking } =
+    useBackendAvailability();
 
   const fetchDonations = useCallback(async () => {
+    if (isChecking) return;
 
-    if (backendAvailable === null || isChecking) {
-      return
+    if (backendAvailable === null) {
+      return;
     }
 
-    setLoading(true)
-    setError(null)
-    
-    try {
-      if (!backendAvailable) {        
+    setLoading(true);
+    setError(null);
 
-        const staticDonations: DonationResponse[] = donationCards.slice(0, limit).map((card) => {
-          const percentage = Math.round((card.collected / card.target) * 100)
-          return {
-            id: card.id,
-            title: card.title,
-            slug: card.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-            description: card.description,
-            detail: card.detail,
-            target: card.target,
-            collected: card.collected,
-            percentage,
-            image: card.image,
-            status: 'active' as const,
-            startDate: new Date().toISOString(),
-            endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-            bankAccount: {
-              bankName: 'BCA',
-              accountNumber: '1234567890',
-              accountName: 'Masjid Al-Furqon'
-            },
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            donors: {
-              total: Math.floor(Math.random() * 50) + 20,
-              recent: []
-            }
-          }
-        })
-        
-        setDonations(staticDonations)
-        setLoading(false)
-        return
+    try {
+      if (!backendAvailable) {
+        const staticDonations: DonationResponse[] = donationCards
+          .slice(0, limit)
+          .map((card) => {
+            const percentage = Math.round((card.collected / card.target) * 100);
+            return {
+              id: card.id,
+              title: card.title,
+              slug: card.title.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+              description: card.description,
+              detail: card.detail,
+              target: card.target,
+              collected: card.collected,
+              percentage,
+              image: card.image,
+              status: "active" as const,
+              startDate: new Date().toISOString(),
+              endDate: new Date(
+                Date.now() + 30 * 24 * 60 * 60 * 1000,
+              ).toISOString(),
+              bankAccount: {
+                bankName: "BCA",
+                accountNumber: "1234567890",
+                accountName: "Masjid Al-Furqon",
+              },
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+              donors: {
+                total: Math.floor(Math.random() * 50) + 20,
+                recent: [],
+              },
+            };
+          });
+
+        setDonations(staticDonations);
+        setLoading(false);
+        return;
       }
 
-      const result = await homePageUseCases.getActiveDonations(limit)
-      
-      if (result.success) {
+      const result = await homePageUseCases.getActiveDonations(limit);
 
-        const activeDonations = (result.data || []).filter((donation: any) => donation.status === 'active')
-        setDonations(activeDonations)
+      if (result.success) {
+        const activeDonations = (result.data || []).filter(
+          (donation: any) => donation.status === "active",
+        );
+        setDonations(activeDonations);
       } else {
-        setError(result.error || 'Failed to load donations')
+        setError(result.error || "Failed to load donations");
       }
     } catch (err) {
-      setError('Failed to load active donations')
+      setError("Failed to load active donations");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [limit, backendAvailable, isChecking])
+  }, [limit, backendAvailable]);
 
   useEffect(() => {
-    fetchDonations()
-  }, [fetchDonations])
+    if (backendAvailable !== null) {
+      fetchDonations();
+    }
+  }, [backendAvailable]);
 
   return {
     donations,
     loading,
     error,
-    refetch: fetchDonations
-  }
-}
-
+    refetch: fetchDonations,
+  };
+};
 
 export const useLatestNews = (limit = 3) => {
-  const [news, setNews] = useState<NewsResponse[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [backendAvailable, setBackendAvailable] = useState<boolean | null>(null)
+  const [news, setNews] = useState<NewsResponse[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const { isAvailable: backendAvailable, isChecking } =
+    useBackendAvailability();
 
   const fetchNews = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    
+    if (isChecking) return;
+
+    if (backendAvailable === null) {
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
     try {
-
-
-      if (backendAvailable === null) {
-        try {
-          const controller = new AbortController()
-          const timeoutId = setTimeout(() => controller.abort(), 3000)
-          
-          const healthCheck = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/health`, {
-            method: 'GET',
-            signal: controller.signal
-          })
-          clearTimeout(timeoutId)
-          setBackendAvailable(healthCheck.ok)
-        } catch {
-          setBackendAvailable(false)
-          console.warn('⚠️ Backend not available for news, will use static data fallback')
-          
-
-
-          const staticNews: NewsResponse[] = newsCards.slice(0, limit).map((card, index) => ({
+      if (!backendAvailable) {
+        const staticNews: NewsResponse[] = newsCards
+          .slice(0, limit)
+          .map((card, index) => ({
             id: `news-${index + 1}`,
             title: card.title,
-            slug: card.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+            slug: card.title.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
             description: card.description,
             content: card.description,
             image: card.image,
-            category: 'berita',
-            priority: 'medium' as const,
+            category: "berita",
+            priority: "medium" as const,
             publishedAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
             author: {
-              id: 'admin',
-              name: 'Admin Al-Furqon'
+              id: "admin",
+              name: "Admin Al-Furqon",
             },
-            views: Math.floor(Math.random() * 100) + 50
-          }))
-          
-          setNews(staticNews)
-          setLoading(false)
-          return
-        }
+            views: Math.floor(Math.random() * 100) + 50,
+          }));
+
+        setNews(staticNews);
+        setLoading(false);
+        return;
       }
 
-      if (!backendAvailable) {        
+      const result = await homePageUseCases.getLatestNews(limit);
 
-
-        const staticNews: NewsResponse[] = newsCards.slice(0, limit).map((card, index) => ({
-          id: `news-${index + 1}`,
-          title: card.title,
-          slug: card.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-          description: card.description,
-          content: card.description,
-          image: card.image,
-          category: 'berita',
-          priority: 'medium' as const,
-          publishedAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          author: {
-            id: 'admin',
-            name: 'Admin Al-Furqon'
-          },
-          views: Math.floor(Math.random() * 100) + 50
-        }))
-        
-        setNews(staticNews)
-        setLoading(false)
-        return
-      }
-
-      const result = await homePageUseCases.getLatestNews(limit)
-      
       if (result.success) {
-
-
         const validatedNews = (result.data || [])
-          .filter((news: any) => !news.status || news.status === 'published') 
-          .map(news => ({
+          .filter((news: any) => !news.status || news.status === "published")
+          .map((news) => ({
             ...news,
-            author: news.author || { id: 'admin', name: 'Admin Al-Furqon' }
-          }))
-        
-        setNews(validatedNews)
+            author: news.author || { id: "admin", name: "Admin Al-Furqon" },
+          }));
+
+        setNews(validatedNews);
       } else {
+        if (result.error === "Backend not available") {
+          const staticNews: NewsResponse[] = newsCards
+            .slice(0, limit)
+            .map((card, index) => ({
+              id: `news-${index + 1}`,
+              title: card.title,
+              slug: card.title.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+              description: card.description,
+              content: card.description,
+              image: card.image,
+              category: "berita",
+              priority: "medium" as const,
+              publishedAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+              author: {
+                id: "admin",
+                name: "Admin Al-Furqon",
+              },
+              views: Math.floor(Math.random() * 100) + 50,
+            }));
 
-        if (result.error === 'Backend not available') {          
-
-
-          const staticNews: NewsResponse[] = newsCards.slice(0, limit).map((card, index) => ({
-            id: `news-${index + 1}`,
-            title: card.title,
-            slug: card.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-            description: card.description,
-            content: card.description,
-            image: card.image,
-            category: 'berita',
-            priority: 'medium' as const,
-            publishedAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            author: {
-              id: 'admin',
-              name: 'Admin Al-Furqon'
-            },
-            views: Math.floor(Math.random() * 100) + 50
-          }))
-          
-          setNews(staticNews)
+          setNews(staticNews);
         } else {
-          setError(result.error || 'Failed to load news')
+          setError(result.error || "Failed to load news");
         }
       }
     } catch (err) {
-      console.error('❌ Error fetching news:', err)
-      setError('Failed to load latest news')
+      setError("Failed to load latest news");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [limit, backendAvailable])
+  }, [limit, backendAvailable]);
 
   useEffect(() => {
-    fetchNews()
-  }, [fetchNews])
+    if (backendAvailable !== null) {
+      fetchNews();
+    }
+  }, [backendAvailable]);
 
   return {
     news,
     loading,
     error,
-    refetch: fetchNews
-  }
-}
-
-
+    refetch: fetchNews,
+  };
+};
 
 export const useNavigationMenus = () => {
-  const [menus, setMenus] = useState<MenuResponse[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [backendAvailable, setBackendAvailable] = useState<boolean | null>(null)
+  const [menus, setMenus] = useState<MenuResponse[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [backendAvailable, setBackendAvailable] = useState<boolean | null>(
+    null,
+  );
 
   const fetchMenus = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    
+    setLoading(true);
+    setError(null);
+
     try {
-      const result = await homePageUseCases.getNavigationMenus()
-      
+      const result = await homePageUseCases.getNavigationMenus();
+
       if (result.success) {
-        setMenus(result.data || [])
+        setMenus(result.data || []);
       } else {
-        setError(result.error || 'Failed to load menus')
+        setError(result.error || "Failed to load menus");
       }
     } catch (err) {
-      setError('Failed to load navigation menus')
+      setError("Failed to load navigation menus");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
-    fetchMenus()
-  }, [fetchMenus])
+    fetchMenus();
+  }, [fetchMenus]);
 
   return {
     menus,
     loading,
     error,
-    refetch: fetchMenus
-  }
-}
-
-
+    refetch: fetchMenus,
+  };
+};
 
 export const useDonationSubmission = () => {
-  const [submitting, setSubmitting] = useState(false)
-  const [success, setSuccess] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const submitDonation = useCallback(async (donationData: DonationSubmissionRequest) => {
-    setSubmitting(true)
-    setError(null)
-    setSuccess(false)
-    
-    try {
-      const result = await homePageUseCases.submitDonation(donationData)
-      
-      if (result.success) {
-        setSuccess(true)
-        return {
-          success: true,
-          data: result.data
+  const submitDonation = useCallback(
+    async (donationData: DonationSubmissionRequest) => {
+      setSubmitting(true);
+      setError(null);
+      setSuccess(false);
+
+      try {
+        const result = await homePageUseCases.submitDonation(donationData);
+
+        if (result.success) {
+          setSuccess(true);
+          return {
+            success: true,
+            data: result.data,
+          };
+        } else {
+          setError(result.error || "Failed to submit donation");
+          return {
+            success: false,
+            error: result.error,
+          };
         }
-      } else {
-        setError(result.error || 'Failed to submit donation')
+      } catch (err) {
+        const errorMessage = "Gagal memproses donasi. Silakan coba lagi.";
+        setError(errorMessage);
         return {
           success: false,
-          error: result.error
-        }
+          error: errorMessage,
+        };
+      } finally {
+        setSubmitting(false);
       }
-    } catch (err) {
-      const errorMessage = 'Gagal memproses donasi. Silakan coba lagi.'
-      setError(errorMessage)
-      return {
-        success: false,
-        error: errorMessage
-      }
-    } finally {
-      setSubmitting(false)
-    }
-  }, [])
+    },
+    [],
+  );
 
   const reset = useCallback(() => {
-    setSuccess(false)
-    setError(null)
-  }, [])
+    setSuccess(false);
+    setError(null);
+  }, []);
 
   return {
     submitDonation,
     submitting,
     success,
     error,
-    reset
-  }
-}
-
-
+    reset,
+  };
+};
 
 export const useNewsletterSubscription = () => {
-  const [subscribing, setSubscribing] = useState(false)
-  const [success, setSuccess] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [subscribing, setSubscribing] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const subscribe = useCallback(async (email: string, name?: string) => {
-    setSubscribing(true)
-    setError(null)
-    setSuccess(false)
-    
+    setSubscribing(true);
+    setError(null);
+    setSuccess(false);
+
     try {
-      const result = await homePageUseCases.subscribeNewsletter(email, name)
-      
+      const result = await homePageUseCases.subscribeNewsletter(email, name);
+
       if (result.success) {
-        setSuccess(true)
+        setSuccess(true);
         return {
           success: true,
-          message: result.message
-        }
+          message: result.message,
+        };
       } else {
-        setError(result.error || 'Failed to subscribe')
+        setError(result.error || "Failed to subscribe");
         return {
           success: false,
-          error: result.error
-        }
+          error: result.error,
+        };
       }
     } catch (err) {
-      const errorMessage = 'Gagal berlangganan newsletter. Silakan coba lagi.'
-      setError(errorMessage)
+      const errorMessage = "Gagal berlangganan newsletter. Silakan coba lagi.";
+      setError(errorMessage);
       return {
         success: false,
-        error: errorMessage
-      }
+        error: errorMessage,
+      };
     } finally {
-      setSubscribing(false)
+      setSubscribing(false);
     }
-  }, [])
+  }, []);
 
   const reset = useCallback(() => {
-    setSuccess(false)
-    setError(null)
-  }, [])
+    setSuccess(false);
+    setError(null);
+  }, []);
 
   return {
     subscribe,
     subscribing,
     success,
     error,
-    reset
-  }
-}
-
-
+    reset,
+  };
+};
 
 export const useContactSubmission = () => {
-  const [submitting, setSubmitting] = useState(false)
-  const [success, setSuccess] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const submitContact = useCallback(async (contactData: ContactRequest) => {
-    setSubmitting(true)
-    setError(null)
-    setSuccess(false)
-    
+    setSubmitting(true);
+    setError(null);
+    setSuccess(false);
+
     try {
-      const result = await homePageUseCases.submitContact(contactData)
-      
+      const result = await homePageUseCases.submitContact(contactData);
+
       if (result.success) {
-        setSuccess(true)
+        setSuccess(true);
         return {
           success: true,
-          message: result.message
-        }
+          message: result.message,
+        };
       } else {
-        setError(result.error || 'Failed to submit contact')
+        setError(result.error || "Failed to submit contact");
         return {
           success: false,
-          error: result.error
-        }
+          error: result.error,
+        };
       }
     } catch (err) {
-      const errorMessage = 'Gagal mengirim pesan. Silakan coba lagi.'
-      setError(errorMessage)
+      const errorMessage = "Gagal mengirim pesan. Silakan coba lagi.";
+      setError(errorMessage);
       return {
         success: false,
-        error: errorMessage
-      }
+        error: errorMessage,
+      };
     } finally {
-      setSubmitting(false)
+      setSubmitting(false);
     }
-  }, [])
+  }, []);
 
   const reset = useCallback(() => {
-    setSuccess(false)
-    setError(null)
-  }, [])
+    setSuccess(false);
+    setError(null);
+  }, []);
 
   return {
     submitContact,
     submitting,
     success,
     error,
-    reset
-  }
-}
-
-
+    reset,
+  };
+};
 
 export const useContentSearch = () => {
   const [results, setResults] = useState<{
-    articles: ArticleResponse[]
-    donations: DonationResponse[]
-    news: NewsResponse[]
-    total: number
-  } | null>(null)
-  const [searching, setSearching] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+    articles: ArticleResponse[];
+    donations: DonationResponse[];
+    news: NewsResponse[];
+    total: number;
+  } | null>(null);
+  const [searching, setSearching] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const search = useCallback(async (query: string, type?: 'all' | 'articles' | 'donations' | 'news') => {
-    if (!query.trim()) {
-      setResults(null)
-      return
-    }
-
-    setSearching(true)
-    setError(null)
-    
-    try {
-      const result = await homePageUseCases.searchContent(query, type)
-      
-      if (result.success) {
-        setResults(result.data || null)
-      } else {
-        setError(result.error || 'Search failed')
+  const search = useCallback(
+    async (query: string, type?: "all" | "articles" | "donations" | "news") => {
+      if (!query.trim()) {
+        setResults(null);
+        return;
       }
-    } catch (err) {
-      setError('Gagal melakukan pencarian')
-    } finally {
-      setSearching(false)
-    }
-  }, [])
+
+      setSearching(true);
+      setError(null);
+
+      try {
+        const result = await homePageUseCases.searchContent(query, type);
+
+        if (result.success) {
+          setResults(result.data || null);
+        } else {
+          setError(result.error || "Search failed");
+        }
+      } catch (err) {
+        setError("Gagal melakukan pencarian");
+      } finally {
+        setSearching(false);
+      }
+    },
+    [],
+  );
 
   const clearResults = useCallback(() => {
-    setResults(null)
-    setError(null)
-  }, [])
+    setResults(null);
+    setError(null);
+  }, []);
 
   return {
     search,
     results,
     searching,
     error,
-    clearResults
-  }
-}
-
-
+    clearResults,
+  };
+};
 
 export const useHomeStats = () => {
-  const [stats, setStats] = useState<HomeStatsResponse | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [stats, setStats] = useState<HomeStatsResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchStats = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    
+    setLoading(true);
+    setError(null);
+
     try {
-      const result = await homePageUseCases.getHomeStats()
-      
+      const result = await homePageUseCases.getHomeStats();
+
       if (result.success) {
-        setStats(result.data || null)
+        setStats(result.data || null);
       } else {
-        setError(result.error || 'Failed to load statistics')
+        setError(result.error || "Failed to load statistics");
       }
     } catch (err) {
-      setError('Failed to load statistics')
+      setError("Failed to load statistics");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
-    fetchStats()
-  }, [fetchStats])
+    fetchStats();
+  }, [fetchStats]);
 
   return {
     stats,
     loading,
     error,
-    refetch: fetchStats
-  }
-}
+    refetch: fetchStats,
+  };
+};

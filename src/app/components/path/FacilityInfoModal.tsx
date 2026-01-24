@@ -45,7 +45,29 @@ export default function FacilityInfoModal({ isOpen, onClose, type, facilityName 
         'prasarana': {
             title: 'Prasarana & Sarana',
             subtitle: facilityName,
-            items: [
+            items: facilityName === 'Masjid Besar Al-Furqon' ? [
+                'Ruangan Cukup Luas dengan ukuran Lebar 20M x Panjang 32M',
+                'Tinggi Plafon/Kubah 6-10M memberikan sirkulasi udara yang baik',
+                'Lantai Granit berkualitas tinggi dengan Karpet Premium',
+                'Sistem pendingin ruangan AC untuk kenyamanan jamaah',
+                'Tempat Wudhu terpisah di Lantai dasar dan Lantai 2',
+                'Toilet bersih tersedia di Lantai dasar dan Lantai 2',
+                'Sistem sound system yang jernih untuk kajian dan pengumuman',
+                'Pencahayaan yang memadai untuk ibadah siang dan malam',
+                'Area parkir yang luas dan aman untuk jamaah',
+                'Akses jalan yang mudah dijangkau dari berbagai arah'
+            ] : facilityName === 'Graha Subagdja' ? [
+                'Ruangan Aula Lebar 20M x Panjang 30M (Tanpa Tiang di tengah)',
+                'Tinggi Plafon 6 Meter memberikan ruang yang lapang',
+                'Pendingin Ruangan AC Standing, Air-Curtain, 2 K-Angin Blower',
+                'Daya Listrik 32 KWH s/d 42 KWH untuk mendukung berbagai kegiatan',
+                'Area Parkir untuk 100 kendaraan roda 4 dan 200 sepeda motor',
+                'Parkir VIP khusus untuk 5 kendaraan',
+                'Sistem Keamanan dengan Petugas Pengamanan dan CCTV',
+                'Akses jalan yang mudah dijangkau dari berbagai arah',
+                'Lokasi strategis di dalam kompleks Masjid Al-Furqon',
+                'Fasilitas toilet dan tempat wudhu yang bersih'
+            ] : [
                 'Area parkir yang luas dan aman',
                 'Akses jalan yang mudah dijangkau',
                 'Sistem keamanan 24 jam',
@@ -62,16 +84,16 @@ export default function FacilityInfoModal({ isOpen, onClose, type, facilityName 
             title: 'Informasi Kapasitas',
             subtitle: facilityName,
             items: facilityName === 'Graha Subagdja' ? [
-                'Kapasitas maksimal 300 orang untuk acara resepsi pernikahan',
-                'Kapasitas maksimal 200 orang untuk seminar dan rapat kerja',
-                'Kapasitas maksimal 150 orang untuk akad nikah',
-                'Tersedia meja bundar untuk 8-10 orang per meja',
-                'Area stage/panggung untuk acara resepsi',
-                'Ruang persiapan pengantin (khusus resepsi)',
-                'Area foto dan dokumentasi yang luas',
-                'Kapasitas parkir untuk 100 kendaraan',
-                'Dapat menampung acara hingga 8 jam',
-                'Reservasi minimal 2 minggu sebelum acara'
+                'Kapasitas maksimal 1000 orang untuk kegiatan Resepsi/Pernikahan',
+                'Kapasitas maksimal 800 orang untuk kegiatan Seminar/Rapat Kerja',
+                'Kapasitas maksimal 1200 orang untuk kegiatan Keagamaan PHBI',
+                'Luas ruangan 20M x 30M tanpa tiang di tengah',
+                'Tinggi plafon 6 meter memberikan kenyamanan ruang',
+                'Tersedia 100 kursi resepsi eterna dengan cover putih',
+                'Area panggung pelaminan ukuran 4M x 12M',
+                'Kapasitas parkir 100 kendaraan roda 4',
+                'Kapasitas parkir 200 sepeda motor',
+                'Parkir VIP untuk 5 kendaraan khusus'
             ] : [
                 'Kapasitas maksimal 300 orang untuk acara resepsi',
                 'Kapasitas maksimal 200 orang untuk acara seminar',
@@ -89,16 +111,16 @@ export default function FacilityInfoModal({ isOpen, onClose, type, facilityName 
             title: 'Fasilitas Umum Tersedia',
             subtitle: facilityName,
             items: facilityName === 'Graha Subagdja' ? [
-                'Sistem sound system profesional dengan wireless microphone',
-                'Penerangan lampu LED yang dapat dimmer',
-                'Meja dan kursi dengan arrangement fleksibel',
-                'Area catering dan pantry untuk acara resepsi',
-                'Toilet pria dan wanita yang terpisah dan bersih',
-                'Tempat wudhu dengan fasilitas air bersih',
-                'Ruang persiapan pengantin dengan cermin dan AC',
-                'Sistem keamanan CCTV dan petugas keamanan',
-                'Area parkir yang luas dan aman',
-                'Dekorasi dasar untuk acara pernikahan'
+                '1 Panggung Pelaminan ukuran 4M x 12M dengan backdrop kain hitam',
+                '2 Ruangan tambahan untuk Ruang Rias Pengantin (Pria/Wanita)',
+                '1 Ruang Catering (Dapur Bersih) dan Meja Catering lengkap',
+                '1 Ruang Meeting untuk koordinasi acara',
+                '100 Kursi Resepsi Eterna dengan Cover Putih',
+                'Sound System standar untuk kegiatan',
+                'AC Standing, Air-Curtain, dan 2 K-Angin Blower',
+                'Sistem keamanan CCTV dan Petugas Pengamanan',
+                'Daya listrik 32 KWH s/d 42 KWH',
+                'Area parkir luas dengan petugas parkir'
             ] : [
                 'Sistem sound system profesional dengan wireless microphone',
                 'Proyektor LCD dan layar besar untuk presentasi',
@@ -201,7 +223,7 @@ export default function FacilityInfoModal({ isOpen, onClose, type, facilityName 
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.8, y: 20 }}
                     transition={{ duration: 0.3, ease: 'easeOut' }}
-                    className="relative w-full max-w-md mx-auto rounded-2xl shadow-2xl overflow-hidden"
+                    className="relative w-full max-w-3xl mx-auto rounded-2xl shadow-2xl overflow-hidden"
                     style={{ backgroundColor: colors.card }}
                 >
                     {/* Header */}
