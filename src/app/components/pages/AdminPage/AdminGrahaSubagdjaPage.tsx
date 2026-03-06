@@ -22,11 +22,11 @@ import {
 import { useTheme } from '@/context/themeContext'
 import { useGraha } from '../../../hooks/useGraha'
 import ImageUpload from '../../ui/ImageUpload'
-import { 
-    UMKMPartner, 
-    GalleryItem, 
-    FAQ, 
-    FacilityInfo 
+import {
+    UMKMPartner,
+    GalleryItem,
+    FAQ,
+    FacilityInfo
 } from '../../../repositories/grahaRepository'
 
 interface AdminGrahaSubagdjaPageProps {
@@ -35,7 +35,7 @@ interface AdminGrahaSubagdjaPageProps {
 
 export default function AdminGrahaSubagdjaPage({ onBack }: AdminGrahaSubagdjaPageProps) {
     const { colors } = useTheme()
-    
+
     // useGraha hook untuk mengambil data dari backend
     const {
         umkmPartners,
@@ -57,7 +57,7 @@ export default function AdminGrahaSubagdjaPage({ onBack }: AdminGrahaSubagdjaPag
         deleteFAQ,
         clearErrors
     } = useGraha()
-    
+
     const [activeTab, setActiveTab] = useState<'partners' | 'gallery' | 'faq' | 'facility'>('partners')
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [editingItem, setEditingItem] = useState<any>(null)
@@ -91,7 +91,7 @@ export default function AdminGrahaSubagdjaPage({ onBack }: AdminGrahaSubagdjaPag
 
     const handleImageSelected = (imageUrl: string) => {
         setFormData({ ...formData, image: imageUrl })
-        setUseImageUpload(false) 
+        setUseImageUpload(false)
     }
 
     const handleDelete = async (id: string, type: string) => {
@@ -699,28 +699,26 @@ export default function AdminGrahaSubagdjaPage({ onBack }: AdminGrahaSubagdjaPag
                                                 >
                                                     Gambar Partner
                                                 </label>
-                                                
+
                                                 {/* Toggle antara upload dan manual input */}
                                                 <div className="flex items-center space-x-4 mb-3">
                                                     <button
                                                         type="button"
                                                         onClick={() => setUseImageUpload(false)}
-                                                        className={`px-3 py-1 text-sm rounded transition-colors ${
-                                                            !useImageUpload 
-                                                                ? 'bg-blue-500 text-white' 
+                                                        className={`px-3 py-1 text-sm rounded transition-colors ${!useImageUpload
+                                                                ? 'bg-blue-500 text-white'
                                                                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                                                        }`}
+                                                            }`}
                                                     >
                                                         Manual URL
                                                     </button>
                                                     <button
                                                         type="button"
                                                         onClick={() => setUseImageUpload(true)}
-                                                        className={`px-3 py-1 text-sm rounded transition-colors ${
-                                                            useImageUpload 
-                                                                ? 'bg-blue-500 text-white' 
+                                                        className={`px-3 py-1 text-sm rounded transition-colors ${useImageUpload
+                                                                ? 'bg-blue-500 text-white'
                                                                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                                                        }`}
+                                                            }`}
                                                     >
                                                         Upload File
                                                     </button>
@@ -749,13 +747,13 @@ export default function AdminGrahaSubagdjaPage({ onBack }: AdminGrahaSubagdjaPag
                                                         placeholder="/images/partner.jpg"
                                                     />
                                                 )}
-                                                
+
                                                 {/* Preview gambar jika ada URL */}
                                                 {formData.image && (
                                                     <div className="mt-2">
-                                                        <img 
-                                                            src={formData.image} 
-                                                            alt="Preview" 
+                                                        <img
+                                                            src={formData.image}
+                                                            alt="Preview"
                                                             className="w-20 h-20 object-cover rounded border"
                                                             onError={(e) => {
                                                                 const target = e.target as HTMLImageElement;
@@ -824,28 +822,26 @@ export default function AdminGrahaSubagdjaPage({ onBack }: AdminGrahaSubagdjaPag
                                                 >
                                                     Gambar Gallery
                                                 </label>
-                                                
+
                                                 {/* Toggle antara upload dan manual input */}
                                                 <div className="flex items-center space-x-4 mb-3">
                                                     <button
                                                         type="button"
                                                         onClick={() => setUseImageUpload(false)}
-                                                        className={`px-3 py-1 text-sm rounded transition-colors ${
-                                                            !useImageUpload 
-                                                                ? 'bg-blue-500 text-white' 
+                                                        className={`px-3 py-1 text-sm rounded transition-colors ${!useImageUpload
+                                                                ? 'bg-blue-500 text-white'
                                                                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                                                        }`}
+                                                            }`}
                                                     >
                                                         Manual URL
                                                     </button>
                                                     <button
                                                         type="button"
                                                         onClick={() => setUseImageUpload(true)}
-                                                        className={`px-3 py-1 text-sm rounded transition-colors ${
-                                                            useImageUpload 
-                                                                ? 'bg-blue-500 text-white' 
+                                                        className={`px-3 py-1 text-sm rounded transition-colors ${useImageUpload
+                                                                ? 'bg-blue-500 text-white'
                                                                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                                                        }`}
+                                                            }`}
                                                     >
                                                         Upload File
                                                     </button>
@@ -874,13 +870,13 @@ export default function AdminGrahaSubagdjaPage({ onBack }: AdminGrahaSubagdjaPag
                                                         placeholder="/images/gallery.jpg"
                                                     />
                                                 )}
-                                                
+
                                                 {/* Preview gambar jika ada URL */}
                                                 {formData.image && (
                                                     <div className="mt-2">
-                                                        <img 
-                                                            src={formData.image} 
-                                                            alt="Preview" 
+                                                        <img
+                                                            src={formData.image}
+                                                            alt="Preview"
                                                             className="w-20 h-20 object-cover rounded border"
                                                             onError={(e) => {
                                                                 const target = e.target as HTMLImageElement;
@@ -1173,8 +1169,8 @@ export default function AdminGrahaSubagdjaPage({ onBack }: AdminGrahaSubagdjaPag
 
                 {/* Error State */}
                 {(error.umkmPartners || error.gallery || error.faqs || error.facilityInfo) && (
-                    <div className="mb-4 p-4 rounded-lg border" style={{ 
-                        backgroundColor: '#fee2e2', 
+                    <div className="mb-4 p-4 rounded-lg border" style={{
+                        backgroundColor: '#fee2e2',
                         borderColor: '#fecaca',
                         color: '#dc2626'
                     }}>

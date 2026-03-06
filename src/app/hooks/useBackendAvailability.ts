@@ -1,179 +1,168 @@
-import { useState, useEffect, useCallback } from 'react'
-
+import { useState, useEffect, useCallback } from "react";
 
 class BackendAvailabilityManager {
-  private static instance: BackendAvailabilityManager
-  private isAvailable: boolean | null = null
-  private lastCheck: number = 0
-  private checkInProgress: boolean = false
-  private readonly CHECK_INTERVAL = 30000
-  private readonly TIMEOUT = 3000
-  private listeners: Set<(available: boolean) => void> = new Set()
+  private static instance: BackendAvailabilityManager;
+  private isAvailable: boolean | null = null;
+  private lastCheck: number = 0;
+  private checkInProgress: boolean = false;
+  private readonly CHECK_INTERVAL = 30000;
+  private readonly TIMEOUT = 3000;
+  private listeners: Set<(available: boolean) => void> = new Set();
 
   static getInstance(): BackendAvailabilityManager {
     if (!BackendAvailabilityManager.instance) {
-      BackendAvailabilityManager.instance = new BackendAvailabilityManager()
+      BackendAvailabilityManager.instance = new BackendAvailabilityManager();
     }
-    return BackendAvailabilityManager.instance
+    return BackendAvailabilityManager.instance;
   }
 
   subscribe(listener: (available: boolean) => void): () => void {
-    this.listeners.add(listener)
-    return () => this.listeners.delete(listener)
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
   }
 
   private notifyListeners(available: boolean) {
-    this.listeners.forEach(listener => {
+    this.listeners.forEach((listener) => {
       try {
-        listener(available)
+        listener(available);
       } catch (error) {
-        console.error('Error notifying backend availability listener:', error)
+        console.error("Error notifying backend availability listener:", error);
       }
-    })
+    });
   }
 
   async checkAvailability(forceCheck = false): Promise<boolean> {
-    const now = Date.now()
-    
+    const now = Date.now();
 
-    if (!forceCheck && this.isAvailable !== null && (now - this.lastCheck) < this.CHECK_INTERVAL) {
-      return this.isAvailable
+    if (
+      !forceCheck &&
+      this.isAvailable !== null &&
+      now - this.lastCheck < this.CHECK_INTERVAL
+    ) {
+      return this.isAvailable;
     }
-
 
     if (this.checkInProgress) {
       return new Promise((resolve) => {
         const checkInterval = setInterval(() => {
           if (!this.checkInProgress) {
-            clearInterval(checkInterval)
-            resolve(this.isAvailable as boolean)
+            clearInterval(checkInterval);
+            resolve(this.isAvailable as boolean);
           }
-        }, 100)
-        
+        }, 100);
 
         setTimeout(() => {
-          clearInterval(checkInterval)
-          resolve(false)
-        }, 10000)
-      })
+          clearInterval(checkInterval);
+          resolve(false);
+        }, 10000);
+      });
     }
 
-    this.checkInProgress = true
+    this.checkInProgress = true;
 
     try {
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), this.TIMEOUT)
-      
-      const healthUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/v1/health`      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), this.TIMEOUT);
+
+      const healthUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001"}/api/home/health`;
       const response = await fetch(healthUrl, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        signal: controller.signal
-      })
-      
-      clearTimeout(timeoutId)
-      
-      const newAvailability = response.ok
-      const statusChanged = this.isAvailable !== newAvailability
-      
-      this.isAvailable = newAvailability
-      this.lastCheck = now
-      
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      const newAvailability = response.ok;
+      const statusChanged = this.isAvailable !== newAvailability;
+
+      this.isAvailable = newAvailability;
+      this.lastCheck = now;
 
       if (statusChanged || this.lastCheck === now) {
-        this.notifyListeners(newAvailability)
+        this.notifyListeners(newAvailability);
       }
-      
-      if (!newAvailability) {
-        console.warn('⚠️ Backend not available, will use static data fallback')
-      }
-      
-      return newAvailability
+
+      return newAvailability;
     } catch (error) {
-      console.error('❌ Backend health check failed:', error)
-      
-      const newAvailability = false
-      const statusChanged = this.isAvailable !== newAvailability
-      
-      this.isAvailable = newAvailability
-      this.lastCheck = now
-      
+      const newAvailability = false;
+      const statusChanged = this.isAvailable !== newAvailability;
+
+      this.isAvailable = newAvailability;
+      this.lastCheck = now;
+
       if (statusChanged) {
-        console.warn('⚠️ Backend not available, will use static data fallback')
-        this.notifyListeners(newAvailability)
+        this.notifyListeners(newAvailability);
       }
-      
-      return newAvailability
+
+      return newAvailability;
     } finally {
-      this.checkInProgress = false
+      this.checkInProgress = false;
     }
   }
 
   getCachedAvailability(): boolean | null {
-    return this.isAvailable
+    return this.isAvailable;
   }
 
   reset() {
-    this.isAvailable = null
-    this.lastCheck = 0
-    this.checkInProgress = false
+    this.isAvailable = null;
+    this.lastCheck = 0;
+    this.checkInProgress = false;
   }
 }
 
-
 export const useBackendAvailability = () => {
-  const [isAvailable, setIsAvailable] = useState<boolean | null>(null)
-  const [isChecking, setIsChecking] = useState(false)
-  const [lastChecked, setLastChecked] = useState<number>(0)
+  const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
+  const [isChecking, setIsChecking] = useState(false);
+  const [lastChecked, setLastChecked] = useState<number>(0);
 
-  const manager = BackendAvailabilityManager.getInstance()
+  const manager = BackendAvailabilityManager.getInstance();
 
   const checkAvailability = useCallback(async (force = false) => {
-    setIsChecking(true)
+    setIsChecking(true);
     try {
-      const available = await manager.checkAvailability(force)
-      setIsAvailable(available)
-      setLastChecked(Date.now())
-      return available
+      const available = await manager.checkAvailability(force);
+      setIsAvailable(available);
+      setLastChecked(Date.now());
+      return available;
     } finally {
-      setIsChecking(false)
+      setIsChecking(false);
     }
-  }, [manager])
+  }, []);
 
   const forceCheck = useCallback(() => {
-    return checkAvailability(true)
-  }, [checkAvailability])
+    return checkAvailability(true);
+  }, [checkAvailability]);
 
   useEffect(() => {
-
-    const cached = manager.getCachedAvailability()
+    const cached = manager.getCachedAvailability();
     if (cached !== null) {
-      setIsAvailable(cached)
+      setIsAvailable(cached);
+      setLastChecked(Date.now());
     }
-
 
     const unsubscribe = manager.subscribe((available) => {
-      setIsAvailable(available)
-      setLastChecked(Date.now())
-    })
-
+      setIsAvailable(available);
+      setLastChecked(Date.now());
+    });
 
     if (cached === null) {
-      checkAvailability()
+      checkAvailability(false);
     }
 
-    return unsubscribe
-  }, [manager, checkAvailability])
+    return unsubscribe;
+  }, []);
 
   return {
     isAvailable,
     isChecking,
     lastChecked,
     checkAvailability: forceCheck,
-    getCached: () => manager.getCachedAvailability()
-  }
-}
+    getCached: () => manager.getCachedAvailability(),
+  };
+};
 
-export default useBackendAvailability
+export default useBackendAvailability;

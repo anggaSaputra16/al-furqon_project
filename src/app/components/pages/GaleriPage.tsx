@@ -9,7 +9,7 @@ import { useMenuStore } from '../../stores/useMenuStore'
 import { useSearchStore } from '../../stores/useSearchStore'
 import { useTheme } from '@/context/themeContext'
 import { iconMap } from '@/app/utils/iconMapper'
-import { useFeaturedArticles } from '../../hooks/useHomePageApi'
+import { usePublishedArticles } from '../../hooks/useHomePageApi'
 
 import GalleryMasonry from '@/app/components/path/GalleryMasonry'
 import GalleryModal from '@/app/components/path/GalleryModal'
@@ -19,7 +19,7 @@ import UniversalNavGrid, { NavItem } from '@/app/components/path/UniversalNavGri
 
 export default function GaleriPage() {
 
-  const { articles: apiArticles, loading: articlesLoading, error: articlesError } = useFeaturedArticles(100)
+  const { articles: apiArticles, loading: articlesLoading, error: articlesError } = usePublishedArticles(100)
   const { search, setSearch } = useSearchStore()
   const { menus, fetchMenus } = useMenuStore()
   const { colors } = useTheme()
